@@ -1,0 +1,62 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build Release executables
+        run: cmake --build build --config Release --parallel 2
+
+      - name: Collect release assets
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+
+          $main = Get-ChildItem -Path . -Recurse -File -Filter main.exe |
+            Where-Object { $_.FullName -notmatch "\\.git\\|\\dist\\" } |
+            Sort-Object LastWriteTimeUtc -Descending |
+            Select-Object -First 1
+
+          $setup = Get-ChildItem -Path . -Recurse -File -Filter setup.exe |
+            Where-Object { $_.FullName -notmatch "\\.git\\|\\dist\\" } |
+            Sort-Object LastWriteTimeUtc -Descending |
+            Select-Object -First 1
+
+          if ($null -eq $main) { throw "main.exe was not produced by the build" }
+          if ($null -eq $setup) { throw "setup.exe was not produced by the build" }
+
+          Copy-Item -LiteralPath $main.FullName -Destination "dist/main.exe" -Force
+          Copy-Item -LiteralPath $setup.FullName -Destination "dist/setup.exe" -Force
+
+          Get-Item -LiteralPath "dist/main.exe", "dist/setup.exe" |
+            Select-Object Name, Length, LastWriteTimeUtc
+
+      - name: Create or update GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag dist/main.exe dist/setup.exe --clobber
+          } else {
+            gh release create $tag dist/main.exe dist/setup.exe `
+              --title "ITU Course Picker $tag" `
+              --generate-notes
+          }
