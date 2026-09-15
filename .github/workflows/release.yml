@@ -10,7 +10,8 @@ permissions:
 
 jobs:
   release:
-    runs-on: windows-latest
+    # Pin the image so the requested VS 2022 generator remains available.
+    runs-on: windows-2022
 
     steps:
       - name: Check out source
