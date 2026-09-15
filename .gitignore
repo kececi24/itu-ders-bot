@@ -1,0 +1,5 @@
+.env
+*.exe
+/data/config.json
+.agents
+/build

@@ -1,0 +1,18 @@
+{
+    "courses": {
+        "crn": [
+            "10000"
+        ],
+        "scrn": []
+    },
+    "time": {
+        "day": 17,
+        "hour": 14,
+        "lead_millisecond": 60,
+        "millisecond": 0,
+        "minute": 0,
+        "month": 9,
+        "second": 0,
+        "year": 2026
+    }
+}
