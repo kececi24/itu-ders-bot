@@ -1,3 +1,5 @@
+#define NOMINMAX
+
 #include "clock.hpp"
 #include <iostream>
 #include <iomanip>
