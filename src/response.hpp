@@ -29,6 +29,7 @@ const std::map<std::string, std::string> RESULT_MESSAGES = {
     {"VAL19", "CRN {} önlisans dersi olduğundan dolayı alınamadı."},
     {"VAL20", "Dönem başına sadece 1 ders bırakabilirsiniz."},
     {"VAL21", "İşlem sırasında bir hata oluştu."},
+    {"VAL22", "Şu anki ders kayıt zamanı içerisinde CRN {} daha önce CC ve üstü harf notu alındığı için bu ders yükseltmeye alınamadı."},
     {"CRNListEmpty", "CRN {} listesi boş göründüğünden alınamadı."},
     {"CRNNotFound", "CRN {} bulunamadığından dolayı alınamadı."},
     {"ERRLoad", "Sistem geçici olarak yanıt vermiyor."},
