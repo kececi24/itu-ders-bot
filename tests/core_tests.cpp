@@ -92,6 +92,11 @@ int main() {
             check(steady_sim-steady==std::chrono::seconds(3),"wall jumps do not move steady deadline");
         }
         clock.wait_until(2000,1,1,0,0);
+        {
+            itu::platform::TimingGuard guard;
+            guard.activate();
+            guard.activate();
+        }
         std::cout << "Core and clock tests passed.\n";
     } catch(const std::exception& e) { std::cerr<<e.what()<<'\n'; return 1; }
 }

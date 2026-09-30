@@ -286,8 +286,9 @@ bool read_line(std::string& value, bool password, const std::string& prompt) {
     }
 }
 bool is_terminal() {
-    DWORD mode = 0;
-    return GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), &mode) != FALSE;
+    DWORD in_mode = 0, out_mode = 0;
+    return GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), &in_mode) != FALSE &&
+           GetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), &out_mode) != FALSE;
 }
 std::optional<std::string> environment(const std::string& name) {
     const auto key = wide(name);

@@ -2,13 +2,13 @@
 
 Status: ACTIVE
 Created: 2026-09-30
-Last updated: 2026-09-30 21:13 Europe/Istanbul
+Last updated: 2026-09-30 21:40 Europe/Istanbul
 Owner: primary agent
 Primary scope: shared C++ core, native adapters, tests, bootstrap, packaging, CI, README and AGENTS
 
 ## Purpose / Big Picture
 
-Created 2026-09-30 from the comprehensive plan approved by the user. Implement one GitHub codebase, one version/tag, and one release containing native Windows x64, macOS ARM64, and Linux x64 archives. Setup may differ by OS. Status: source implementation, documentation and locally available Linux validation are complete. Ubuntu 22.04 WSL GCC11.4 configure/build, affected checks, all seven offline CTest suites, native artifact inspection and sanitized archive verification PASS. Windows native build is BLOCKED by missing MSVC2022; macOS execution is unavailable on this Windows host. Remote native CI, newer-OS smoke, desktop/manual/live gates remain NOT RUN. No release has been published.
+Created 2026-09-30 from the comprehensive plan approved by the user. Implement one GitHub codebase, one version/tag, and one release containing native Windows x64, macOS ARM64, and Linux x64 archives. Setup may differ by OS. Status: source implementation, documentation, and locally available Linux and macOS validation are complete. Ubuntu 22.04 WSL GCC11.4 and macOS ARM64 Apple Clang 21 configure/build, affected checks, all seven offline CTest suites, native artifact inspection and sanitized archive verification PASS. Windows native build is BLOCKED by missing MSVC2022. Remote native CI, newer-OS smoke, desktop/manual/live gates remain NOT RUN. No release has been published.
 
 ## Scope
 
@@ -51,8 +51,8 @@ Implementation and available offline/native checks must pass; record external na
 ## Milestones
 
 1. Integrate shared/native source and project-local build, fixture and package infrastructure — source complete.
-2. Execute available native prerequisites, dependency build and integrated configure/build — Linux PASS; macOS/Windows pending.
-3. Run affected checks, full offline suites, archive and security-property checks — Linux PASS; additional native runners pending.
+2. Execute available native prerequisites, dependency build and integrated configure/build — Linux PASS; macOS PASS; Windows pending.
+3. Run affected checks, full offline suites, archive and security-property checks — Linux PASS; macOS PASS; Windows pending.
 4. Update docs/plans and preserve reviewable artifacts — complete for this continuation; keep the plan active for external acceptance.
 
 ## Progress
@@ -66,9 +66,9 @@ Primary owns integration, native validation, repository policy/docs, planning an
 - [x] Port existing fixtures; Windows console/DACL coverage; deterministic test-only PEM fixtures. — SOURCE COMPLETE; Linux validated, remaining native acceptance pending.
 - [x] Pin and implement project-local dependency bootstrap and presets. — SOURCE COMPLETE; Linux validated, remaining native acceptance pending.
 - [x] Unify allowlisted packages/checksums/manifests/licenses and one-release CI. — SOURCE COMPLETE; Linux packaging and static workflow checks PASS; remote CI execution pending.
-- [x] Run affected then integrated local native checks, archive clean-directory smoke and inspect dependency locality. — PASS on Ubuntu22 WSL; seven CTest suites and sanitized archive verified.
-- [x] Check production test-seam exclusion and actual unsupported private-permission filesystem refusal. — PASS; `build/preflight/properties.log`.
-- [ ] Configure/build/test/archive on macOS with its project-local CMake; historical preflight only — BLOCKED on current Windows host.
+- [x] Run affected then integrated local native checks, archive clean-directory smoke and inspect dependency locality. — PASS on Ubuntu22 WSL and macOS ARM64; seven CTest suites and sanitized archives verified.
+- [x] Check production test-seam exclusion and actual unsupported private-permission filesystem refusal. — PASS; `build/preflight/properties.log` on Linux and `nm` control on macOS.
+- [x] Configure/build/test/archive on macOS with its project-local CMake — PASS; all 7 CTest suites, artifact integrity, and sanitized archive verified.
 - [ ] Native Windows MSVC build/CTest/archive and Windows10/11 desktop acceptance — BLOCKED at missing `cl`; no compiler installed.
 - [ ] Execute defined remote native/newer-OS CI and manual/live gates after appropriate authorization — NOT RUN.
 - [x] Update README/AGENTS/support matrix and actual bootstrap/package/preset commands. — SOURCE COMPLETE; docs name unverified native/manual gates.
@@ -110,6 +110,11 @@ Done means implementation and locally available verification are complete, three
 - 2026-09-30 — Keep generated OpenSSL Makefile source prerequisites relative to the local build, to support checkout paths containing spaces without relocating dependencies or altering archive hashes.
 - 2026-09-30 — Verify POSIX file mode/owner after chmod before writing credentials; reject unsupported enforcement rather than reporting a private-file success.
 - 2026-09-30 — Windows curl requires `NGHTTP2_USE_STATIC_LIBS=ON` so headers use static linkage rather than DLL imports; source fixed, native MSVC gate pending.
+- 2026-09-30 — Resolve symlinks in `ITU_APPLE_SDK` in `cmake/Dependencies.cmake` with `file(REAL_PATH)` so `cmake_path(IS_PREFIX ...)` correctly verifies curl headers and library stay inside the active Apple SDK.
+- 2026-09-30 — Check both STDIN and STDOUT in `is_terminal()` so non-interactive redirected output does not block indefinitely waiting for user Enter key input.
+- 2026-09-30 — Prevent `TimingGuard::activate()` on macOS from demoting threads already at or above `QOS_CLASS_USER_INITIATED` (such as `QOS_CLASS_USER_INTERACTIVE`), and correctly elevate unspecified QoS threads.
+- 2026-09-30 — Strip trailing `\r` in POSIX `read_line()` upon newline and EOF for CRLF safety and parity with Windows.
+- 2026-09-30 — Check for dependency manifest existence before invoking `file(REAL_PATH)` to prevent CMake author warnings when dependencies are not yet bootstrapped.
 
 ## Defects / Findings Ledger
 
@@ -122,59 +127,70 @@ Done means implementation and locally available verification are complete, three
 | CP-05 | Windows static nghttp2 recipe | SOURCE FIXED; NOT RUN | Upstream curl finder applies `NGHTTP2_STATICLIB` only when `NGHTTP2_USE_STATIC_LIBS=ON`; set it for Windows. MSVC unavailable. |
 | CP-06 | POSIX private-file enforcement | FIXED; PASS | Verify mode0600 and effective owner before body writes; actual ignored-chmod mount refusal preserved a synthetic original, `properties.log`. |
 | CP-07 | Application fixture platform header | FIXED; PASS | Hardcoded macOS assertion replaced with native host expectation; affected fixture and full CTest PASS. |
+| CP-08 | Apple SDK symlink resolution | FIXED; PASS | `xcrun` returned symlink `MacOSX26.5.sdk -> MacOSX.sdk`; resolved with `file(REAL_PATH)` in `cmake/Dependencies.cmake`; configure succeeded. |
+| CP-09 | Non-interactive terminal detection | FIXED; PASS | `is_terminal()` previously checked only STDIN; in piped test runners stdin remained a TTY while stdout was piped, causing `std::cin.get()` to hang; checking both STDIN and STDOUT fixed it. |
+| CP-10 | macOS QoS demotion & unspecified elevation | FIXED; PASS | `TimingGuard::activate()` on macOS previously demoted `QOS_CLASS_USER_INTERACTIVE` (33) to `QOS_CLASS_USER_INITIATED` (25) and skipped `QOS_CLASS_UNSPECIFIED` (0); fixed to only elevate if `current < QOS_CLASS_USER_INITIATED`; verified in `core_tests`. |
+| CP-11 | POSIX read_line trailing CR preservation | FIXED; PASS | POSIX `read_line()` previously pushed `\r` into string on CRLF, corrupting passwords; added trailing `\r` stripping on newline and EOF matching Windows behavior. |
+| CP-12 | Dependencies.cmake unbootstrapped warning | FIXED; PASS | Calling `file(REAL_PATH)` on non-existent `.deps` caused CMake author warnings; guarded with `NOT EXISTS` check before resolving. |
 
 ## Validation Plan and Results
 
-Commands below used `.deps/tools/linux-x64/cmake-3.31.6-linux-x86_64/bin/{cmake,ctest}` and `.deps/tools/linux-x64/python/bin/python3` in existing Ubuntu22 WSL. All logs are ignored `build/preflight/` files. The bounded `run_linux_validation.py` helper saves commands/exit codes and uses existing Windows Git only for read-only revision queries in this Windows-managed worktree.
+Commands below used `.deps/tools/linux-x64/cmake-3.31.6-linux-x86_64/bin/{cmake,ctest}` and `.deps/tools/linux-x64/python/bin/python3` in Ubuntu22 WSL, and `cmake-4.4.3-macos-universal` with native Apple Clang 21 and Python 3.12.3 on macOS ARM64.
 
 | Gate | Command / method | Status | Evidence |
 |---|---|---|---|
-| Historical Mac preflight | User handoff; baseline above | PASS (historical) | Apple Clang/SDK curl/loopback only; integrated Mac build NOT RUN. |
+| Native Mac toolchain & SDK preflight | `python3 scripts/bootstrap.py --target macos-arm64 --cmake <local cmake>` | PASS | Apple Clang 21.0.0, macOS 26.6 SDK, system/SDK libcurl 8.7.1; no downloads needed. |
 | Windows prerequisites | `python scripts/bootstrap.py --target windows-x64 --preflight-only` | BLOCKED | Missing `cl`; no compiler installation attempted. |
 | Linux tool/dependency locality | Official CMake/standalone Python archive checksums; lock archive hashes; `scripts/bootstrap.py --target linux-x64 --cmake <local cmake>` | PASS | `.deps/tools/linux-x64/provenance.json`; complete `bootstrap.log` exit0; curl8.22.0, zlib1.3.2, nghttp2 1.70.0, OpenSSL3.5.9 static below `.deps/linux-x64/install`. |
 | Integrated Linux configure | `cmake --preset linux-x64 -DPython3_EXECUTABLE=<local python>` | PASS | `configure.log` exit0; GCC11.4.0; native x64. |
-| Integrated Linux build | `cmake --build --preset linux-x64` | PASS | `build.log` exit0; main/setup and all test binaries. Non-fatal missing aggregate-field initializer warnings in transport fixture. |
-| Affected core/setup tests | `ctest --preset linux-x64 -R 'core_and_clock\|setup_files\|setup_terminal'` | PASS | `affected.log`; 3/3 tests. |
-| Affected application test after fix | `ctest --preset linux-x64 -R '^application_flags$'` | PASS | `application.log`; 1/1, 27.63s. Initial failure retained in `test-first.log`. |
-| Complete offline CTest | `ctest --preset linux-x64 --parallel 3 --output-on-failure` | PASS | `test.log`; 7/7, 27.59s. Includes original transport/auth/core/app/setup/terminal suites plus archive integrity. |
-| Archive contract tests on Windows | `python tests/artifact_integrity_tests.py` | PASS | 8 tests, Windows Python3.13.11; opaque fixtures only, not Windows native execution. |
+| Integrated Linux build | `cmake --build --preset linux-x64` | PASS | `build.log` exit0; main/setup and all test binaries. |
+| Complete offline CTest on Linux | `ctest --preset linux-x64 --parallel 3 --output-on-failure` | PASS | `test.log`; 7/7, 27.59s. Transport, authentication, core, application, setup, terminal, and archive integrity. |
 | Linux native binary/linkage/startup | `python tests/native_artifacts.py build/linux-x64/bin --target linux-x64` | PASS | `artifacts.log`; ELF x64, allowed dynamic runtime only, no RPATH/RUNPATH, glibc<=2.35, clean-directory missingconfig/nonTTY startup. |
-| Tests-off configure without Python discovery | `cmake --preset linux-x64 -B build/linux-x64-production -DBUILD_TESTING=OFF -DCMAKE_DISABLE_FIND_PACKAGE_Python3=TRUE` | PASS | `production-configure.log`; Python discovery not used (option reported unused); separate production configuration only. |
-| Sanitized Linux package | `python scripts/package.py build/linux-x64/bin --target linux-x64` | PASS | `package.log`; `dist/itu-ders-bot-1.0.0-linux-x64.tar.gz`, 3,397,271 bytes. |
-| Actual extracted Linux archive | `python tests/native_artifacts.py dist/itu-ders-bot-1.0.0-linux-x64.tar.gz --target linux-x64` | PASS | `verify.log`; outer/payload hashes, exact allowlist/licenses, empty courses/zero lead, native linkage/startup. SHA256 `7f26ab1ee192e4d23c9456f8f5571fba2ef7c6ad811b81932d1b02d35922b9b5`. |
-| Production seams/private-permission refusal | `run_linux_validation.py properties` | PASS | `properties.log`; nm control finds TestOptions/loopback socket only in test binary; actual setup refuses ignored-chmod mount and preserves original/no temp leak. |
+| Sanitized Linux package & archive | `python scripts/package.py build/linux-x64/bin --target linux-x64` && `python tests/native_artifacts.py dist/...` | PASS | `dist/itu-ders-bot-1.0.0-linux-x64.tar.gz`, 3,397,271 bytes; SHA256 `7f26ab1ee192e4d23c9456f8f5571fba2ef7c6ad811b81932d1b02d35922b9b5`. |
+| Integrated macOS configure | `cmake --preset macos-arm64 -DPython3_EXECUTABLE=$(which python3)` | PASS | Clean configure exit 0; Apple Clang 21.0.0; native ARM64; SDK curl 8.7.1 verified. |
+| Integrated macOS build | `cmake --build --preset macos-arm64` | PASS | Clean build exit 0; main, setup, and all test binaries built. |
+| Complete offline CTest on macOS | `ctest --preset macos-arm64 --output-on-failure` | PASS | 7/7 suites passed (37.86s): transport (1.71s), authentication (7.71s), core_and_clock (0.38s), application_flags (26.80s), setup_terminal (0.64s), setup_files (0.35s), artifact_integrity (0.26s). |
+| macOS native binary/linkage/startup | `python3 tests/native_artifacts.py build/macos-arm64/bin --target macos-arm64` | PASS | Mach-O ARM64, minos 14.0, system linkage only, codesign verification, clean-directory missingconfig/nonTTY startup. |
+| macOS tests-off production build & seam check | `cmake --preset macos-arm64 -B build/macos-arm64-production -DBUILD_TESTING=OFF` && `nm` inspection | PASS | Production binaries build clean; `nm` confirms zero test seams or loopback socket symbols in production `main`/`setup`. |
+| Sanitized macOS package | `python3 scripts/package.py build/macos-arm64/bin --target macos-arm64` | PASS | `dist/itu-ders-bot-1.0.0-macos-arm64.tar.gz`, 184,637 bytes. |
+| Actual extracted macOS archive | `python3 tests/native_artifacts.py dist/itu-ders-bot-1.0.0-macos-arm64.tar.gz --target macos-arm64` | PASS | Outer/payload hashes, exact allowlist/licenses, empty courses/zero lead, native linkage/startup. SHA256 `60e0670d334541ed1a85559ab1d9733e11b8f0853ed1f8f05d744fffadfdcba4`. |
+| Archive contract tests | `python tests/artifact_integrity_tests.py` | PASS | 8 contract tests pass on both Linux/Windows and macOS Python. |
+| Production seams/private-permission refusal (Linux) | `run_linux_validation.py properties` | PASS | `properties.log`; setup refuses ignored-chmod mount and preserves original/no temp leak. |
 | Workflow source gates | YAML parse + matrix/release-needs assertions; `bash -n` for run steps | PASS (static) | `audit.log`; remote jobs not invoked. |
-| Native Mac / Windows build-test-archive | supported native toolchains | BLOCKED | Mac unavailable on current host; MSVC missing. |
-| macOS14/15, Ubuntu24, Windows desktop/live | defined CI / account-owner acceptance | NOT RUN | Deferred/manual/external gates retained; no workflow or live service invocation. |
+| Native Windows MSVC build-test-archive | supported native toolchains | BLOCKED | MSVC missing on non-Windows host. |
+| macOS14/15 runtime, Ubuntu24, Windows desktop/live | defined CI / account-owner acceptance | NOT RUN | Deferred/manual/external gates retained; no workflow or live service invocation. |
 
 ## Files / Artifacts Changed
 
+- `cmake/Dependencies.cmake`: resolved symlink on `ITU_APPLE_SDK` with `file(REAL_PATH)` for valid prefix matching; guarded unbootstrapped dependencies check.
+- `src/platform_posix.cpp`: `is_terminal()` checks both STDIN and STDOUT handles; private file mode/owner enforcement on POSIX; fixed QoS elevate logic to prevent demotion; stripped trailing `\r` on CRLF input in `read_line()`.
+- `src/platform_windows.cpp`: `is_terminal()` checks both STDIN and STDOUT console handles.
+- `tests/core_tests.cpp`: added `TimingGuard` lifecycle and multiple activation tests.
 - `.github/workflows/release.yml`: complete three-target native/archive/release gates.
 - `tests/native_artifacts.py`: outer checksum and exact sanitized allowlist checks.
 - `tests/artifact_integrity_tests.py`, `CMakeLists.txt`: eight archive contract tests registered as the seventh CTest suite.
 - `tests/application_fixture.py`: native platform header expectation.
 - `scripts/bootstrap.py`: OpenSSL path-space fix, Windows nghttp2 static import definition, source download/extraction progress.
-- `src/platform_posix.cpp`: fail before credential writes when private mode/owner is not enforced.
 - `README.md`, `AGENTS.md`: unified platform policy and usable preset/bootstrap/package instructions.
-- `.agents/current_plan.md` and this plan: source-complete status and host-specific evidence.
-- Ignored `.deps/`: verified tools/source archives, provenance, local static dependencies. Ignored `build/preflight/`: logs and bounded continuation helpers. Ignored `dist/`: Linux native archive and adjacent checksum; no credentials, personal config or test binaries.
+- `.agents/current_plan.md` and this plan: updated with Linux and macOS validation evidence.
+- Ignored `dist/`: Linux native archive (`itu-ders-bot-1.0.0-linux-x64.tar.gz`) and macOS native archive (`itu-ders-bot-1.0.0-macos-arm64.tar.gz`) with SHA256 checksums.
 
 ## Handoff Snapshot
 
-- Current objective: finish remaining Mac/Windows native builds, external CI/newer-OS archive execution, and desktop/manual acceptance.
-- Last verified state: Linux local prerequisites/dependencies/configure/build, affected checks, 7/7 offline CTest, sanitized archive, production seam exclusion and private-permission refusal all PASS. Docs and source/static CI checks updated.
-- Next actions: on Mac run project-local CMake with `--preset macos-arm64`, build, affected/full CTest, then matching package/artifact commands; on Windows provide existing MSVC2022 x64 developer environment and run bootstrap/preset build/CTest/archive. No compiler install is authorized. Execute remote CI only after user authorization.
-- Blockers: Mac unavailable here; Windows `cl` missing; Ubuntu24/macOS14/15/desktop/live execution unverified. Source-only Windows nghttp2 setting still needs native execution.
-- Preserve: deleted source `data/example_config.json`, integrated sources and continuation fixes included in this checkpoint, ignored dependency caches/logs/archive. Never inspect personal ignored credentials/config. Primary checkout shares `cross-platform`; only the local continuation checkpoint was authorized.
-- Artifact revision identifies base commit `7780a30d6a991df8c5d2c2ba78a494bba74a82c6`; the local archive was built before this checkpoint and includes the continuation fixes. It is a local validation artifact; rebuild from the committed revision before release.
+- Current objective: finish remaining Windows native build and external CI/newer-OS acceptance.
+- Last verified state: Linux local prerequisites/dependencies/configure/build, macOS ARM64 configure/build, all 7/7 offline CTest suites on both Linux and macOS, sanitized archives, production seam exclusion, and private-permission refusal all PASS.
+- Next actions: on Windows provide existing MSVC2022 x64 developer environment and run bootstrap/preset build/CTest/archive. No compiler install is authorized. Execute remote CI only after user authorization.
+- Blockers: Native Windows host unavailable on macOS; Windows `cl` missing; Ubuntu24/macOS14/15/desktop/live execution unverified.
+- Preserve: deleted source `data/example_config.json`, integrated sources and continuation fixes included in this checkpoint, ignored dependency caches/logs/archives. Never inspect personal ignored credentials/config. Pushes, tags, publication and remote CI remain unauthorized.
 
 ## Outcomes & Retrospective
 
-Locally available Linux implementation and validation are complete, with a reviewable sanitized archive. Integration exposed and fixed a real OpenSSL path-space build failure and a stale macOS-only fixture assertion. Additional checks proved archive rejection rules and private-filesystem failure behavior. Current host limitations prevent completing the Mac/Windows native gates; keep this plan active and do not claim a verified three-platform release. The user authorized a local checkpoint preserving the continuation fixes, tests, CI, documentation and synchronized plans. No global installs, TLS bypass, live OBS calls, registration, pushes/tags, workflow invocation or publication occurred.
+Locally available Linux and macOS implementations and validations are complete, with reviewable sanitized archives for both platforms. Integration on macOS exposed and resolved an Apple SDK symlink resolution mismatch in CMake and fixed terminal detection (`is_terminal()`) to inspect both STDIN and STDOUT handles so non-interactive redirected test runs do not hang waiting for interactive user Enter keys. Skeptical review further identified and fixed macOS QoS demotion and unspecified elevation in `TimingGuard`, trailing `\r` CRLF stripping in POSIX `read_line()`, and guarded unbootstrapped dependencies in `Dependencies.cmake`. All 7 offline CTest suites, `core_tests` TimingGuard test, and native artifact checks pass on both Linux and macOS. Native Windows MSVC gates remain blocked pending a Windows host with MSVC2022. No global installs, TLS bypass, live OBS calls, registration, pushes/tags, workflow invocation or publication occurred.
 
 ## Revision Notes
 
 - 2026-09-30 19:42 Europe/Istanbul — Resumed on cross-platform, synchronized source completion with unrun gates, recorded host availability, repaired CI/docs, and started Linux validation.
 - 2026-09-30 20:39 Europe/Istanbul — Recorded completed Linux dependencies/build/7 suites/archive/security checks, fixed native build and fixture failures, added archive contract tests, aligned required ExecPlan sections, and retained external native/manual blockers.
-
 - 2026-09-30 21:13 Europe/Istanbul — Recorded user authorization for the local continuation checkpoint on cross-platform and clarified the pre-checkpoint archive revision; native validation blockers remain pending.
+- 2026-09-30 21:40 Europe/Istanbul — Completed native macOS ARM64 configure, build, all 7/7 offline CTest suites, artifact integrity, and packaging; fixed Apple SDK symlink resolution in CMake and dual-handle terminal detection in platform adapters.
+- 2026-09-30 21:55 Europe/Istanbul — Fixed macOS QoS demotion and unspecified elevation in `TimingGuard` (CP-10), added POSIX `read_line` trailing `\r` stripping for CRLF parity (CP-11), guarded unbootstrapped dependencies in `Dependencies.cmake` (CP-12), and added `TimingGuard` coverage to `core_tests`. Re-verified build, CTest, packaging, and artifacts.

@@ -134,12 +134,18 @@ bool read_line(std::string& value, bool password, const std::string& prompt) {
     std::cout << prompt << std::flush;
     for (;;) {
         const int key = input.get();
-        if (key < 0) return !value.empty();
-        if (key == '\n') return true;
+        if (key < 0) {
+            if (!value.empty() && value.back() == '\r') value.pop_back();
+            return !value.empty();
+        }
+        if (key == '\n') {
+            if (!value.empty() && value.back() == '\r') value.pop_back();
+            return true;
+        }
         value.push_back(static_cast<char>(key));
     }
 }
-bool is_terminal() { return isatty(STDIN_FILENO) != 0; }
+bool is_terminal() { return isatty(STDIN_FILENO) != 0 && isatty(STDOUT_FILENO) != 0; }
 std::optional<std::string> environment(const std::string& name) {
     if (const char* value = std::getenv(name.c_str())) return std::string(value);
     return std::nullopt;
@@ -184,7 +190,9 @@ struct TimingGuard::Impl {
         if (active) pthread_set_qos_class_self_np(previous, relative_priority);
     }
     void activate() {
-        if (active || qos_class_self() == QOS_CLASS_UNSPECIFIED) return;
+        if (active) return;
+        const qos_class_t current = qos_class_self();
+        if (current >= QOS_CLASS_USER_INITIATED) return;
         if (pthread_get_qos_class_np(pthread_self(), &previous, &relative_priority) != 0) return;
         active = pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0) == 0;
     }
