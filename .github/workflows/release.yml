@@ -1,4 +1,4 @@
-name: macOS Build, Test and Release
+name: Native Build, Test and Release
 
 on:
   push:
@@ -9,67 +9,116 @@ permissions:
 
 jobs:
   native:
-    # Standard macos-14 and macos-15 labels are ARM64; also assert at runtime.
-    # https://docs.github.com/en/actions/reference/runners/github-hosted-runners
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, macos-15]
+        include:
+          - os: windows-2022
+            target: windows-x64
+          - os: macos-14
+            target: macos-arm64
+          - os: ubuntu-22.04
+            target: linux-x64
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      ITU_TARGET: ${{ matrix.target }}
+      RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+        with:
+          arch: x64
       - name: Verify native toolchain
         run: |
-          test "$(uname -m)" = arm64
-          clang++ --version | grep 'Apple clang'
           cmake --version
-          python3 --version
+          python --version
+          if [[ "$ITU_TARGET" == macos-arm64 ]]; then
+            test "$(uname -m)" = arm64
+            clang++ --version | grep 'Apple clang'
+          fi
+          python scripts/bootstrap.py --target "$ITU_TARGET" --preflight-only
+      - name: Build verified project-local dependencies
+        if: runner.os != 'macOS'
+        run: python scripts/bootstrap.py --target "$ITU_TARGET"
       - name: Configure and build
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0
-          cmake --build build --parallel 3
+          cmake --preset "$ITU_TARGET"
+          cmake --build --preset "$ITU_TARGET"
       - name: Offline verification
         run: |
-          ctest --test-dir build --output-on-failure --parallel 3
-          python3 tests/native_artifacts.py build/bin
-      - name: Package on oldest supported OS
-        if: matrix.os == 'macos-14'
-        run: python3 scripts/package.py
+          ctest --preset "$ITU_TARGET" --parallel 3
+          python tests/native_artifacts.py "build/$ITU_TARGET/bin" --target "$ITU_TARGET"
+      - name: Package and verify extracted archive
+        run: |
+          args=("build/$ITU_TARGET/bin" --target "$ITU_TARGET")
+          if [[ -n "$RELEASE_TAG" ]]; then args+=(--tag "$RELEASE_TAG"); fi
+          python scripts/package.py "${args[@]}"
+          extension=tar.gz
+          if [[ "$ITU_TARGET" == windows-x64 ]]; then extension=zip; fi
+          archives=(dist/*-"$ITU_TARGET"."$extension")
+          test "${#archives[@]}" = 1
+          python tests/native_artifacts.py "${archives[0]}" --target "$ITU_TARGET"
       - uses: actions/upload-artifact@v4
-        if: matrix.os == 'macos-14'
         with:
-          name: macos-arm64-release
+          name: ${{ matrix.target }}-release
           path: dist/*
           if-no-files-found: error
 
   archive-smoke:
     needs: native
-    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            target: macos-arm64
+          - os: ubuntu-24.04
+            target: linux-x64
+    runs-on: ${{ matrix.os }}
+    env:
+      ITU_TARGET: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - uses: actions/download-artifact@v4
         with:
-          name: macos-arm64-release
+          name: ${{ matrix.target }}-release
           path: dist
-      - name: Verify macOS 14 archive on macOS 15
+      - name: Verify identical archive on newer supported OS
+        shell: bash
         run: |
-          cd dist
-          shasum -a 256 -c itu-ders-bot-macos-arm64.tar.gz.sha256
-          cd ..
-          python3 tests/native_artifacts.py dist/itu-ders-bot-macos-arm64.tar.gz
+          python tests/native_artifacts.py dist/*-"$ITU_TARGET".tar.gz --target "$ITU_TARGET"
 
   release:
     if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push'
     needs: [native, archive-smoke]
-    runs-on: macos-15
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - uses: actions/download-artifact@v4
         with:
-          name: macos-arm64-release
+          pattern: '*-release'
+          merge-multiple: true
           path: dist
-      - name: Publish verified archive
+      - name: Verify all three archives and aggregate checksums
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python scripts/release_checksums.py dist --tag "$RELEASE_TAG"
+      - name: Publish one release with all verified archives
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}

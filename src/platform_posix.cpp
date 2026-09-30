@@ -152,7 +152,11 @@ bool atomic_write_private(const std::filesystem::path& path, const std::string& 
     temporary.push_back('\0');
     int fd = mkstemp(temporary.data());
     if (fd < 0) return false;
-    bool written = fchmod(fd, S_IRUSR | S_IWUSR) == 0;
+    struct stat permissions{};
+    // Some mounted filesystems accept chmod but do not enforce its mode.
+    // Refuse the replacement before writing credentials in that case.
+    bool written = fchmod(fd, S_IRUSR | S_IWUSR) == 0 && fstat(fd, &permissions) == 0 &&
+                   (permissions.st_mode & 0777) == (S_IRUSR | S_IWUSR) && permissions.st_uid == geteuid();
     size_t offset = 0;
     while (written && offset < contents.size()) {
         const ssize_t count = write(fd, contents.data() + offset, contents.size() - offset);

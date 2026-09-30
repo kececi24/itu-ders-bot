@@ -83,6 +83,11 @@ def smoke(root, target):
 
 
 def archive(path, requested):
+    checksum = path.with_name(path.name + '.sha256').read_text(encoding='utf-8').splitlines()
+    assert len(checksum) == 1, 'one outer archive checksum required'
+    digest, name = checksum[0].split('  ', 1)
+    assert name == path.name and re.fullmatch(r'[0-9a-f]{64}', digest), 'invalid outer checksum entry'
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == digest, 'outer archive checksum mismatch'
     with tempfile.TemporaryDirectory(prefix='itu-archive-ü-') as folder:
         destination = Path(folder)
         if zipfile.is_zipfile(path):
@@ -110,7 +115,15 @@ def archive(path, requested):
         mandatory = {'main'+suffix,'setup'+suffix,'data/example_config.json','README.md','build-manifest.json','SHA256SUMS'}
         assert mandatory <= actual, ('missing archive entries',mandatory-actual)
         extras = actual - mandatory
-        assert extras and all(name.startswith('licenses/') for name in extras), ('archive allowlist',extras)
+        licenses = {'licenses/nlohmann-json.txt'}
+        if target != 'macos-arm64':
+            licenses |= {'licenses/curl.txt', 'licenses/nghttp2.txt', 'licenses/zlib.txt'}
+        if target == 'linux-x64': licenses.add('licenses/openssl.txt')
+        assert extras == licenses, ('archive allowlist', extras)
+        example = json.loads((root/'data/example_config.json').read_text(encoding='utf-8'))
+        assert set(example) == {'time', 'courses'}, 'unexpected example configuration keys'
+        assert example['courses'] == {'crn': [], 'scrn': []}, 'archive courses must be empty'
+        assert example['time']['lead_millisecond'] == 0, 'archive lead must be zero'
         checks = {}
         for line in (root/'SHA256SUMS').read_text(encoding='utf-8').splitlines():
             digest,relative=line.split('  ',1)

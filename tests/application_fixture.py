@@ -3,6 +3,7 @@ import http.server
 import itertools
 import json
 import os
+import platform
 from pathlib import Path
 import subprocess
 import sys
@@ -30,6 +31,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.close_connection = True
 
 binary=str(Path(sys.argv[1]).resolve())
+expected_platform = {'Darwin': '"macOS"', 'Windows': '"Windows"', 'Linux': '"Linux"'}[platform.system()]
 with http.server.ThreadingHTTPServer(('127.0.0.1',0),Handler) as server, tempfile.TemporaryDirectory(prefix="itu-application-ü-") as folder:
     server.posts=[]; server.heads=0; server.status=200; server.incomplete=False
     server.response=b'{"ecrnResultList":[{"crn":"001","resultCode":"successResult"}]}'
@@ -54,7 +56,7 @@ with http.server.ThreadingHTTPServer(('127.0.0.1',0),Handler) as server, tempfil
             assert path=='/api/ders-kayit/v21'
             assert payload=={'ECRN':['001','002'],'SCRN':['003']}
             assert headers['Authorization']=='Bearer fixture.header.signature'
-            assert headers['sec-ch-ua-platform']=='"macOS"'
+            assert headers['sec-ch-ua-platform'] == expected_platform, headers['sec-ch-ua-platform']
     # Future targets prove the branch behavior that past-target smoke cases
     # cannot exercise. Only wall/scheduled waits are faked; HTTP stays loopback.
     future_config = {'time': {'year': 2030, 'month': 1, 'day': 1, 'hour': 0,

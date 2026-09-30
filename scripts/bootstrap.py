@@ -38,6 +38,7 @@ def require(program):
 def archive_source(name, spec, cache, sources):
     archive = cache / Path(spec["url"]).name
     if not archive.exists():
+        print(f"Downloading pinned {name} {spec['version']}...", flush=True)
         temporary = archive.with_suffix(archive.suffix + ".partial")
         try:
             # Default TLS verification is mandatory. Fail once; never retry insecurely.
@@ -56,6 +57,7 @@ def archive_source(name, spec, cache, sources):
         if not marker.exists() or marker.read_text().strip() != spec["sha256"]:
             raise RuntimeError(f"Unverified existing source directory: {source}")
         return source
+    print(f"Verified {name} {spec['version']}; extracting project-local sources...", flush=True)
     with tempfile.TemporaryDirectory(dir=sources, prefix="extract-") as temporary:
         with tarfile.open(archive) as tar:
             tar.extractall(temporary, filter="data")
@@ -148,6 +150,14 @@ def main():
         build.mkdir(parents=True, exist_ok=True)
         run(["perl", source["openssl"] / "Configure", "linux-x86_64", "no-shared", "no-tests", "no-module",
              f"--prefix={prefix}", "--libdir=lib", "--openssldir=/etc/ssl"], cwd=build)
+        # OpenSSL emits absolute, unescaped configuration prerequisites in its
+        # Makefile. Relative source paths keep checkouts with spaces buildable
+        # without moving dependencies or changing the verified source archive.
+        makefile = build / "Makefile"
+        generated = makefile.read_text(encoding="utf-8")
+        generated = generated.replace(str(source["openssl"]) + "/",
+                                      Path(os.path.relpath(source["openssl"], build)).as_posix() + "/")
+        makefile.write_text(generated, encoding="utf-8")
         run(["make", f"-j{args.jobs}"], cwd=build)
         run(["make", "install_sw"], cwd=build)
     # Explicit archive locations keep CMake from silently finding globally installed variants.
@@ -164,7 +174,10 @@ def main():
         f"-DZLIB_INCLUDE_DIR={prefix.as_posix()}/include", f"-DZLIB_LIBRARY={zlib.as_posix()}",
         f"-DNGHTTP2_INCLUDE_DIR={prefix.as_posix()}/include", f"-DNGHTTP2_LIBRARY={nghttp2.as_posix()}"]
     if windows:
-        options += ["-DCURL_USE_SCHANNEL=ON", "-DCURL_USE_OPENSSL=OFF", "-DENABLE_UNICODE=ON", "-DCURL_STATIC_CRT=ON"]
+        # curl's finder otherwise declares nghttp2 functions as DLL imports,
+        # even when NGHTTP2_LIBRARY explicitly points to the static archive.
+        options += ["-DNGHTTP2_USE_STATIC_LIBS=ON", "-DCURL_USE_SCHANNEL=ON", "-DCURL_USE_OPENSSL=OFF",
+                    "-DENABLE_UNICODE=ON", "-DCURL_STATIC_CRT=ON"]
     else:
         options += ["-DCURL_USE_OPENSSL=ON", "-DCURL_USE_SCHANNEL=OFF", "-DOPENSSL_USE_STATIC_LIBS=ON",
             f"-DOPENSSL_ROOT_DIR={prefix.as_posix()}", f"-DOPENSSL_INCLUDE_DIR={prefix.as_posix()}/include",
