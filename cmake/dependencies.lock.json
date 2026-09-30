@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-09-30",
+  "dependencies": {
+    "curl": {
+      "version": "8.22.0",
+      "url": "https://github.com/curl/curl/releases/download/curl-8_22_0/curl-8.22.0.tar.xz",
+      "sha256": "f7ef3ae8a22e521f289803fe93543eb64c329b58aa73a9e224dfd915a2a5f4f7",
+      "checksum_source": "https://github.com/curl/curl/releases/expanded_assets/curl-8_22_0",
+      "license_file": "COPYING"
+    },
+    "zlib": {
+      "version": "1.3.2",
+      "url": "https://zlib.net/zlib-1.3.2.tar.gz",
+      "sha256": "bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16",
+      "checksum_source": "https://zlib.net/",
+      "license_file": "LICENSE"
+    },
+    "nghttp2": {
+      "version": "1.70.0",
+      "url": "https://github.com/nghttp2/nghttp2/releases/download/v1.70.0/nghttp2-1.70.0.tar.xz",
+      "sha256": "e05cb1388eaca3830aded4ccf20044b6e1ac1a61411dcca11b0437c4285c8bc2",
+      "checksum_source": "https://github.com/nghttp2/nghttp2/releases/expanded_assets/v1.70.0",
+      "license_file": "COPYING"
+    },
+    "openssl": {
+      "version": "3.5.9",
+      "url": "https://github.com/openssl/openssl/releases/download/openssl-3.5.9/openssl-3.5.9.tar.gz",
+      "sha256": "603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a",
+      "checksum_source": "https://github.com/openssl/openssl/releases/expanded_assets/openssl-3.5.9",
+      "license_file": "LICENSE.txt"
+    }
+  }
+}

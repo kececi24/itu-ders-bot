@@ -3,7 +3,8 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
-#include <windows.h>
+#include <filesystem>
+#include <system_error>
 
 #include <include/nlohmann_json.hpp>
 #include <include/console.hpp>
@@ -18,20 +19,8 @@ std::string trim(const std::string& value) {
 }
 
 bool replace_file(const std::string& path, const std::string& contents) {
-    std::string temporary = path + ".tmp." + std::to_string(GetCurrentProcessId());
-    bool written = false;
-    {
-        std::ofstream file(temporary, std::ios::binary | std::ios::trunc);
-        if (file && (file << contents) && (file.flush())) written = true;
-    }
-    if (!written) {
-        std::cerr << "Failed to write: " << temporary << "\n";
-        DeleteFileA(temporary.c_str());
-        return false;
-    }
-    if (!MoveFileExA(temporary.c_str(), path.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
-        std::cerr << "Failed to replace: " << path << "\n";
-        DeleteFileA(temporary.c_str());
+    if (!itu::platform::atomic_write_private(std::filesystem::u8path(path), contents)) {
+        std::cerr << "Failed to replace: " << path << '\n';
         return false;
     }
     return true;
@@ -39,22 +28,10 @@ bool replace_file(const std::string& path, const std::string& contents) {
 
 bool encode_env_value(const std::string& value, std::string& encoded) {
     if (value.find('\r') != std::string::npos || value.find('\n') != std::string::npos) return false;
-    bool quoted = value.size() >= 2 &&
-        ((value.front() == '"' && value.back() == '"') ||
-         (value.front() == '\'' && value.back() == '\''));
-    if (trim(value) == value && !value.empty() && value[0] != '#' && !quoted) {
-        encoded = value;
-        return true;
-    }
-    if (value.find('"') == std::string::npos) {
-        encoded = '"' + value + '"';
-        return true;
-    }
-    if (value.find('\'') == std::string::npos) {
-        encoded = '\'' + value + '\'';
-        return true;
-    }
-    return false;
+    // The loader removes exactly one pair of outer quotes, without unescaping.
+    // Therefore inner quotes, backslashes and whitespace remain literal.
+    encoded = '\"' + value + '\"';
+    return true;
 }
 
 bool write_to_env(const std::string& path, const std::string& username, const std::string& password) {
@@ -63,8 +40,12 @@ bool write_to_env(const std::string& path, const std::string& username, const st
         std::cerr << "Credentials contain characters that cannot be represented in .env\n";
         return false;
     }
-    std::ifstream file(path);
-    if (!file && GetFileAttributesA(path.c_str()) != INVALID_FILE_ATTRIBUTES) {
+    const auto native_path = std::filesystem::u8path(path);
+    std::ifstream file(native_path);
+    std::error_code status_error;
+    const auto status = std::filesystem::symlink_status(native_path, status_error);
+    if (!file && (status.type() != std::filesystem::file_type::not_found ||
+                  (status_error && status_error != std::errc::no_such_file_or_directory))) {
         std::cerr << "Failed to read: " << path << "\n";
         return false;
     }
@@ -87,33 +68,12 @@ bool write_to_env(const std::string& path, const std::string& username, const st
     return replace_file(path, output.str());
 }
 
-struct EchoGuard {
-    HANDLE handle = GetStdHandle(STD_INPUT_HANDLE);
-    DWORD mode = 0;
-    bool changed = false;
-    EchoGuard() {
-        if (handle != INVALID_HANDLE_VALUE && GetConsoleMode(handle, &mode))
-            changed = SetConsoleMode(handle, mode & ~ENABLE_ECHO_INPUT) != 0;
-    }
-    ~EchoGuard() {
-        if (changed) SetConsoleMode(handle, mode);
-    }
-};
-
 bool update_user(const std::string& path) {
     std::string username, password;
     std::cout << "Enter your username: ";
-    if (!std::getline(std::cin, username)) return false;
+    if (!terminal::read_line(username)) return false;
     username = trim(username);
-    std::cout << "Enter your password: " << std::flush;
-    {
-        EchoGuard echo;
-        if (!echo.changed) {
-            std::cerr << "Unable to disable password echo\n";
-            return false;
-        }
-        if (!std::getline(std::cin, password)) return false;
-    }
+    if (!terminal::read_line(password, true, "Enter your password: ")) return false;
     std::cout << '\n';
     if (username.empty() || password.empty()) {
         std::cerr << "Username and password cannot be empty\n";
@@ -162,17 +122,17 @@ bool update_config(const std::string& path) {
     int millisecond = 0, lead_millisecond = 0;
     std::string date, time, lead_input, addlist, droplist;
     std::cout << "Enter date for course selection (YYYY/MM/DD): ";
-    if (!std::getline(std::cin, date) || !parse_date(date, year, month, day)) {
+    if (!terminal::read_line(date) || !parse_date(date, year, month, day)) {
         std::cerr << "Invalid date\n";
         return false;
     }
     std::cout << "Enter time of course selection (HH:MM:SS:MS): ";
-    if (!std::getline(std::cin, time) || !parse_time(time, hour, minute, second, millisecond)) {
+    if (!terminal::read_line(time) || !parse_time(time, hour, minute, second, millisecond)) {
         std::cerr << "Invalid time\n";
         return false;
     }
     std::cout << "Enter lead milliseconds (0 for none): ";
-    if (!std::getline(std::cin, lead_input)) return false;
+    if (!terminal::read_line(lead_input)) return false;
     std::istringstream lead_stream(lead_input);
     if (!(lead_stream >> lead_millisecond)) {
         std::cerr << "Invalid lead milliseconds\n";
@@ -184,9 +144,9 @@ bool update_config(const std::string& path) {
         return false;
     }
     std::cout << "Enter add CRNs (separate by comma): ";
-    if (!std::getline(std::cin, addlist)) return false;
+    if (!terminal::read_line(addlist)) return false;
     std::cout << "Enter drop CRNs (separate by comma): ";
-    if (!std::getline(std::cin, droplist)) return false;
+    if (!terminal::read_line(droplist)) return false;
 
     json data;
     data["time"] = {
@@ -202,7 +162,7 @@ bool update_config(const std::string& path) {
     return true;
 }
 
-int main(int argc, char** argv) {
+int run_setup(int argc, char** argv) {
     std::string configpath = "data/config.json";
     std::string envpath = ".env";
     for (int i = 1; i < argc; ++i) {
@@ -218,7 +178,7 @@ int main(int argc, char** argv) {
             return 1;
         }
     }
-    enable_ansi();
+    itu::platform::ConsoleSession console;
     std::vector<std::string> options = {
         "1. Update user credentials",
         "2. Update add/drop list and time",
@@ -228,4 +188,17 @@ int main(int argc, char** argv) {
     if (choice == 0) return update_user(envpath) ? 0 : 1;
     if (choice == 1) return update_config(configpath) ? 0 : 1;
     return 0;
+}
+
+int main(int argc, char** argv) {
+    try {
+        auto utf8 = itu::platform::arguments(argc, argv);
+        std::vector<char*> pointers;
+        for (auto& argument : utf8) pointers.push_back(argument.data());
+        return run_setup(static_cast<int>(pointers.size()), pointers.data());
+    }
+    catch (const std::exception& error) {
+        std::cerr << "Setup failed: " << error.what() << '\n';
+        return 1;
+    }
 }

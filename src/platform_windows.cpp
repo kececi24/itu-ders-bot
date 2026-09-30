@@ -1,0 +1,387 @@
+#include "include/platform.hpp"
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include <aclapi.h>
+#include <shellapi.h>
+#include <mmsystem.h>
+#include <immintrin.h>
+#include <algorithm>
+#include <atomic>
+#include <climits>
+#include <iostream>
+#include <stdexcept>
+
+namespace itu::platform {
+namespace {
+std::wstring wide(const std::string& value) {
+    if (value.empty()) return {};
+    if (value.size() > INT_MAX) throw std::runtime_error("UTF-8 value is too large");
+    const int size = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, value.data(),
+                                       static_cast<int>(value.size()), nullptr, 0);
+    if (!size) throw std::runtime_error("Invalid UTF-8 input");
+    std::wstring result(static_cast<size_t>(size), L'\0');
+    if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, value.data(),
+                            static_cast<int>(value.size()), result.data(), size))
+        throw std::runtime_error("Unable to convert UTF-8 input");
+    return result;
+}
+std::string utf8(const std::wstring& value) {
+    if (value.empty()) return {};
+    if (value.size() > INT_MAX) throw std::runtime_error("Unicode value is too large");
+    const int size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, value.data(),
+                                       static_cast<int>(value.size()), nullptr, 0, nullptr, nullptr);
+    if (!size) throw std::runtime_error("Invalid Unicode input");
+    std::string result(static_cast<size_t>(size), '\0');
+    if (!WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, value.data(),
+                            static_cast<int>(value.size()), result.data(), size, nullptr, nullptr))
+        throw std::runtime_error("Unable to convert Unicode input");
+    return result;
+}
+struct Handle {
+    HANDLE value = INVALID_HANDLE_VALUE;
+    Handle() = default;
+    explicit Handle(HANDLE handle) : value(handle) {}
+    Handle(const Handle&) = delete;
+    Handle& operator=(const Handle&) = delete;
+    ~Handle() { if (value != INVALID_HANDLE_VALUE && value != nullptr) CloseHandle(value); }
+    bool close() {
+        HANDLE handle = value;
+        value = INVALID_HANDLE_VALUE;
+        return CloseHandle(handle) != FALSE;
+    }
+};
+
+std::atomic<bool> interrupted{false};
+// Windows dispatches control handlers on another thread. Coordinate reader
+// lifetime so a late cancellation cannot inject a wakeup into the caller's shell.
+SRWLOCK reader_lock = SRWLOCK_INIT;
+bool reader_active = false;
+bool cooked_reader = false;
+HANDLE control_input = INVALID_HANDLE_VALUE;
+BOOL WINAPI on_control(DWORD event) {
+    if (event != CTRL_C_EVENT && event != CTRL_BREAK_EVENT) return FALSE;
+    AcquireSRWLockShared(&reader_lock);
+    if (reader_active) {
+        interrupted.store(true);
+        // Wake cooked ReadConsoleW while retaining native line editing. The
+        // result is discarded and terminal restoration runs outside the handler.
+        if (cooked_reader) {
+            INPUT_RECORD wake{};
+            wake.EventType = KEY_EVENT;
+            wake.Event.KeyEvent.bKeyDown = TRUE;
+            wake.Event.KeyEvent.wRepeatCount = 1;
+            wake.Event.KeyEvent.wVirtualKeyCode = VK_RETURN;
+            wake.Event.KeyEvent.uChar.UnicodeChar = L'\r';
+            DWORD written = 0;
+            WriteConsoleInputW(control_input, &wake, 1, &written);
+        }
+    }
+    ReleaseSRWLockShared(&reader_lock);
+    return TRUE;
+}
+void check_interrupted() {
+    if (interrupted.load()) throw std::runtime_error("Terminal input interrupted");
+}
+class InputMode {
+    Handle wake_input_;
+    DWORD saved_ = 0;
+    bool handler_ = false, changed_ = false;
+public:
+    HANDLE input = GetStdHandle(STD_INPUT_HANDLE);
+    InputMode(bool menu, bool password) {
+        DWORD output_mode = 0;
+        if (!GetConsoleMode(input, &saved_) ||
+            !GetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), &output_mode))
+            throw std::runtime_error("Interactive input requires a terminal");
+        if (!menu) {
+            wake_input_.value = CreateFileW(L"CONIN$", GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                           nullptr, OPEN_EXISTING, 0, nullptr);
+            if (wake_input_.value == INVALID_HANDLE_VALUE)
+                throw std::runtime_error("Unable to enable interruptible terminal input");
+        }
+        AcquireSRWLockExclusive(&reader_lock);
+        interrupted.store(false);
+        control_input = menu ? input : wake_input_.value;
+        cooked_reader = !menu;
+        reader_active = true;
+        ReleaseSRWLockExclusive(&reader_lock);
+        if (!SetConsoleCtrlHandler(on_control, TRUE)) {
+            AcquireSRWLockExclusive(&reader_lock);
+            reader_active = false;
+            ReleaseSRWLockExclusive(&reader_lock);
+            throw std::runtime_error("Unable to handle terminal interruption");
+        }
+        handler_ = true;
+        DWORD mode = saved_ | ENABLE_PROCESSED_INPUT;
+        if (menu) {
+            mode &= ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_VIRTUAL_TERMINAL_INPUT | ENABLE_QUICK_EDIT_MODE);
+            mode |= ENABLE_EXTENDED_FLAGS;
+        } else {
+            mode |= ENABLE_LINE_INPUT;
+            mode &= ~ENABLE_VIRTUAL_TERMINAL_INPUT;
+            if (password) mode &= ~ENABLE_ECHO_INPUT;
+        }
+        if (!SetConsoleMode(input, mode)) {
+            AcquireSRWLockExclusive(&reader_lock);
+            reader_active = false;
+            ReleaseSRWLockExclusive(&reader_lock);
+            SetConsoleCtrlHandler(on_control, FALSE);
+            handler_ = false;
+            throw std::runtime_error("Unable to change terminal settings");
+        }
+        changed_ = true;
+    }
+    InputMode(const InputMode&) = delete;
+    InputMode& operator=(const InputMode&) = delete;
+    ~InputMode() {
+        AcquireSRWLockExclusive(&reader_lock);
+        reader_active = false;
+        if (changed_) SetConsoleMode(input, saved_);
+        if (interrupted.load()) FlushConsoleInputBuffer(input);
+        ReleaseSRWLockExclusive(&reader_lock);
+        if (handler_) SetConsoleCtrlHandler(on_control, FALSE);
+    }
+};
+
+struct PrivateSecurity {
+    std::vector<unsigned char> token_user;
+    PACL acl = nullptr;
+    SECURITY_DESCRIPTOR descriptor{};
+    SECURITY_ATTRIBUTES attributes{sizeof(SECURITY_ATTRIBUTES), &descriptor, FALSE};
+    PrivateSecurity(const PrivateSecurity&) = delete;
+    PrivateSecurity& operator=(const PrivateSecurity&) = delete;
+    PrivateSecurity() = default;
+    ~PrivateSecurity() { if (acl) LocalFree(acl); }
+    bool initialize() {
+        Handle token;
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token.value)) return false;
+        DWORD size = 0;
+        GetTokenInformation(token.value, TokenUser, nullptr, 0, &size);
+        if (!size) return false;
+        token_user.resize(size);
+        if (!GetTokenInformation(token.value, TokenUser, token_user.data(), size, &size)) return false;
+        PSID owner = reinterpret_cast<TOKEN_USER*>(token_user.data())->User.Sid;
+        EXPLICIT_ACCESSW access{};
+        access.grfAccessPermissions = FILE_ALL_ACCESS;
+        access.grfAccessMode = SET_ACCESS;
+        access.grfInheritance = NO_INHERITANCE;
+        access.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+        access.Trustee.TrusteeType = TRUSTEE_IS_USER;
+        access.Trustee.ptstrName = static_cast<LPWSTR>(owner);
+        return SetEntriesInAclW(1, &access, nullptr, &acl) == ERROR_SUCCESS &&
+               InitializeSecurityDescriptor(&descriptor, SECURITY_DESCRIPTOR_REVISION) &&
+               SetSecurityDescriptorOwner(&descriptor, owner, FALSE) &&
+               SetSecurityDescriptorDacl(&descriptor, TRUE, acl, FALSE) &&
+               SetSecurityDescriptorControl(&descriptor, SE_DACL_PROTECTED, SE_DACL_PROTECTED);
+    }
+};
+bool supports_private_permissions(const std::filesystem::path& path) {
+    std::error_code error;
+    const auto parent = std::filesystem::absolute(path, error).parent_path();
+    if (error) return false;
+    std::vector<wchar_t> root(32768);
+    if (!GetVolumePathNameW(parent.c_str(), root.data(), static_cast<DWORD>(root.size()))) return false;
+    DWORD flags = 0;
+    return GetVolumeInformationW(root.data(), nullptr, 0, nullptr, nullptr, &flags, nullptr, 0) &&
+           (flags & FILE_PERSISTENT_ACLS);
+}
+} // namespace
+
+struct ConsoleSession::Impl {
+    HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE error = GetStdHandle(STD_ERROR_HANDLE);
+    DWORD output_mode = 0, error_mode = 0;
+    UINT input_cp = 0, output_cp = 0;
+    bool output_changed = false, error_changed = false, input_cp_changed = false, output_cp_changed = false;
+    void restore() noexcept {
+        // Distinct standard handles may refer to the same screen buffer.
+        // Restore in reverse acquisition order so its original mode wins.
+        if (error_changed) SetConsoleMode(error, error_mode);
+        if (output_changed) SetConsoleMode(output, output_mode);
+        if (input_cp_changed) SetConsoleCP(input_cp);
+        if (output_cp_changed) SetConsoleOutputCP(output_cp);
+    }
+    Impl() {
+        try {
+            // Redirected streams remain ordinary UTF-8 bytes, not console API I/O.
+            if (GetConsoleMode(output, &output_mode)) {
+                if (!SetConsoleMode(output, output_mode | ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING))
+                    throw std::runtime_error("Unable to enable terminal output");
+                output_changed = true;
+            }
+            if (error != output && GetConsoleMode(error, &error_mode)) {
+                if (!SetConsoleMode(error, error_mode | ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING))
+                    throw std::runtime_error("Unable to enable terminal error output");
+                error_changed = true;
+            }
+            input_cp = GetConsoleCP();
+            output_cp = GetConsoleOutputCP();
+            if (input_cp) {
+                if (!SetConsoleCP(CP_UTF8)) throw std::runtime_error("Unable to enable Unicode terminal input");
+                input_cp_changed = true;
+            }
+            if (output_cp) {
+                if (!SetConsoleOutputCP(CP_UTF8)) throw std::runtime_error("Unable to enable Unicode terminal output");
+                output_cp_changed = true;
+            }
+        } catch (...) { restore(); throw; }
+    }
+    ~Impl() { restore(); }
+};
+ConsoleSession::ConsoleSession() : impl_(std::make_unique<Impl>()) {}
+ConsoleSession::~ConsoleSession() = default;
+struct MenuInput::Impl { InputMode mode{true, false}; };
+MenuInput::MenuInput() : impl_(std::make_unique<Impl>()) {}
+MenuInput::~MenuInput() = default;
+MenuKey MenuInput::read() {
+    for (;;) {
+        check_interrupted();
+        const DWORD ready = WaitForSingleObject(impl_->mode.input, 100);
+        check_interrupted();
+        if (ready == WAIT_TIMEOUT) continue;
+        if (ready != WAIT_OBJECT_0) throw std::runtime_error("Unable to wait for terminal input");
+        INPUT_RECORD record{};
+        DWORD count = 0;
+        if (!ReadConsoleInputW(impl_->mode.input, &record, 1, &count))
+            throw std::runtime_error("Unable to read terminal input");
+        check_interrupted();
+        if (!count || record.EventType != KEY_EVENT || !record.Event.KeyEvent.bKeyDown) continue;
+        const auto& key = record.Event.KeyEvent;
+        if (key.wVirtualKeyCode == VK_UP) return MenuKey::up;
+        if (key.wVirtualKeyCode == VK_DOWN) return MenuKey::down;
+        if (key.wVirtualKeyCode == VK_RETURN) return MenuKey::enter;
+        if (key.uChar.UnicodeChar == 4 || key.uChar.UnicodeChar == 26) return MenuKey::end;
+        if (key.uChar.UnicodeChar == 3) throw std::runtime_error("Terminal input interrupted");
+        return MenuKey::other;
+    }
+}
+bool read_line(std::string& value, bool password, const std::string& prompt) {
+    InputMode mode(false, password);
+    value.clear();
+    std::cout << prompt << std::flush;
+    std::wstring line;
+    for (;;) {
+        check_interrupted();
+        wchar_t buffer[256];
+        DWORD count = 0;
+        const BOOL success = ReadConsoleW(mode.input, buffer, 256, &count, nullptr);
+        const DWORD error = success ? ERROR_SUCCESS : GetLastError();
+        check_interrupted();
+        if (!success) {
+            if (error == ERROR_OPERATION_ABORTED) throw std::runtime_error("Terminal input interrupted");
+            throw std::runtime_error("Unable to read terminal input");
+        }
+        if (!count) { value = utf8(line); return !value.empty(); }
+        line.append(buffer, count);
+        if (line.find(L'\n') != std::wstring::npos) {
+            if (!line.empty() && line.front() == 26) return false;
+            const auto end = line.find(L'\n');
+            line.resize(end);
+            if (!line.empty() && line.back() == L'\r') line.pop_back();
+            value = utf8(line);
+            return true;
+        }
+    }
+}
+bool is_terminal() {
+    DWORD mode = 0;
+    return GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), &mode) != FALSE;
+}
+std::optional<std::string> environment(const std::string& name) {
+    const auto key = wide(name);
+    SetLastError(ERROR_SUCCESS);
+    DWORD required = GetEnvironmentVariableW(key.c_str(), nullptr, 0);
+    if (!required) {
+        if (GetLastError() == ERROR_ENVVAR_NOT_FOUND) return std::nullopt;
+        if (GetLastError() == ERROR_SUCCESS) return std::string{};
+        throw std::runtime_error("Unable to read environment variable");
+    }
+    // Another thread may update the environment between the sizing and read calls.
+    for (;;) {
+        std::wstring value(required, L'\0');
+        SetLastError(ERROR_SUCCESS);
+        const DWORD copied = GetEnvironmentVariableW(key.c_str(), value.data(), required);
+        if (copied >= required) { required = copied; continue; }
+        if (!copied && GetLastError() == ERROR_ENVVAR_NOT_FOUND) return std::nullopt;
+        if (!copied && GetLastError() != ERROR_SUCCESS) throw std::runtime_error("Unable to read environment variable");
+        value.resize(copied);
+        return utf8(value);
+    }
+}
+std::vector<std::string> arguments(int, char**) {
+    int count = 0;
+    LPWSTR* native = CommandLineToArgvW(GetCommandLineW(), &count);
+    if (!native) throw std::runtime_error("Unable to read command line");
+    std::vector<std::string> result;
+    try {
+        for (int index = 0; index < count; ++index) result.push_back(utf8(native[index]));
+    } catch (...) { LocalFree(native); throw; }
+    LocalFree(native);
+    return result;
+}
+bool atomic_write_private(const std::filesystem::path& path, const std::string& contents) {
+    if (!supports_private_permissions(path)) return false;
+    PrivateSecurity security;
+    if (!security.initialize()) return false;
+    static std::atomic<unsigned long long> counter{0};
+    std::filesystem::path temporary;
+    Handle file;
+    for (int attempt = 0; attempt < 64; ++attempt) {
+        temporary = path;
+        temporary += L".tmp." + std::to_wstring(GetCurrentProcessId()) + L"." +
+                     std::to_wstring(GetTickCount64()) + L"." + std::to_wstring(counter.fetch_add(1));
+        file.value = CreateFileW(temporary.c_str(), GENERIC_WRITE, 0, &security.attributes,
+                                 CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (file.value != INVALID_HANDLE_VALUE) break;
+        if (GetLastError() != ERROR_FILE_EXISTS && GetLastError() != ERROR_ALREADY_EXISTS) return false;
+    }
+    if (file.value == INVALID_HANDLE_VALUE) return false;
+    bool written = true;
+    size_t offset = 0;
+    while (offset < contents.size()) {
+        const DWORD chunk = static_cast<DWORD>(std::min<size_t>(contents.size() - offset, MAXDWORD));
+        DWORD count = 0;
+        if (!WriteFile(file.value, contents.data() + offset, chunk, &count, nullptr) || !count) {
+            written = false;
+            break;
+        }
+        offset += count;
+    }
+    if (!FlushFileBuffers(file.value)) written = false;
+    if (!file.close()) written = false;
+    // Both paths are in one directory. Never allow copy-across-volume fallback:
+    // the private temporary file's descriptor must accompany the replacement.
+    if (!written || !MoveFileExW(temporary.c_str(), path.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+        DeleteFileW(temporary.c_str());
+        return false;
+    }
+    return true;
+}
+
+struct TimingGuard::Impl {
+    bool attempted = false, priority_changed = false, timer_changed = false;
+    int previous = THREAD_PRIORITY_NORMAL;
+    void activate() {
+        if (attempted) return;
+        attempted = true;
+        previous = GetThreadPriority(GetCurrentThread());
+        if (previous != THREAD_PRIORITY_ERROR_RETURN && previous < THREAD_PRIORITY_ABOVE_NORMAL)
+            priority_changed = SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL) != FALSE;
+        timer_changed = timeBeginPeriod(1) == TIMERR_NOERROR;
+    }
+    ~Impl() {
+        if (priority_changed) SetThreadPriority(GetCurrentThread(), previous);
+        if (timer_changed) timeEndPeriod(1);
+    }
+};
+TimingGuard::TimingGuard() : impl_(std::make_unique<Impl>()) {}
+TimingGuard::~TimingGuard() = default;
+void TimingGuard::activate() { impl_->activate(); }
+void cpu_relax() { _mm_pause(); }
+const char* user_agent() {
+    return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36";
+}
+const char* browser_platform() { return "\"Windows\""; }
+} // namespace itu::platform

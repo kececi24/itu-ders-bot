@@ -1,6 +1,3 @@
-#include <windows.h>
-#include <winhttp.h>
-#include <mmsystem.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -10,6 +7,8 @@
 #include <cstdlib>
 #include <map>
 #include <cctype>
+#include <functional>
+#include <filesystem>
 
 #include "clock.hpp"
 #include "token.hpp"
@@ -18,8 +17,6 @@
 #include <include/nlohmann_json.hpp>
 #include <include/console.hpp>
 
-#pragma comment(lib, "winhttp.lib")
-#pragma comment(lib, "winmm.lib")
 
 using json = nlohmann::json;
 
@@ -28,11 +25,6 @@ struct ConfigFlags {
     bool test;
     bool local;
     bool dry_run;
-};
-
-struct TimerResolutionGuard {
-    TimerResolutionGuard() { timeBeginPeriod(1); }
-    ~TimerResolutionGuard() { timeEndPeriod(1); }
 };
 
 std::string trim_copy(const std::string& value) {
@@ -59,7 +51,7 @@ std::string unquote_copy(const std::string& value) {
 
 std::map<std::string, std::string> load_env_file(const std::string& path) {
     std::map<std::string, std::string> values;
-    std::ifstream file(path);
+    std::ifstream file(std::filesystem::u8path(path));
     if (!file.is_open()) return values;
 
     std::string line;
@@ -84,13 +76,13 @@ std::map<std::string, std::string> load_env_file(const std::string& path) {
 }
 
 std::string get_secret_value(const std::map<std::string, std::string>& env_file, const std::string& primary, const std::string& legacy) {
-    if (const char* value = std::getenv(primary.c_str())) return value;
+    if (auto value = itu::platform::environment(primary)) return *value;
 
     auto from_file = env_file.find(primary);
     if (from_file != env_file.end()) return from_file->second;
 
     if (!legacy.empty()) {
-        if (const char* value = std::getenv(legacy.c_str())) return value;
+        if (auto value = itu::platform::environment(legacy)) return *value;
 
         auto legacy_from_file = env_file.find(legacy);
         if (legacy_from_file != env_file.end()) return legacy_from_file->second;
@@ -105,12 +97,45 @@ int json_int_with_alias(const json& obj, const std::string& primary, const std::
     return fallback;
 }
 
-int main(int argc, char *argv[]) {
-    enable_unicode();
-    TimerResolutionGuard timer_resolution;
-    SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+using AcquireToken = std::function<std::string(const std::string&, const std::string&, bool)>;
 
+json registration_payload(const json& config) {
+    json payload = {{"ECRN", json::array()}, {"SCRN", json::array()}};
+    const auto& courses = config.at("courses");
+    for (const auto* key : {"crn", "scrn"}) {
+        if (!courses.contains(key) && std::string(key) == "scrn") continue;
+        const auto& values = courses.at(key);
+        if (!values.is_array()) throw std::runtime_error("Course lists must be arrays");
+        for (const auto& value : values) {
+            if (!value.is_string()) throw std::runtime_error("CRNs must be strings");
+            payload[std::string(key) == "crn" ? "ECRN" : "SCRN"].push_back(value);
+        }
+    }
+    return payload;
+}
+
+// Scheduling callbacks keep offline orchestration tests deterministic. Production
+// uses the same real clock and sleep operations as the original flow.
+struct ApplicationSchedule {
+    std::function<SystemClock::Wall::time_point()> wall_now = [] { return SystemClock::Wall::now(); };
+    std::function<void(std::chrono::seconds)> sleep_for = [](auto duration) {
+        std::this_thread::sleep_for(duration);
+    };
+    std::function<void(SystemClock::Wall::time_point)> sleep_until = [](auto target) {
+        std::this_thread::sleep_until(target);
+    };
+    std::function<void(SystemClock&, int, int, int, int, int, int, int, int, TimingQoS*)> final_wait =
+        [](SystemClock& clock, int year, int month, int day, int hour, int minute, int second,
+           int millisecond, int lead, TimingQoS* qos) {
+            clock.wait_until(year, month, day, hour, minute, second, millisecond, lead, qos);
+        };
+};
+
+// Internal dependency seam for offline fixtures; production supplies fixed OBS endpoints.
+int run_application(int argc, char* argv[], HttpSession& session, const AcquireToken& acquire_token,
+                    const std::string& origin = "https://obs.itu.edu.tr",
+                    const ApplicationSchedule& schedule = {}) {
+    itu::platform::ConsoleSession console;
     // Configure program flags
     const ConfigFlags flags = [argc, argv](){
         bool d = false, t = false, l = false, r = false;
@@ -138,27 +163,9 @@ int main(int argc, char *argv[]) {
 
     // Initialize Helpers
     SystemClock itu_clock;
-    TokenFetcher itu_auth;
-
-    // Setup Persistent Session with Chrome User-Agent
-    HINTERNET hSession = WinHttpOpen(L"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36", 
-                                    WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, 
-                                    WINHTTP_NO_PROXY_NAME, 
-                                    WINHTTP_NO_PROXY_BYPASS, 0);
-
-    DWORD protocols = WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2 | WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_3;
-    WinHttpSetOption(hSession, WINHTTP_OPTION_SECURE_PROTOCOLS, &protocols, sizeof(protocols));
-
-    HINTERNET hConnect = WinHttpConnect(hSession, L"obs.itu.edu.tr", INTERNET_DEFAULT_HTTPS_PORT, 0);
-
-    if (!hConnect) {
-        std::cerr << "[Fatal] Could not connect to servers. Error: " << GetLastError() << std::endl;
-        return 1;
-    }
-
     // Initial Clock Sync
     if(!flags.local){
-        itu_clock.sync_with_server(hConnect);
+        itu_clock.sync_with_server(session, origin);
     }else{
         std::cout << "[Clock] Skipping server synchronization." << std::endl;
     }
@@ -168,32 +175,24 @@ int main(int argc, char *argv[]) {
     int target_second = json_int_with_alias(t, "second", "", 0);
     int target_millisecond = json_int_with_alias(t, "millisecond", "milisecond", 0);
     int lead_millisecond = json_int_with_alias(t, "lead_millisecond", "lead_milisecond", 0);
-    std::tm target_tm = {};
-    target_tm.tm_year = t["year"].get<int>() - 1900;
-    target_tm.tm_mon  = t["month"].get<int>() - 1;
-    target_tm.tm_mday = t["day"].get<int>();
-    target_tm.tm_hour = t["hour"].get<int>();
-    target_tm.tm_min  = t["minute"].get<int>();
-    target_tm.tm_sec  = target_second;
-
-    auto target_tp = std::chrono::system_clock::from_time_t(std::mktime(&target_tm));
+    auto target_tp = SystemClock::local_target(t["year"].get<int>(), t["month"].get<int>(),
+        t["day"].get<int>(), t["hour"].get<int>(), t["minute"].get<int>(), target_second);
     auto sync_tp = target_tp - std::chrono::seconds(90);
     auto token_tp = target_tp - std::chrono::seconds(60);
 
-    if(flags.test) std::cout << "[Warning] Test mode enabled, immediately sending request" << std::endl;
+    if (flags.test) std::cout << (flags.dry_run ? "[Test] Scheduled waits disabled; dry-run prevents submission." : "[Warning] Test mode sends immediately.") << std::endl;
 
-    if(std::chrono::system_clock::now() < sync_tp && !flags.test && !flags.local){
+    if(schedule.wall_now() < sync_tp && !flags.test && !flags.local){
         std::cout << "[System] Wait until 90s..." << std::endl;
-        while(std::chrono::system_clock::now() < sync_tp){
+        while(schedule.wall_now() < sync_tp){
             const auto remaining = std::chrono::duration_cast<std::chrono::seconds>(
-                sync_tp - std::chrono::system_clock::now());
+                sync_tp - schedule.wall_now());
             std::cout << "\rRemaining: " << remaining.count() << "s" << std::flush;
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            schedule.sleep_for(std::chrono::seconds(1));
         }
-        // std::this_thread::sleep_until(sync_tp);
         
         std::cout << "[Clock] Re-Sync with ITU Server..." << std::endl;
-        itu_clock.sync_with_server(hConnect);
+        itu_clock.sync_with_server(session, origin);
     }
     else if(!flags.local){
         std::cout << "[Warning] Less than 90s remains. Skipping resync..." << std::endl;
@@ -202,7 +201,7 @@ int main(int argc, char *argv[]) {
     // Wait for Pre-Fetch Phase
     if(!flags.test){
         std::cout << "[System] Waiting until 60s before target for native token acquisition..." << std::endl;
-        std::this_thread::sleep_until(token_tp);
+        schedule.sleep_until(token_tp);
     }
 
     // Acquire Token
@@ -218,154 +217,117 @@ int main(int argc, char *argv[]) {
 
     if (username.empty() || password.empty()) {
         std::cerr << "[Fatal] Missing credentials. Add ITU_USERNAME and ITU_PASSWORD to .env or process environment." << std::endl;
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
         return 1;
     }
 
-    std::string auth_header = itu_auth.get_bearer_token(
+    std::string auth_header = acquire_token(
         username,
         password,
         flags.debug // Print extra logs if debug is true
     );
 
-    if (auth_header.find("ERROR") != std::string::npos) {
-        std::cerr << "[Critical] " << auth_header << std::endl;
-        return 1;
-    }
+    if (auth_header.empty()) throw std::runtime_error("Authentication returned no token");
     std::cout << "[Success] JWT acquired." << std::endl;
-    if(flags.debug) std::cout << "[Debug] Auth token: \n" << auth_header << std::endl;
-
-    // Prepare Request Payload (Ensure ECRN/SCRN are arrays)
-    std::cout << "[JSON] Preparing add CRN" << std::endl;
-    json body_json;
-    body_json["ECRN"] = json::array();
-    for (auto& item : config["courses"]["crn"]){
-        std::cout << "   Adding: " << item.get<std::string>() << std::endl;
-        body_json["ECRN"].push_back(item);
-    }
-    
-    std::cout << "[JSON] Preparing drop CRN" << std::endl;
-    body_json["SCRN"] = json::array();
-    if (config["courses"].contains("scrn")) {
-        for (auto& item : config["courses"]["scrn"]){
-            std::cout << "   Dropping: " << item.get<std::string>() << std::endl;
-            body_json["SCRN"].push_back(item);
-        }
-    }
-    
-    std::string body_data = body_json.dump();
-    std::wstring wToken(auth_header.begin(), auth_header.end());
-
-    // Build Comprehensive Headers (Browser Fetch)
-    std::wstring headers = 
-        L"Authorization: " + wToken + L"\r\n" +
-        L"Content-Type: application/json\r\n" +
-        L"Accept: application/json, text/plain, */*\r\n" +
-        L"Accept-Language: tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7\r\n" +
-        L"Origin: https://obs.itu.edu.tr\r\n" +
-        L"Referer: https://obs.itu.edu.tr/ogrenci/DersKayitIslemleri/DersKayit\r\n" +
-        L"sec-ch-ua: \"Not(A:Brand\";v=\"8\", \"Chromium\";v=\"144\", \"Google Chrome\";v=\"144\"\r\n" +
-        L"sec-ch-ua-mobile: ?0\r\n" +
-        L"sec-ch-ua-platform: \"Windows\"\r\n" +
-        L"sec-fetch-dest: empty\r\n" +
-        L"sec-fetch-mode: cors\r\n" +
-        L"sec-fetch-site: same-origin\r\n";
-
-    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/ders-kayit/v21",
-                                            NULL, WINHTTP_NO_REFERER,
-                                            WINHTTP_DEFAULT_ACCEPT_TYPES,
-                                            WINHTTP_FLAG_SECURE);
-
-    if (!hRequest) {
-        std::cerr << "[Fatal] Could not prepare registration request. Error: " << GetLastError() << std::endl;
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        return 1;
-    }
+    const auto body_json = registration_payload(config);
+    if (flags.debug) std::cout << "[Debug] Prepared " << body_json["ECRN"].size()
+                               << " add and " << body_json["SCRN"].size() << " drop entries.\n";
+    HttpRequest request;
+    request.method = "POST";
+    request.url = origin + "/api/ders-kayit/v21";
+    request.body = body_json.dump();
+    request.headers = {
+        "Authorization: " + auth_header,
+        "Content-Type: application/json",
+        "Accept: application/json, text/plain, */*",
+        "Accept-Language: tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Origin: " + origin,
+        "Referer: " + origin + "/ogrenci/DersKayitIslemleri/DersKayit",
+        "sec-ch-ua: \"Not(A:Brand\";v=\"8\", \"Chromium\";v=\"144\", \"Google Chrome\";v=\"144\"",
+        "sec-ch-ua-mobile: ?0",
+        std::string("sec-ch-ua-platform: ") + itu::platform::browser_platform(),
+        "sec-fetch-dest: empty",
+        "sec-fetch-mode: cors",
+        "sec-fetch-site: same-origin"
+    };
+    session.prepare(request);
 
     if (flags.dry_run) {
         std::cout << "[DryRun] Login, payload build, and final request preparation succeeded." << std::endl;
         std::cout << "[DryRun] No registration request was sent." << std::endl;
-        WinHttpCloseHandle(hRequest);
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
         return 0;
     }
 
-    // Final Wait
-    if(!flags.test) {
-        itu_clock.wait_until(
-            t["year"].get<int>(),
-            t["month"].get<int>(),
-            t["day"].get<int>(),
-            t["hour"].get<int>(),
-            t["minute"].get<int>(),
-            target_second,
-            target_millisecond,
-            lead_millisecond
-        );
-    }
-
-    // Send registration request
-    std::cout << ">>> FIRING REGISTRATION REQUEST <<<" << std::endl;
-
-    if (!WinHttpSendRequest(hRequest, headers.c_str(), (DWORD)-1L, 
-                           (LPVOID)body_data.c_str(), (DWORD)body_data.length(), 
-                           (DWORD)body_data.length(), 0)) {
-        DWORD err = GetLastError();
-        std::cerr << "[Error] WinHttpSendRequest failed: " << err << std::endl;
-
-        if(err == ERROR_WINHTTP_CANNOT_CONNECT) std::cerr << "Cannot connect to server." << std::endl;
-        if(err == ERROR_WINHTTP_SECURE_FAILURE) std::cerr << "SSL/TLS handshake error." << std::endl;
-    } else {
-        if (!WinHttpReceiveResponse(hRequest, NULL)) {
-            std::cerr << "[Error] WinHttpReceiveResponse failed: " << GetLastError() << std::endl;
-        } else {
-            DWORD code = 0, size = sizeof(code);
-            WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, 
-                                WINHTTP_HEADER_NAME_BY_INDEX, &code, &size, WINHTTP_NO_HEADER_INDEX);
-            std::cout << "[Result] Server Response Code: " << code << std::endl;
-
-            std::string response_raw;
-            DWORD dwSize = 0;
-            do{
-                WinHttpQueryDataAvailable(hRequest, &dwSize);
-                if(dwSize == 0) break;
-                std::vector<char> buffer(dwSize);
-                DWORD dwDownloaded = 0;
-                WinHttpReadData(hRequest, (LPVOID)&buffer[0], dwSize, &dwDownloaded);
-                response_raw.append(buffer.data(), dwDownloaded);
-            }while(dwSize > 0);
-
-            if(flags.debug) std::cout << "[Debug] Raw Response: \n" << response_raw << std::endl;
-
-            // Parse response to json
-            /** TODO: handle scrn as well */
-            try{
-                auto res_json = json::parse(response_raw);
-
-                std::cout << "\n--- Registration Results ---" << std::endl;
-                for(const auto& item : res_json["ecrnResultList"]){
-                    std::string crn = item["crn"].get<std::string>();
-                    std::string code = item["resultCode"].get<std::string>();
-
-                    std::cout << get_result_message(code, crn) << std::endl;
-                }
-
-            }catch(json::parse_error &e){
-                std::cerr << "[Error] Failed to parse response JSON: " << e.what() << std::endl;
-                std::cerr << "Raw response: \n" << response_raw << std::endl;
-            }
+    HttpResponse response;
+    {
+        TimingQoS timing_qos;
+        // Keep the elevated QoS through submission, then restore it before
+        // parsing/displaying the result or waiting for interactive exit.
+        if(!flags.test) {
+            schedule.final_wait(
+                itu_clock,
+                t["year"].get<int>(),
+                t["month"].get<int>(),
+                t["day"].get<int>(),
+                t["hour"].get<int>(),
+                t["minute"].get<int>(),
+                target_second,
+                target_millisecond,
+                lead_millisecond,
+                &timing_qos
+            );
+        }
+        timing_qos.activate();
+        std::cout << "\n>>> FIRING REGISTRATION REQUEST <<<" << std::endl;
+        try {
+            response = session.perform();
+        } catch (const HttpTransportError&) {
+            std::cerr << "[Warning] Registration outcome is unknown. OBS may have applied some or all changes.\n"
+                      << "Check your registered courses in OBS before retrying. No automatic retry was attempted.\n";
+            throw;
         }
     }
-
-    // Cleanup
-    WinHttpCloseHandle(hRequest);
-    WinHttpCloseHandle(hConnect);
-    WinHttpCloseHandle(hSession);
-
-    std::cout << "[System] Press Enter to exit." << std::endl;
-    std::cin.get();
+    std::cout << "[Result] Server Response Code: " << response.status << std::endl;
+    if (response.status < 200 || response.status >= 300)
+        throw std::runtime_error("Registration HTTP request failed");
+    // Drop-result schema remains undocumented; retain the existing add-result display.
+    const auto results = json::parse(response.body);
+    if (!results.is_object() || !results.contains("ecrnResultList") || !results["ecrnResultList"].is_array())
+        throw std::runtime_error("Invalid registration response");
+    std::cout << "\n--- Registration Results ---" << std::endl;
+    for (const auto& item : results["ecrnResultList"]) {
+        const auto crn = item.at("crn").get<std::string>();
+        const auto code = item.at("resultCode").get<std::string>();
+        std::cout << get_result_message(code, crn) << std::endl;
+    }
+    if (itu::platform::is_terminal()) {
+        std::cout << "[System] Press Enter to exit." << std::endl;
+        std::cin.get();
+    }
     return 0;
 }
+
+#ifndef ITU_NO_MAIN
+int main(int argc, char* argv[]) {
+    try {
+        auto arguments = itu::platform::arguments(argc, argv);
+        std::vector<char*> utf8_argv;
+        for (auto& argument : arguments) utf8_argv.push_back(argument.data());
+        utf8_argv.push_back(nullptr);
+        HttpSession session;
+        TokenFetcher auth;
+        return run_application(static_cast<int>(arguments.size()), utf8_argv.data(), session,
+            [&](const std::string& username, const std::string& password, bool debug) {
+                return auth.get_bearer_token(username, password, debug);
+            });
+    } catch (const json::exception&) {
+        std::cerr << "[Fatal] Invalid configuration or registration response JSON.\n";
+    } catch (const std::runtime_error& error) {
+        // Transport/authentication runtime errors contain only fixed text and status codes.
+        std::cerr << "[Fatal] " << error.what() << "\n";
+    } catch (const std::exception&) {
+        // Exception text can include secrets from malformed configuration/response data.
+        std::cerr << "[Fatal] Request or application operation failed. No automatic retry was attempted.\n";
+    }
+    return 1;
+}
+#endif

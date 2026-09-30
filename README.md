@@ -1,115 +1,119 @@
-# ITU Course Picker (Native C++)
+# İTÜ Course Picker for macOS
 
-A native Windows C++ helper for preparing and submitting İTÜ course registration requests through WinHTTP. It contains a registration program and a small interactive setup utility.
+A native C++ course registration helper for **Apple Silicon Macs running macOS 14 or later**. It authenticates to İTÜ OBS, prepares add/drop requests, and can submit one request at a configured time. Windows and Intel Macs are not supported by this edition.
 
-The program is intended for your own authorized account. Use it only in accordance with İTÜ registration rules and service limits.
+Use only with your own authorized account and in accordance with university registration rules.
 
-## Features
+## Build
 
-- Native WinHTTP requests with a persistent session.
-- Native authentication flow, including identity selection when required.
-- Server clock sampling through HTTP `Date` headers.
-- Hybrid wait loop using sleep followed by a high precision spin near the target.
-- `.env` support for credentials.
-- Separate setup utility for credentials, courses, and registration time.
-- `--dry-run` mode to authenticate and prepare the request without sending it.
+Required tools are Apple Clang and the macOS SDK from Xcode or Command Line Tools, plus CMake 3.20 or later. macOS supplies libcurl; the build resolves its headers and library only from the Apple SDK. JSON is vendored. Python 3.12+ and `/usr/bin/openssl` are used only for offline tests and packaging.
 
-## Prerequisites
+Keep downloaded build tools within this project. For the local CMake distribution already in this workspace:
 
-- Windows 10 or later.
-- MinGW-w64 UCRT64 or MSVC.
-- CMake 3.10 or later.
-- Internet access to the İTÜ OBS service.
-
-WinHTTP and `winmm` are Windows system libraries. No separate installation is required when using the supported Windows toolchain.
-
-## Build With CMake
-
-From the project directory:
-
-```powershell
-cmake -S . -B build
-cmake --build build --parallel 2
+```sh
+CMAKE="$PWD/cmake-4.4.3-macos-universal/CMake.app/Contents/bin/cmake"
+"$CMAKE" -S . -B build -DCMAKE_BUILD_TYPE=Release
+"$CMAKE" --build build --parallel 3
+"${CMAKE%/cmake}/ctest" --test-dir build --output-on-failure --parallel 3
 ```
 
-The two executables are written to the project directory:
+If using a different project-local CMake version, adjust `CMAKE` to its executable. CMake distributions under `cmake-*-macos-*/`, `.deps/`, `build/`, and `dist/` are ignored by Git. No Homebrew installation or global dependency installation is needed when the Apple toolchain is already available. To omit development tests and their Python requirement, configure with `-DBUILD_TESTING=OFF`.
 
-- `main.exe`: registration program.
-- `setup.exe`: interactive configuration utility.
+Executables are `build/bin/main` and `build/bin/setup`. Run them from the **project root** so `.env` and `data/config.json` resolve correctly.
 
-Run both programs from the project directory so their relative paths resolve correctly.
+## Setup
 
-## Configuration
+```sh
+./build/bin/setup
+```
 
-Create `.env` in the project directory. It is ignored by Git and should contain your credentials:
+Use the arrow keys and Enter to choose credentials or course/time configuration. Password input is hidden; input requires a terminal. Files are replaced atomically with owner-only permissions. Optional paths:
 
-```env
+```sh
+./build/bin/setup --config-path data/config.json --env-path .env
+```
+
+You can also create `.env` yourself (ignored by Git):
+
+```dotenv
 ITU_USERNAME=your_itu_username
 ITU_PASSWORD=your_itu_password
 ```
 
-Create `data/config.json` with the target time and courses. The time is interpreted using the computer's local timezone.
+Protect manually created credentials with `chmod 600 .env`. Primary process environment values take precedence over primary `.env` values, then legacy `ITU_OBS_USERNAME`/`ITU_OBS_PASSWORD` process/file values, then legacy `account` entries in the configuration. Keep all real credentials local.
+
+Use `data/example_config.json` as the configuration shape; example CRNs and dates are placeholders. `data/config.json` is ignored by Git.
 
 ```json
 {
   "time": {
-    "year": 2026,
-    "month": 6,
-    "day": 22,
-    "hour": 15,
-    "minute": 33,
-    "second": 0,
-    "millisecond": 0,
-    "lead_millisecond": 0
+    "year": 2026, "month": 10, "day": 1,
+    "hour": 14, "minute": 0, "second": 0,
+    "millisecond": 0, "lead_millisecond": 0
   },
-  "courses": {
-    "crn": ["30335"],
-    "scrn": []
-  }
+  "courses": {"crn": ["10000"], "scrn": []}
 }
 ```
 
-`crn` contains courses to add and `scrn` contains courses to drop. 
+Time uses your Mac's **local timezone**, including daylight saving time. `crn` lists courses to add; `scrn` lists courses to drop and defaults to empty when absent. CRNs remain strings, including any leading zeroes. Legacy `milisecond` and `lead_milisecond` keys remain accepted.
 
-For a registration system that rejects early requests, keep `lead_millisecond` at `0`. A network latency estimate cannot guarantee that a request will arrive after the opening time, so using a positive lead can trigger an early request and cooldown.
+Keep `lead_millisecond` at **0** unless you deliberately want to send before the estimated opening time. A positive lead can cause rejection or cooldown. The existing add-result messages are preserved; drop-result display remains unimplemented because its response schema has not been verified.
 
-## Setup Utility
+## Safe verification and registration
 
-Run `setup.exe` from the project directory and select one of the menu options:
+Authenticate and prepare a request without submitting courses or waiting for the configured time:
 
-1. Update `.env` credentials. The utility hides password input and replaces existing `ITU_USERNAME` and `ITU_PASSWORD` entries.
-2. Update the date, time, lead, add CRNs, and drop CRNs in `data/config.json`.
-
-Optional path arguments are available:
-
-```powershell
-setup.exe --config-path data/config.json --env-path .env
+```sh
+./build/bin/main --test --dry-run --local
 ```
 
+Also verify server clock sampling:
 
-## Registration Program
-
-```powershell
-main.exe
+```sh
+./build/bin/main --test --dry-run
 ```
 
-Available flags:
+These commands contact OBS and use your credentials, but do **not** send the registration request. Offline automated tests use loopback fixtures with synthetic credentials; they cannot prove compatibility with the live OBS service. Live JWT acquisition must be verified separately with an authorized account.
 
-- `--logs`: enable verbose diagnostic output, including authentication details and raw response output. Avoid sharing logs because they may contain sensitive information.
-- `--test`: skip the final wait and send immediately. Use only with a safe test configuration.
-- `--local`: skip server clock sampling and use local system time.
-- `--dry-run`: authenticate, build the payload, and prepare the final request, then exit without sending a registration request.
+Flags can be combined:
 
-The normal flow performs clock sampling, obtains the authentication token before the target time, prepares the request, waits until the configured deadline, and sends one request. The clock sampler uses the lowest round-trip sample from seven HTTP requests, but HTTP `Date` headers have only whole-second precision and do not provide a guaranteed server-receipt time.
+- `--dry-run`: authenticate, build the payload, and prepare the request, then exit before the final wait or submission. Earlier scheduling waits still occur unless combined with `--test`.
+- `--test`: skip scheduled waits. **This sends a real registration request unless paired with `--dry-run`.**
+- `--local`: disable server clock sampling; use local time.
+- `--logs`: show safe diagnostic stages and counts. Passwords, tokens, cookies, session URLs, and raw authenticated response bodies are omitted.
 
-## Timing Notes
+For an intentional scheduled registration after reviewing your configuration:
 
-The local wait loop uses `steady_clock`, which avoids problems when Windows adjusts the wall clock during the final wait. The process also requests a 1 ms Windows timer period and higher process/thread priority where Windows permits it.
+```sh
+./build/bin/main
+```
 
-These measures reduce local scheduling delay. They cannot guarantee the time at which the university server receives or processes a request because network routing, TLS connection state, queues, and server load remain outside the program's control. Keep the connection and authentication preparation close to the target time and use `--dry-run` before a real registration attempt.
+The program maintains an authentication session with cookies and redirects, and a separate persistent clock/registration session. It samples seven HTTP `Date` headers, selects the lowest-RTT offset, resamples at 90 seconds before the target when time permits, and starts token acquisition 60 seconds before the target. It prepares the registration request before the final wait and makes one submission attempt, with no application retry. HTTP, authentication, and malformed-response failures exit nonzero.
+
+A registration transfer has a 30-second total timeout (including connection setup), with a 10-second connection limit. If the transfer times out or disconnects, **the registration outcome is unknown**: OBS may already have applied some or all changes. Check your registered courses before retrying. The program reports the curl error code, elapsed milliseconds, last observed HTTP status (`0` if none), and received body byte count without printing response contents. It does not automatically resend the batch. A completed response with mixed accepted/rejected CRNs is displayed using the normal per-course result messages.
+
+## Timing limits
+
+The final deadline uses a monotonic clock, so later wall-clock adjustments do not change it. The last five milliseconds spin; during the final two seconds through submission, the process makes a best-effort request for user-initiated thread QoS, then restores the previous setting.
+
+Keep the Mac awake, connected to power, and online; lid closure and sleep can interrupt timing. HTTP dates have whole-second precision (roughly ±500 ms), and scheduling, network latency, TLS setup, and server queues prevent any guaranteed arrival time. A successful dry-run proves preparation, not future registration success.
+
+## Release archive
+
+To package a local build and verify its architecture, deployment target, system linkage, and archive contents:
+
+```sh
+python3 tests/native_artifacts.py build/bin
+python3 scripts/package.py
+python3 tests/native_artifacts.py dist/itu-ders-bot-macos-arm64.tar.gz
+```
+
+The archive contains `main`, `setup`, `data/example_config.json`, this README, and `SHA256SUMS`. An adjacent `.sha256` checks the archive itself. It excludes local credentials, configuration, logs, test binaries, and downloaded build tools.
+
+After extraction, run `./setup` and `./main` from the extracted directory instead of the build paths above. Verify `shasum -a 256 -c SHA256SUMS` first. Releases retain normal linker signatures but are not Developer ID signed or notarized. macOS may block downloaded executables; use the per-app **Open Anyway** control in System Settings → Privacy & Security only after verifying the source and checksums. Do not disable Gatekeeper globally.
+
+CI builds/tests on macOS 14 and 15 ARM64, packages on 14, and smoke-tests that same archive on 15. Only `v*` tag pushes publish release assets. Local builds on newer macOS still target macOS 14; cross-version execution is validated by CI, not by a deployment-target flag alone.
 
 ## Acknowledgments
 
-Server result code mappings and the original course selection behavior were adapted from the Python implementation by [AtaTrkgl](https://github.com/AtaTrkgl/itu-ders-secici).
-
-This project uses [nlohmann/json](https://github.com/nlohmann/json), a header-only JSON library.
+Original behavior and result mappings were adapted from [AtaTrkgl/itu-ders-secici](https://github.com/AtaTrkgl/itu-ders-secici). This project uses the vendored [nlohmann/json](https://github.com/nlohmann/json) header library.

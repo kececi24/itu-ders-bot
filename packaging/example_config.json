@@ -1,0 +1,13 @@
+{
+  "time": {
+    "year": 2030,
+    "month": 1,
+    "day": 1,
+    "hour": 10,
+    "minute": 0,
+    "second": 0,
+    "millisecond": 0,
+    "lead_millisecond": 0
+  },
+  "courses": {"crn": [], "scrn": []}
+}

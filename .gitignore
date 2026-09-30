@@ -1,6 +1,10 @@
 .env
 *.exe
 /data/config.json
-.agents
 /build
-*.bat
+/cmake-*-macos-*/
+/.deps/
+/dist/
+.DS_Store
+__pycache__/
+.vscode

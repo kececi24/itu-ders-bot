@@ -1,147 +1,101 @@
-#define NOMINMAX
-
 #include "clock.hpp"
+#include <algorithm>
+#include <curl/curl.h>
 #include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <thread>
-#include <vector>
 #include <limits>
-#include <locale>
+#include <stdexcept>
+#include <thread>
 
-SystemClock::SystemClock() : offset_ms(0) {}
-
-namespace {
-    constexpr int samples = 7;
-    constexpr long long http_date_midpoint_ms = 500;
+void SystemClock::sync_with_server(HttpSession& session, const std::string& origin) {
+    sample({[&](const HttpRequest& request) { return session.request(request); },
+            [] { return Wall::now(); }, [] { return Steady::now(); },
+            [](std::chrono::milliseconds duration) { std::this_thread::sleep_for(duration); }}, origin);
 }
 
-std::time_t SystemClock::parse_http_date(const std::wstring& date_str) {
-    std::tm tm = {};
-    std::wistringstream ss(date_str);
-    // Format example: Sat, 07 Feb 2026 14:00:01 GMT
-    // Note: Windows implementation of get_time can be locale-sensitive.
-    // For robustness in this specific format, simple parsing is often safer, 
-    // but get_time works if locale is "C".
-    ss.imbue(std::locale("C")); 
-    ss >> std::get_time(&tm, L"%a, %d %b %Y %H:%M:%S");
-    return _mkgmtime(&tm);
-}
-
-void SystemClock::sync_with_server(HINTERNET hConnect) {
-    std::cout << "[Clock] Syncing with ITU server..." << std::endl;
-
-    long long best_offset = 0;
+void SystemClock::sample(const Sampling& sampling, const std::string& origin) {
+    std::cout << "[Clock] Syncing with ITU server...\n";
     long long best_rtt = std::numeric_limits<long long>::max();
-    int successful_samples = 0;
-
-    for (int i = 0; i < samples; i++) {
-        HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"HEAD", L"/", 
-                                                NULL, WINHTTP_NO_REFERER, 
-                                                WINHTTP_DEFAULT_ACCEPT_TYPES, 
-                                                WINHTTP_FLAG_SECURE);
-
-        if (!hRequest) {
-            std::cerr << "[Clock] Could not create sync request. Error: " << GetLastError() << std::endl;
-            continue;
+    long long best_offset = 0;
+    int successes = 0;
+    for (int index = 0; index < 7; ++index) {
+        try {
+            HttpRequest request;
+            request.method = "HEAD";
+            request.url = origin + "/";
+            request.timeout_ms = 5000;
+            const auto wall_start = sampling.wall_now();
+            const auto steady_start = sampling.steady_now();
+            const auto response = sampling.request(request);
+            const auto elapsed = sampling.steady_now() - steady_start;
+            auto date = response.headers.find("date");
+            if (response.status < 200 || response.status >= 400 || date == response.headers.end())
+                throw std::runtime_error("Clock response unavailable");
+            const auto seconds = curl_getdate(date->second.c_str(), nullptr);
+            if (seconds == static_cast<std::time_t>(-1)) throw std::runtime_error("Invalid Date header");
+            const auto server = Wall::from_time_t(seconds) + std::chrono::milliseconds(500);
+            const auto midpoint = wall_start + elapsed / 2;
+            const auto rtt = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+            const auto offset = std::chrono::duration_cast<std::chrono::milliseconds>(server - midpoint).count();
+            ++successes;
+            if (rtt < best_rtt) { best_rtt = rtt; best_offset = offset; }
+            std::cout << "   Sample " << index + 1 << ": RTT " << rtt << "ms Offset " << offset << "ms\n";
+        } catch (const std::exception&) {
+            std::cerr << "[Clock] Sample " << index + 1 << " failed.\n";
         }
-        
-        auto t1 = std::chrono::system_clock::now();
-        if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&
-            WinHttpReceiveResponse(hRequest, NULL)) {
-            
-            auto t2 = std::chrono::system_clock::now();
-            
-            wchar_t date_buffer[256];
-            DWORD dwSize = sizeof(date_buffer);
-            if (!WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_CUSTOM, L"Date", date_buffer, &dwSize, WINHTTP_NO_HEADER_INDEX)) {
-                std::cerr << "[Clock] Date header missing in sample " << (i + 1) << ". Error: " << GetLastError() << std::endl;
-                WinHttpCloseHandle(hRequest);
-                continue;
-            }
-
-            std::time_t server_time_t = parse_http_date(date_buffer);
-            // HTTP Date has only whole-second precision, so estimate the middle of that second.
-            auto server_time_pt = std::chrono::system_clock::from_time_t(server_time_t) + std::chrono::milliseconds(http_date_midpoint_ms);
-            auto mid_point_local = t1 + (t2 - t1) / 2;
-            auto rtt = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-
-            auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(server_time_pt - mid_point_local).count();
-            successful_samples++;
-            if (rtt < best_rtt) {
-                best_rtt = rtt;
-                best_offset = diff;
-            }
-            
-            std::wcout << L"   Sample " << (i + 1) << L": Server Date [" << date_buffer
-                       << L"] RTT: " << rtt << L"ms Offset: " << diff << L"ms" << std::endl;
-        } else {
-            std::cerr << "[Clock] Sync sample failed. Error: " << GetLastError() << std::endl;
-        }
-        WinHttpCloseHandle(hRequest);
-        if (i + 1 < samples) Sleep(300);
+        if (index < 6) sampling.sleep(std::chrono::milliseconds(300));
     }
-
-    if (successful_samples > 0) {
-        this->offset_ms = best_offset;
-        std::cout << "[Clock] Selected offset from lowest RTT sample: " << this->offset_ms
-                  << "ms (RTT " << best_rtt << "ms; HTTP Date precision is about +/-500ms)" << std::endl;
-    } else {
-        std::cerr << "[Clock] Could not sync. Falling back to local system time." << std::endl;
-        this->offset_ms = 0;
-    }
+    offset_ms_ = successes ? best_offset : 0;
+    if (successes) std::cout << "[Clock] Selected lowest RTT offset: " << offset_ms_
+                             << "ms (RTT " << best_rtt << "ms; HTTP Date precision about +/-500ms)\n";
+    else std::cerr << "[Clock] Could not sync. Falling back to local system time.\n";
 }
 
-void SystemClock::wait_until(int year, int month, int day, int hour, int minute, int second, int millisecond, int lead_millisecond) {
-    if (lead_millisecond < 0) lead_millisecond = 0;
+SystemClock::Wall::time_point SystemClock::local_target(int year, int month, int day, int hour,
+                                                       int minute, int second, int millisecond) {
+    std::tm value{};
+    value.tm_year = year - 1900; value.tm_mon = month - 1; value.tm_mday = day;
+    value.tm_hour = hour; value.tm_min = minute; value.tm_sec = second;
+    value.tm_isdst = -1;
+    const auto seconds = std::mktime(&value);
+    if (seconds == static_cast<std::time_t>(-1)) throw std::runtime_error("Invalid target time");
+    return Wall::from_time_t(seconds) + std::chrono::milliseconds(millisecond);
+}
 
-    std::tm target_tm = {};
-    target_tm.tm_year = year - 1900;
-    target_tm.tm_mon  = month - 1;
-    target_tm.tm_mday = day;
-    target_tm.tm_hour = hour;
-    target_tm.tm_min  = minute;
-    target_tm.tm_sec  = second;
+SystemClock::Steady::time_point SystemClock::deadline(Wall::time_point target, Wall::time_point wall_now,
+                                                      Steady::time_point steady_now, long long offset_ms, int lead_ms) {
+    return steady_now + std::chrono::duration_cast<Steady::duration>(
+        target - wall_now - std::chrono::milliseconds(offset_ms) - std::chrono::milliseconds(std::max(0, lead_ms)));
+}
 
-    auto target_tp = std::chrono::system_clock::from_time_t(std::mktime(&target_tm)) + std::chrono::milliseconds(millisecond);
-    auto now_server_estimated = std::chrono::system_clock::now() + std::chrono::milliseconds(offset_ms);
-    auto wait_duration = target_tp - now_server_estimated - std::chrono::milliseconds(lead_millisecond);
+void SystemClock::wait_until(int year, int month, int day, int hour, int minute, int second,
+                            int millisecond, int lead_millisecond, TimingQoS* qos) {
+    wait_until_with({[] { return Wall::now(); }, [] { return Steady::now(); },
+                     [](std::chrono::milliseconds duration) { std::this_thread::sleep_for(duration); },
+                     [] { itu::platform::cpu_relax(); }},
+                    year, month, day, hour, minute, second, millisecond, lead_millisecond, qos);
+}
 
-    if (lead_millisecond > 0) {
-        std::cout << "[Clock] Network lead enabled: sending " << lead_millisecond
-                  << "ms before the estimated server target time." << std::endl;
-    }
-
-    if (wait_duration <= std::chrono::milliseconds(0)) {
-        return;
-    }
-
-    auto deadline = std::chrono::steady_clock::now() + wait_duration;
-    auto last_log = std::chrono::steady_clock::now() - std::chrono::seconds(1);
-
+void SystemClock::wait_until_with(const Waiting& waiting, int year, int month, int day, int hour,
+                                 int minute, int second, int millisecond, int lead_millisecond, TimingQoS* qos) {
+    const auto target = local_target(year, month, day, hour, minute, second, millisecond);
+    const auto wall_now = waiting.wall_now();
+    const auto steady_now = waiting.steady_now();
+    const auto end = deadline(target, wall_now, steady_now, offset_ms_, lead_millisecond);
+    if (lead_millisecond > 0) std::cout << "[Clock] Network lead: " << lead_millisecond << "ms.\n";
+    auto last_log = steady_now - std::chrono::seconds(1);
     while (true) {
-        auto now = std::chrono::steady_clock::now();
-        auto remaining = deadline - now;
-
-        if (remaining <= std::chrono::milliseconds(0)) {
-            std::cout << "\n[Clock] Target reached." << std::endl;
-            return;
-        }
-
-        auto ms_remaining = std::chrono::duration_cast<std::chrono::milliseconds>(remaining).count();
-        if (ms_remaining > 250 && now - last_log >= std::chrono::milliseconds(250)) {
-            std::cout << "[Clock] Waiting for target time: " << (ms_remaining / 1000.0) << "s   \r" << std::flush;
+        const auto now = waiting.steady_now();
+        const auto remaining = end - now;
+        if (remaining <= std::chrono::seconds(2) && qos) qos->activate();
+        if (remaining <= Steady::duration::zero()) return;
+        const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(remaining).count();
+        if (ms > 250 && now - last_log >= std::chrono::milliseconds(250)) {
+            std::cout << "[Clock] Waiting for target time: " << ms / 1000.0 << "s   \r" << std::flush;
             last_log = now;
         }
-
-        if (ms_remaining > 2000) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        } else if (ms_remaining > 100) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(20));
-        } else if (ms_remaining > 5) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        } else {
-            YieldProcessor();
-        }
+        if (ms > 2000) waiting.sleep(std::chrono::seconds(1));
+        else if (ms > 100) waiting.sleep(std::chrono::milliseconds(20));
+        else if (ms > 5) waiting.sleep(std::chrono::milliseconds(1));
+        else waiting.spin();
     }
 }

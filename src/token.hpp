@@ -1,25 +1,22 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
 
-#include <windows.h>
-#include <winhttp.h>
+#include "http.hpp"
 #include <string>
 
 class TokenFetcher {
-private:
-    HINTERNET hSession;
-    HINTERNET hConnect;
-
-    std::string perform_request(const std::wstring& method, const std::wstring& path, 
-                               const std::string& body = "", const std::wstring& headers = L"");
-
-    std::string extract_value(const std::string& html, const std::string& name);
-    std::string url_encode(const std::string& value);
-
+    HttpSession session_;
 public:
-    TokenFetcher();
-    ~TokenFetcher();
-    std::string get_bearer_token(const std::string& username, const std::string& password, const bool _debug);
+    TokenFetcher() = default;
+    std::string get_bearer_token(const std::string& username,
+                                 const std::string& password, bool debug = false);
 };
 
+#ifdef ITU_ENABLE_TEST_SEAMS
+// Internal fixture seam; production callers always use the fixed OBS endpoints.
+namespace token_detail {
+std::string fetch(HttpSession& session, const std::string& obs_base,
+                  const std::string& username, const std::string& password, bool debug);
+}
+#endif
 #endif
