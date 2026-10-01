@@ -16,7 +16,7 @@ std::string lower(std::string value) {
 
 std::string decode_html(std::string value) {
     // Decode once so an escaped entity is not accidentally interpreted twice.
-    static const std::regex entity(R"(&(amp|quot|apos|lt|gt|#[0-9]+|#x[0-9a-fA-F]+);)");
+    static const std::regex entity(R"(&(amp|quot|apos|lt|gt|#[0-9]+|#[xX][0-9a-fA-F]+);)");
     std::string result;
     size_t cursor = 0;
     for (std::sregex_iterator it(value.begin(), value.end(), entity), end; it != end; ++it) {
@@ -29,7 +29,8 @@ std::string decode_html(std::string value) {
         else if (code == "gt") result += '>';
         else {
             unsigned long cp = 0;
-            try { cp = std::stoul(code.substr(code[1] == 'x' ? 2 : 1), nullptr, code[1] == 'x' ? 16 : 10); }
+            const bool hex = (code[1] == 'x' || code[1] == 'X');
+            try { cp = std::stoul(code.substr(hex ? 2 : 1), nullptr, hex ? 16 : 10); }
             catch (...) { throw std::runtime_error("Authentication page contains an invalid HTML entity."); }
             if (cp > 0x10ffff || (cp >= 0xd800 && cp <= 0xdfff) || cp == 0)
                 throw std::runtime_error("Authentication page contains an invalid HTML entity.");

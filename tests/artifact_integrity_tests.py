@@ -9,6 +9,11 @@ import unittest
 from unittest.mock import patch
 import warnings
 import zipfile
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+from release_checksums import release_checksums
 
 import native_artifacts
 
@@ -129,6 +134,87 @@ class ArchiveIntegrityTests(unittest.TestCase):
                     self.rejected(self.package(target, extra_entries=[(name, b'synthetic', False)]), message)
             self.rejected(self.package(target, extra_entries=[(root + '/link', b'README.md', True)]),
                           'archive (?:symlink|special entry)')
+
+    def test_release_checksums_accepts_consistent_archives(self):
+        for target in ('windows-x64', 'macos-arm64', 'linux-x64'):
+            self.package(target)
+        release_checksums(self.folder, 'v1.0.0')
+        self.assertTrue((self.folder / 'SHA256SUMS').is_file())
+
+    def test_release_checksums_rejects_mismatched_revisions(self):
+        self.package('windows-x64', mutate=lambda f: f.update({
+            'build-manifest.json': json.dumps({
+                'version': '1.0.0', 'target': 'windows-x64', 'compiler': {},
+                'dependencies': {}, 'revision': '1' * 40
+            }).encode()
+        }))
+        self.package('macos-arm64')
+        self.package('linux-x64')
+        with self.assertRaisesRegex(SystemExit, 'Archive revision mismatch'):
+            release_checksums(self.folder, 'v1.0.0')
+
+    def test_release_checksums_rejects_dirty_manifest(self):
+        for target in ('windows-x64', 'macos-arm64'):
+            self.package(target)
+        self.package('linux-x64', mutate=lambda f: f.update({
+            'build-manifest.json': json.dumps({
+                'version': '1.0.0', 'target': 'linux-x64', 'compiler': {},
+                'dependencies': {}, 'revision': '0' * 40, 'dirty': True
+            }).encode()
+        }))
+        with self.assertRaisesRegex(SystemExit, 'dirty working tree'):
+            release_checksums(self.folder, 'v1.0.0')
+
+    def test_release_checksums_rejects_invalid_revision(self):
+        for bad_rev in ('unknown', '123', 'g' * 40):
+            with self.subTest(bad_rev=bad_rev):
+                for target in ('windows-x64', 'macos-arm64'):
+                    self.package(target)
+                self.package('linux-x64', mutate=lambda f: f.update({
+                    'build-manifest.json': json.dumps({
+                        'version': '1.0.0', 'target': 'linux-x64', 'compiler': {},
+                        'dependencies': {}, 'revision': bad_rev
+                    }).encode()
+                }))
+                with self.assertRaisesRegex(SystemExit, 'Invalid or unknown revision in manifest'):
+                    release_checksums(self.folder, 'v1.0.0')
+
+    def test_release_checksums_rejects_missing_checksum_file(self):
+        for target in ('windows-x64', 'macos-arm64', 'linux-x64'):
+            self.package(target)
+        (self.folder / 'itu-ders-bot-1.0.0-linux-x64.tar.gz.sha256').unlink()
+        with self.assertRaisesRegex(SystemExit, 'Missing checksum file'):
+            release_checksums(self.folder, 'v1.0.0')
+
+    def test_release_checksums_accepts_sha256_git_revisions(self):
+        rev = 'a' * 64
+        for target in ('windows-x64', 'macos-arm64', 'linux-x64'):
+            self.package(target, mutate=lambda f: f.update({
+                'build-manifest.json': json.dumps({
+                    'version': '1.0.0', 'target': target, 'compiler': {},
+                    'dependencies': {}, 'revision': rev
+                }).encode()
+            }))
+        release_checksums(self.folder, 'v1.0.0')
+        self.assertTrue((self.folder / 'SHA256SUMS').is_file())
+
+    def test_linux_abi_checker_rejects_newer_glibcxx_and_cxxabi(self):
+        fake_elf = self.folder / 'fake.elf'
+        fake_elf.write_bytes(b'\x7fELF\x02\x01' + b'\x00' * 12 + (62).to_bytes(2, 'little') + b'\x00' * 100)
+        with patch.object(native_artifacts, 'output') as mock_output:
+            mock_output.side_effect = lambda *cmd: (
+                '(NEEDED) [libc.so.6]\n(NEEDED) [libstdc++.so.6]' if cmd[1] == '-d'
+                else 'GLIBC_2.35\nGLIBCXX_3.4.32\nCXXABI_1.3.13'
+            )
+            with self.assertRaisesRegex(AssertionError, 'requires libstdc\\+\\+ newer than Ubuntu 22.04: GLIBCXX_3.4.32'):
+                native_artifacts.inspect(fake_elf, 'linux-x64')
+
+            mock_output.side_effect = lambda *cmd: (
+                '(NEEDED) [libc.so.6]\n(NEEDED) [libstdc++.so.6]' if cmd[1] == '-d'
+                else 'GLIBC_2.35\nGLIBCXX_3.4.30\nCXXABI_1.3.15'
+            )
+            with self.assertRaisesRegex(AssertionError, 'requires CXXABI newer than Ubuntu 22.04: CXXABI_1.3.15'):
+                native_artifacts.inspect(fake_elf, 'linux-x64')
 
 
 if __name__ == '__main__':

@@ -14,6 +14,7 @@
 #ifdef __APPLE__
 #include <pthread.h>
 #include <pthread/qos.h>
+#include <sys/acl.h>
 #endif
 #if defined(__x86_64__)
 #include <immintrin.h>
@@ -163,6 +164,31 @@ bool atomic_write_private(const std::filesystem::path& path, const std::string& 
     // Refuse the replacement before writing credentials in that case.
     bool written = fchmod(fd, S_IRUSR | S_IWUSR) == 0 && fstat(fd, &permissions) == 0 &&
                    (permissions.st_mode & 0777) == (S_IRUSR | S_IWUSR) && permissions.st_uid == geteuid();
+#ifdef __APPLE__
+    if (written) {
+        acl_t empty_acl = acl_init(0);
+        if (empty_acl) {
+            if (acl_set_fd(fd, empty_acl) != 0) {
+                written = false;
+            }
+            acl_free(empty_acl);
+        } else {
+            written = false;
+        }
+        if (written) {
+            acl_t acl = acl_get_fd(fd);
+            if (acl != nullptr) {
+                acl_entry_t entry;
+                if (acl_get_entry(acl, ACL_FIRST_ENTRY, &entry) == 0) {
+                    written = false;
+                }
+                acl_free(acl);
+            } else if (errno != ENOENT) {
+                written = false;
+            }
+        }
+    }
+#endif
     size_t offset = 0;
     while (written && offset < contents.size()) {
         const ssize_t count = write(fd, contents.data() + offset, contents.size() - offset);
@@ -170,9 +196,11 @@ bool atomic_write_private(const std::filesystem::path& path, const std::string& 
         if (count <= 0) { written = false; break; }
         offset += static_cast<size_t>(count);
     }
-    int sync_result;
-    do { sync_result = fsync(fd); } while (sync_result < 0 && errno == EINTR);
-    if (sync_result < 0) written = false;
+    if (written) {
+        int sync_result;
+        do { sync_result = fsync(fd); } while (sync_result < 0 && errno == EINTR);
+        if (sync_result < 0) written = false;
+    }
     if (close(fd) < 0) written = false;
     if (!written || rename(temporary.data(), path.c_str()) < 0) {
         unlink(temporary.data());

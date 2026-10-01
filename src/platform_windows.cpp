@@ -62,6 +62,7 @@ bool cooked_reader = false;
 HANDLE control_input = INVALID_HANDLE_VALUE;
 BOOL WINAPI on_control(DWORD event) {
     if (event != CTRL_C_EVENT && event != CTRL_BREAK_EVENT) return FALSE;
+    BOOL handled = FALSE;
     AcquireSRWLockShared(&reader_lock);
     if (reader_active) {
         interrupted.store(true);
@@ -77,9 +78,10 @@ BOOL WINAPI on_control(DWORD event) {
             DWORD written = 0;
             WriteConsoleInputW(control_input, &wake, 1, &written);
         }
+        handled = TRUE;
     }
     ReleaseSRWLockShared(&reader_lock);
-    return TRUE;
+    return handled;
 }
 void check_interrupted() {
     if (interrupted.load()) throw std::runtime_error("Terminal input interrupted");
@@ -232,10 +234,18 @@ struct ConsoleSession::Impl {
 };
 ConsoleSession::ConsoleSession() : impl_(std::make_unique<Impl>()) {}
 ConsoleSession::~ConsoleSession() = default;
-struct MenuInput::Impl { InputMode mode{true, false}; };
+struct MenuInput::Impl {
+    InputMode mode{true, false};
+    MenuKey pending_key = MenuKey::other;
+    WORD repeat_remaining = 0;
+};
 MenuInput::MenuInput() : impl_(std::make_unique<Impl>()) {}
 MenuInput::~MenuInput() = default;
 MenuKey MenuInput::read() {
+    if (impl_->repeat_remaining > 0) {
+        --impl_->repeat_remaining;
+        return impl_->pending_key;
+    }
     for (;;) {
         check_interrupted();
         const DWORD ready = WaitForSingleObject(impl_->mode.input, 100);
@@ -249,12 +259,18 @@ MenuKey MenuInput::read() {
         check_interrupted();
         if (!count || record.EventType != KEY_EVENT || !record.Event.KeyEvent.bKeyDown) continue;
         const auto& key = record.Event.KeyEvent;
-        if (key.wVirtualKeyCode == VK_UP) return MenuKey::up;
-        if (key.wVirtualKeyCode == VK_DOWN) return MenuKey::down;
-        if (key.wVirtualKeyCode == VK_RETURN) return MenuKey::enter;
-        if (key.uChar.UnicodeChar == 4 || key.uChar.UnicodeChar == 26) return MenuKey::end;
-        if (key.uChar.UnicodeChar == 3) throw std::runtime_error("Terminal input interrupted");
-        return MenuKey::other;
+        MenuKey key_type = MenuKey::other;
+        if (key.wVirtualKeyCode == VK_UP) key_type = MenuKey::up;
+        else if (key.wVirtualKeyCode == VK_DOWN) key_type = MenuKey::down;
+        else if (key.wVirtualKeyCode == VK_RETURN) key_type = MenuKey::enter;
+        else if (key.uChar.UnicodeChar == 4 || key.uChar.UnicodeChar == 26) key_type = MenuKey::end;
+        else if (key.uChar.UnicodeChar == 3) throw std::runtime_error("Terminal input interrupted");
+
+        if ((key_type == MenuKey::up || key_type == MenuKey::down) && key.wRepeatCount > 1) {
+            impl_->pending_key = key_type;
+            impl_->repeat_remaining = key.wRepeatCount - 1;
+        }
+        return key_type;
     }
 }
 bool read_line(std::string& value, bool password, const std::string& prompt) {

@@ -51,7 +51,15 @@ class Session:
         try:
             assert self.process.wait(timeout=5) == expected, self.output
             while select.select([self.master], [], [], 0)[0]:
-                self.output += os.read(self.master, 65536)
+                try:
+                    chunk = os.read(self.master, 65536)
+                except OSError as error:
+                    if error.errno == errno.EIO:
+                        break
+                    raise
+                if not chunk:
+                    break
+                self.output += chunk
             restored = termios.tcgetattr(self.slave)
             # Darwin may set PENDIN when canonical mode resumes; it is kernel
             # pending-input bookkeeping, not a user terminal setting.

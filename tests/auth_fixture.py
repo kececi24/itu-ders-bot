@@ -32,7 +32,7 @@ class Fixture(http.server.BaseHTTPRequestHandler):
         if self.path.startswith('/auth/Login.aspx?subSessionId='):
             action = {'query_action': '?subSessionId=fixture-session&step=login', 'absolute_action': '/auth/Login.aspx?subSessionId=fixture-session&step=login'}.get(scenario, './Login.aspx?subSessionId=fixture-session&step=login')
             if scenario == 'absolute_action': action = f'http://127.0.0.1:{self.server.server_port}' + action
-            fields = "<input value='a&amp;b+/' name='__VIEWSTATE'><input name='__VIEWSTATEGENERATOR' value='vsg'><input value='ev' id='__EVENTVALIDATION'>"
+            fields = "<input value='a&amp;b+/&#X2D;' name='__VIEWSTATE'><input name='__VIEWSTATEGENERATOR' value='vsg'><input value='ev' id='__EVENTVALIDATION'>"
             if scenario == 'missing_field': fields = fields.replace("id='__EVENTVALIDATION'", "id='other'")
             return self.reply(body=f"<form method='post' action='{action.replace('&', '&amp;')}'>{fields}</form>")
         if self.path == '/Login.aspx?identityGuid=first&state=fixture-session':
@@ -58,7 +58,7 @@ class Fixture(http.server.BaseHTTPRequestHandler):
         self.server.check(self.headers.get('Content-Type') == 'application/x-www-form-urlencoded', 'form Content-Type')
         self.server.check(self.headers.get('Referer', '').endswith('/auth/Login.aspx?subSessionId=fixture-session'), 'Referer')
         self.server.check('handshake=ok' in self.headers.get('Cookie', ''), 'redirect cookie missing')
-        expected = [('__VIEWSTATE', 'a&b+/'), ('__VIEWSTATEGENERATOR', 'vsg'), ('__EVENTVALIDATION', 'ev'), ('ctl00$ContentPlaceHolder1$tbUserName', 'test ü&+'), ('ctl00$ContentPlaceHolder1$tbPassword', 'fixture-password\t&+'), ('ctl00$ContentPlaceHolder1$btnLogin', 'Giriş / Login')]
+        expected = [('__VIEWSTATE', 'a&b+/-'), ('__VIEWSTATEGENERATOR', 'vsg'), ('__EVENTVALIDATION', 'ev'), ('ctl00$ContentPlaceHolder1$tbUserName', 'test ü&+'), ('ctl00$ContentPlaceHolder1$tbPassword', 'fixture-password\t&+'), ('ctl00$ContentPlaceHolder1$btnLogin', 'Giriş / Login')]
         self.server.check(urllib.parse.parse_qsl(raw) == expected, 'form order/values')
         self.server.check('%09' in raw and '%C3%BC' in raw and '%2B' in raw, 'UTF8/reserved encoding')
         scenario = self.server.scenario

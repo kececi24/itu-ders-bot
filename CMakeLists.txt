@@ -61,14 +61,25 @@ target_link_libraries(main PRIVATE itu_core)
 add_executable(setup setup/main.cpp)
 target_link_libraries(setup PRIVATE itu_platform)
 
-# A machine-readable package input; no absolute paths or user environment values.
-execute_process(COMMAND git log -1 --format=%H WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    OUTPUT_VARIABLE ITU_REVISION OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
-if(NOT ITU_REVISION MATCHES "^[0-9a-f]+$")
-    set(ITU_REVISION unknown)
-endif()
-file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/bin/build-manifest.json" CONTENT
-"{\n  \"schema_version\": 1,\n  \"version\": \"${PROJECT_VERSION}\",\n  \"target\": \"${ITU_TARGET}\",\n  \"compiler\": {\"id\": \"${CMAKE_CXX_COMPILER_ID}\", \"version\": \"${CMAKE_CXX_COMPILER_VERSION}\"},\n  \"revision\": \"${ITU_REVISION}\",\n  \"dependencies\": ${ITU_DEPENDENCY_MANIFEST}\n}\n")
+file(WRITE "${CMAKE_BINARY_DIR}/dependency-manifest.json" "${ITU_DEPENDENCY_MANIFEST}\n")
+
+# A machine-readable package input generated with the actual build.
+add_custom_target(build_manifest ALL
+    COMMAND "${CMAKE_COMMAND}"
+        -DSOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+        -DBINARY_DIR="${CMAKE_BINARY_DIR}"
+        -DOUTPUT_FILE="${CMAKE_BINARY_DIR}/bin/build-manifest.json"
+        -DPROJECT_VERSION="${PROJECT_VERSION}"
+        -DITU_TARGET="${ITU_TARGET}"
+        -DCOMPILER_ID="${CMAKE_CXX_COMPILER_ID}"
+        -DCOMPILER_VERSION="${CMAKE_CXX_COMPILER_VERSION}"
+        -DDEPENDENCY_MANIFEST_FILE="${CMAKE_BINARY_DIR}/dependency-manifest.json"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateManifest.cmake"
+    BYPRODUCTS "${CMAKE_BINARY_DIR}/bin/build-manifest.json"
+    COMMENT "Generating build manifest with current build provenance"
+)
+add_dependencies(main build_manifest)
+add_dependencies(setup build_manifest)
 
 include(CTest)
 if(BUILD_TESTING)

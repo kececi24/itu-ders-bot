@@ -13,6 +13,10 @@
 #include <aclapi.h>
 #else
 #include <sys/stat.h>
+#include <unistd.h>
+#ifdef __APPLE__
+#include <sys/acl.h>
+#endif
 #endif
 namespace test_helpers {
 inline void require(bool value, const char* message) { if (!value) throw std::runtime_error(message); }
@@ -80,7 +84,16 @@ inline void private_file(const std::filesystem::path& file) {
     }
     require(owner_access, "private file owner lacks read/write access");
 #else
-    struct stat info{}; require(stat(file.c_str(), &info) == 0 && (info.st_mode & 0777) == 0600, "private file mode must be 0600");
+    struct stat info{}; require(stat(file.c_str(), &info) == 0 && (info.st_mode & 0777) == 0600 && info.st_uid == geteuid(), "private file mode must be 0600 and owned by current user");
+#ifdef __APPLE__
+    acl_t acl = acl_get_file(file.c_str(), ACL_TYPE_EXTENDED);
+    if (acl != nullptr) {
+        acl_entry_t entry;
+        bool has_entry = (acl_get_entry(acl, ACL_FIRST_ENTRY, &entry) == 0);
+        acl_free(acl);
+        require(!has_entry, "private file must have no extended ACL entries");
+    }
+#endif
 #endif
 }
 }

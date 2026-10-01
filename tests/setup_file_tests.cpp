@@ -40,6 +40,31 @@ int main() {
     std::filesystem::create_directory(test_helpers::path(destination_directory));
     assert(!replace_file(destination_directory, "replacement"));
     assert(std::filesystem::is_directory(test_helpers::path(destination_directory)));
+#ifdef __APPLE__
+    const auto acl_dir = root + "/acl_inherited";
+    std::filesystem::create_directory(test_helpers::path(acl_dir));
+    int chmod_res = std::system(("chmod +a 'everyone allow read,file_inherit' \"" + acl_dir + "\"").c_str());
+    if (chmod_res == 0) {
+        const auto acl_env = acl_dir + "/.env";
+        assert(write_to_env(acl_env, "user", "secret_one"));
+        assert(read_file(acl_env).find("secret_one") != std::string::npos);
+        test_helpers::private_file(test_helpers::path(acl_env));
+
+        assert(write_to_env(acl_env, "user", "secret_two"));
+        assert(read_file(acl_env).find("secret_two") != std::string::npos);
+        test_helpers::private_file(test_helpers::path(acl_env));
+
+        const std::string preserved_content = read_file(acl_env);
+        const auto sub_dir = acl_dir + "/sub";
+        std::filesystem::create_directory(test_helpers::path(sub_dir));
+        assert(!replace_file(sub_dir, "cannot_overwrite_dir"));
+        assert(std::filesystem::is_directory(test_helpers::path(sub_dir)));
+        assert(read_file(acl_env) == preserved_content);
+
+        for (auto& entry : std::filesystem::directory_iterator(test_helpers::path(acl_dir)))
+            assert(entry.path().filename().string().find(".tmp.") == std::string::npos);
+    }
+#endif
     for (auto& entry : std::filesystem::directory_iterator(directory.root))
         assert(entry.path().filename().string().find(".tmp.") == std::string::npos);
     assert(!write_to_env(root, "user", "password"));

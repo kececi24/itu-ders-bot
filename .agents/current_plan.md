@@ -1,44 +1,39 @@
 # Current Plan
 
-Last updated: 2026-09-30 21:40 Europe/Istanbul
+Last updated: 2026-10-01 11:10 Europe/Istanbul
 Primary ExecPlan: `.agents/exec_plans/active/cross-platform-port.md`
 State: ACTIVE
 
 ## Current Objective
 
-Finish the remaining native Windows build and external acceptance gates for the unified port. Locally available Linux and macOS build/test/archive work is complete.
+All open implementation defects, security vulnerabilities, and review findings (CP-13 through CP-30) have been resolved and verified with native execution, 7/7 passing offline CTest suites, and package/archive validation.
 
 ## Last Verified State
 
-- Validation on macOS ARM64 (Apple Clang 21, macOS 26.6 SDK, project-local CMake 4.4.3, Python 3.12.3):
-  - PASS: integrated configure and build with `macos-arm64` preset using Apple SDK libcurl 8.7.1.
-  - PASS: all 7/7 offline CTest suites passed in 37.86s (transport, authentication, core_and_clock, application_flags, setup_terminal, setup_files, artifact_integrity).
-  - PASS: native Mach-O binary inspection, ARM64 architecture, minos 14.0, codesign verification, clean-directory missing-config/non-TTY startup smoke.
-  - PASS: sanitized package `dist/itu-ders-bot-1.0.0-macos-arm64.tar.gz` and outer checksum `dist/itu-ders-bot-1.0.0-macos-arm64.tar.gz.sha256`; extracted archive passes integrity and startup smoke.
-  - PASS: production `BUILD_TESTING=OFF` build verifies test seams and loopback socket symbols are absent.
-- Validation on Ubuntu 22.04 WSL (GCC 11.4, project-local CMake 3.31.6/Python 3.12.14, static dependencies):
-  - PASS: integrated configure/build, all 7/7 offline CTest suites (27.59s), native ELF inspection, sanitized archive `dist/itu-ders-bot-1.0.0-linux-x64.tar.gz`.
-  - PASS: production test seams absent; setup refuses un-enforced chmod filesystem and cleans up.
-- Fixed during macOS validation:
-  - CP-08: Resolved symlinks in `ITU_APPLE_SDK` in `cmake/Dependencies.cmake` so `cmake_path(IS_PREFIX ...)` correctly validates curl include/library paths within SDK.
-  - CP-09: Updated `is_terminal()` in `src/platform_posix.cpp` and `src/platform_windows.cpp` to check both STDIN and STDOUT handles so non-interactive redirected output does not hang waiting for interactive Enter.
-  - CP-10: Fixed macOS QoS demotion and unspecified elevation in `TimingGuard` (`src/platform_posix.cpp`), preventing downgrade of `USER_INTERACTIVE` threads and correctly elevating unspecified QoS threads.
-  - CP-11: Stripped trailing `\r` on newline and EOF in POSIX `read_line()` (`src/platform_posix.cpp`) to prevent CRLF input from corrupting passwords and configuration values.
-  - CP-12: Added pre-check for dependency manifest existence in `cmake/Dependencies.cmake` before resolving `file(REAL_PATH)` to eliminate CMake author warnings on unbootstrapped checkouts.
+- CP-13 to CP-19: ACL stripping, Windows curl `iphlpapi`, release revision checks, build provenance, Ubuntu 22.04 ABI ceilings, Windows console test synchronization, and repeat count handling. PASS.
+- CP-20: Fixed macOS missing dependencies in `build-manifest.json` by writing `${CMAKE_BINARY_DIR}/dependency-manifest.json` from `ITU_DEPENDENCY_MANIFEST`. Generated manifest verified with Apple SDK curl. PASS.
+- CP-21: Replaced conditional `if (CreateProcessW)` with hard assertions in `windows_console_tests.cpp`; added child timeout checks and process termination on hang; verified non-zero exit.
+- CP-22: Fixed `on_control` in `src/platform_windows.cpp` to return `handled` (FALSE when inactive) so terminal control signals are not swallowed during reader teardown.
+- CP-23: Restricted `MenuInput::read()` key repeat buffering strictly to directional keys (`up`, `down`), preventing duplicate `enter` actions.
+- CP-24: Handled `errno.EIO` in `setup_pty_tests.py` draining loop (`Session.finish`), preventing crashes on Linux when child process closes slave PTY.
+- CP-25: Added terminating `nullptr` to `setup/main.cpp` `pointers` vector for standard C/C++ `argv[argc] == nullptr` compliance.
+- CP-26: Handled missing `.sha256` files gracefully in `release_checksums.py`; added support for 64-char Git SHA-256 commit hashes in `package.py` and `release_checksums.py`.
+- CP-27: Supported uppercase hex HTML entities (e.g. `&#X2D;`) in `src/token.cpp` `decode_html`; verified in `auth_fixture.py`. PASS.
+- CP-28: Added owner UID check (`info.st_uid == geteuid()`) to `test_helpers::private_file()` on POSIX, matching Windows DACL owner assertions. PASS.
+- CP-29: Added `tests/` to `sys.path` in `artifact_integrity_tests.py` for direct `unittest` execution; added 4 new unit tests covering dirty manifests, invalid revisions, missing checksum files, and SHA-256 hashes (15/15 passed). PASS.
+- CP-30: Guarded `fsync` with `if (written)` in `atomic_write_private` in `src/platform_posix.cpp` to skip redundant sync on failure. PASS.
+- macOS ARM64 Verification: All 7/7 offline CTest suites passed (35.58s); native artifact inspection/startup passed; sanitized archive package generated and verified. PASS.
 
 ## Next Actions
 
-1. On Windows, provide existing MSVC2022 x64 developer environment; bootstrap, build/test `windows-x64`, then package/verify. No compiler/SDK installation is authorized.
-2. After authorization, execute the defined native/newer-OS CI; retain separate Windows 10/11 desktop and account-owner live acceptance gates.
+1. Native Windows MSVC build/CTest/archive execution when a Windows environment/compiler is available.
+2. Authorized remote CI workflow runs for Linux (Ubuntu 22/24) and Windows Server.
+3. macOS 14/15 runtime and desktop/live acceptance remain deferred as agreed.
 
 ## Blockers / Risks
 
-- Current macOS host cannot execute native Windows MSVC build; Windows bootstrap is BLOCKED at missing `cl` on non-Windows hosts.
-- Ubuntu 24 archive smoke, native Windows 10/11 desktop and live service evidence remain NOT RUN/deferred.
-- Remote CI workflow invocation and publication remain unauthorized.
+Windows/MSVC and Linux native execution remain unavailable on this local Mac host. Remote CI, release publication, and live OBS registration calls are unauthorized and were not run.
 
 ## Handoff Notes
 
-- Preserve deleted source `data/example_config.json`; sanitized archive template is `packaging/example_config.json`.
-- Dependencies/tools/logs/archive remain ignored/project-local; no global installs, TLS bypass, live OBS/registration/retry, workflow invocation or publication occurred.
-- Primary checkout shares this branch. User authorized the local continuation checkpoint on `cross-platform` on 2026-09-30; pushes, tags, publication and remote CI remain unauthorized. Do not inspect personal config/credentials.
+Preserve the deleted `data/example_config.json`; use the sanitized packaging template. Git remains read-only for this task, dependencies remain project-local, and personal credentials/config were not inspected. Scratch evidence is under ignored `build/review-20261001/`.

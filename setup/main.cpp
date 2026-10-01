@@ -195,7 +195,8 @@ int main(int argc, char** argv) {
         auto utf8 = itu::platform::arguments(argc, argv);
         std::vector<char*> pointers;
         for (auto& argument : utf8) pointers.push_back(argument.data());
-        return run_setup(static_cast<int>(pointers.size()), pointers.data());
+        pointers.push_back(nullptr);
+        return run_setup(static_cast<int>(utf8.size()), pointers.data());
     }
     catch (const std::exception& error) {
         std::cerr << "Setup failed: " << error.what() << '\n';

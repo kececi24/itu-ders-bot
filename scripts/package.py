@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import re
 import shutil
+import subprocess
 import tarfile
 import tempfile
 import zipfile
@@ -31,8 +32,21 @@ def main():
     version = manifest["version"]
     if manifest["target"] != args.target or not re.fullmatch(r"\d+\.\d+\.\d+", version):
         raise SystemExit("Build manifest target/version mismatch")
-    if args.tag and args.tag != f"v{version}":
-        raise SystemExit("Release tag must match project version")
+    if args.tag:
+        if args.tag != f"v{version}":
+            raise SystemExit("Release tag must match project version")
+        rev = manifest.get("revision")
+        if not rev or rev == "unknown" or not re.fullmatch(r"([0-9a-f]{40}|[0-9a-f]{64})", rev):
+            raise SystemExit(f"Ambiguous release provenance: invalid manifest revision {rev}")
+        if manifest.get("dirty"):
+            raise SystemExit("Ambiguous release provenance: built from modified working tree")
+        if (ROOT / ".git").exists():
+            try:
+                res = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True)
+                if res.returncode == 0 and res.stdout.strip() != rev:
+                    raise SystemExit(f"Ambiguous release provenance: manifest revision {rev} does not match git HEAD {res.stdout.strip()}")
+            except Exception:
+                pass
     suffix = ".exe" if args.target == "windows-x64" else ""
     files = [(bin_dir / (name + suffix), name + suffix) for name in ("main", "setup")]
     files += [(ROOT / "packaging/example_config.json", "data/example_config.json"),

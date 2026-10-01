@@ -65,8 +65,17 @@ def inspect(binary, target):
         needed = re.findall(r'\(NEEDED\).*\[(.*?)\]', dynamic)
         assert all(lib in allowed for lib in needed), ('unexpected dynamic dependency', needed)
         assert not re.search(r'\((?:RPATH|RUNPATH)\)', dynamic), 'host-dependent search path'
-        versions = re.findall(r'GLIBC_(\d+)\.(\d+)', output('readelf', '--version-info', str(binary)))
-        assert all((int(major), int(minor)) <= (2,35) for major,minor in versions), 'requires glibc newer than Ubuntu 22.04'
+        version_info = output('readelf', '--version-info', str(binary))
+        versions = re.findall(r'GLIBC_(\d+)\.(\d+)', version_info)
+        assert all((int(major), int(minor)) <= (2, 35) for major, minor in versions), 'requires glibc newer than Ubuntu 22.04'
+        glibcxx_versions = re.findall(r'GLIBCXX_(\d+)\.(\d+)(?:\.(\d+))?', version_info)
+        for parts in glibcxx_versions:
+            nums = tuple(int(p) if p else 0 for p in parts)
+            assert nums <= (3, 4, 30), f'requires libstdc++ newer than Ubuntu 22.04: GLIBCXX_{".".join(p for p in parts if p)}'
+        cxxabi_versions = re.findall(r'CXXABI_(\d+)\.(\d+)(?:\.(\d+))?', version_info)
+        for parts in cxxabi_versions:
+            nums = tuple(int(p) if p else 0 for p in parts)
+            assert nums <= (1, 3, 13), f'requires CXXABI newer than Ubuntu 22.04: CXXABI_{".".join(p for p in parts if p)}'
     else:
         raise AssertionError('unknown target')
     if target != 'windows-x64': assert os.access(binary, os.X_OK)
