@@ -6,10 +6,11 @@ import json
 from pathlib import Path
 import re
 import shutil
-import subprocess
 import tarfile
 import tempfile
 import zipfile
+
+from provenance import validate_provenance, validate_release
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGETS = ("windows-x64", "macos-arm64", "linux-x64")
@@ -35,18 +36,8 @@ def main():
     if args.tag:
         if args.tag != f"v{version}":
             raise SystemExit("Release tag must match project version")
-        rev = manifest.get("revision")
-        if not rev or rev == "unknown" or not re.fullmatch(r"([0-9a-f]{40}|[0-9a-f]{64})", rev):
-            raise SystemExit(f"Ambiguous release provenance: invalid manifest revision {rev}")
-        if manifest.get("dirty"):
-            raise SystemExit("Ambiguous release provenance: built from modified working tree")
-        if (ROOT / ".git").exists():
-            try:
-                res = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True)
-                if res.returncode == 0 and res.stdout.strip() != rev:
-                    raise SystemExit(f"Ambiguous release provenance: manifest revision {rev} does not match git HEAD {res.stdout.strip()}")
-            except Exception:
-                pass
+        validate_release(manifest, ROOT)
+    validate_provenance(manifest, ROOT, bin_dir)
     suffix = ".exe" if args.target == "windows-x64" else ""
     files = [(bin_dir / (name + suffix), name + suffix) for name in ("main", "setup")]
     files += [(ROOT / "packaging/example_config.json", "data/example_config.json"),
@@ -77,6 +68,15 @@ def main():
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, destination)
             destination.chmod(0o755 if relative in ("main", "setup", "main.exe", "setup.exe") else 0o644)
+        # Validate the bytes actually copied, not just the earlier source read.
+        staged_manifest = json.loads((stage / "build-manifest.json").read_text(encoding="utf-8"))
+        if staged_manifest != manifest or not manifest_path.is_file():
+            raise SystemExit("Build provenance changed while staging package")
+        if json.loads(manifest_path.read_text(encoding="utf-8")) != manifest:
+            raise SystemExit("Build provenance changed while staging package")
+        validate_provenance(manifest, ROOT, bin_dir, binary_dir=stage)
+        if args.tag:
+            validate_release(manifest, ROOT)
         paths = sorted(path for path in stage.rglob("*") if path.is_file())
         sums = "".join(f"{sha256(path)}  {path.relative_to(stage).as_posix()}\n" for path in paths)
         (stage / "SHA256SUMS").write_text(sums, encoding="utf-8", newline="\n")

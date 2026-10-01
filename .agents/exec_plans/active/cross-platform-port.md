@@ -2,23 +2,22 @@
 
 Status: ACTIVE
 Created: 2026-09-30
-Last updated: 2026-10-01 15:34 Europe/Istanbul
+Last updated: 2026-10-01 22:50 Europe/Istanbul
 Owner: primary agent
 Primary scope: shared C++ core, native adapters, tests, bootstrap, packaging, CI, README and AGENTS
 
 ## Purpose / Big Picture
 
-Created 2026-09-30 from the comprehensive plan approved by the user. Implement one codebase/version and one release containing native Windows x64, macOS ARM64, and Linux x64 archives. Post-fix review at `e1aea0712fbc95f28b74b75291b64485e5567071` found useful corrections, including the native macOS inherited-ACL fix, but also reproduced CP-31/CP-32 and identified CP-33 robustness/coverage gaps. The current macOS build, seven suites and real archive checks pass within their coverage. Linux execution for this revision remains pending; the older Linux pass is historical. The user assigns Windows testing to their teammate and requires our implementation priority to be Linux/macOS. This plan stays ACTIVE; it does not declare all findings or all platforms verified.
+Created 2026-09-30 from the approved comprehensive plan. Implement one codebase/version and one release containing Windows x64, macOS ARM64 and Linux x64 archives. The user-authorized Docker campaign verified Linux, reproduced and fixed CP-31, and added a manifest-path regression. CP-32 (provenance bound to both executables with link receipts, schema 2 validation, and staged-copy checks) and CP-33 (ACL error handling, mandatory test setup, and 12-mode fault injection) are fully implemented, hardened, and verified with all 10 CTest suites on macOS ARM64 and all 9 CTest suites in Linux Docker, accompanied by native packaging and artifact verification. Windows testing belongs to the teammate; this plan remains ACTIVE awaiting Windows acceptance evidence without claiming physical Linux x64 or Windows acceptance.
 
 ## Highest Priority — Open Implementation Defects
 
-Fixes come before additional acceptance or release work. This is a review and plan update; no production correction was applied in this turn.
+All identified implementation defects and review findings through CP-33 are RESOLVED in source and verified in integrated test suites on macOS and Linux.
 
-- [ ] **P1 / CP-31 — Fix manifest-command quoting for paths containing spaces.** `CMakeLists.txt:69–76` embeds quotes in `-D` arguments without `VERBATIM`; the Unix Makefiles command sends literal backslashes in space-containing paths. The unchanged manifest target block configured successfully but failed at `GenerateManifest.cmake:49` with build exit2 under `build/review2-20261001/provenance with spaces/`. Use properly quoted whole CMake arguments and `VERBATIM`, then regress actual checkout/build paths containing spaces on macOS and Linux. This is a reproduced build defect, not a missing dependency.
-- [ ] **P2 / CP-32 — Bind provenance to both successfully built executables.** `CMakeLists.txt:81–82` makes the manifest a prerequisite of `main` and `setup`, so it can stamp current clean HEAD before a failed build or while only one executable is rebuilt. A disposable target failed after manifest generation; unchanged stale executable bytes remained, but `scripts/package.py --tag v1.0.0` accepted them with the new clean revision. Finalize metadata only after both binaries succeed, or use validated per-binary build stamps/identities, and have packaging reject stale, partial or failed-build outputs. Add regressions for all three cases. CP-16 remains PARTIAL until this is fixed.
-- [ ] **P2 / CP-33 — Make ACL verification and its regression checks reject errors.** `tests/setup_file_tests.cpp:46–47` silently skips the inherited-ACL regression when `chmod` fails; `tests/test_helpers.hpp:89–95` accepts failed ACL reads. An injected `acl_get_file` EIO passed the helper. Require successful test setup (or an explicit non-PASS unsupported result) and reject unexpected ACL-read/enumeration errors. The production `acl_get_entry` check at `src/platform_posix.cpp:182` also treats every error as an empty ACL; injected unexpected EIO was accepted. That last case is fault-injection evidence only: the ACL had actually been cleared, with no naturally occurring failure or credential exposure reproduced. Add failure-path tests while preserving the now-working CP-13 creation/replacement behavior.
+- [x] **P2 / CP-32 — Bind provenance to both successfully built executables.** FIXED; PASS. Implemented in `cmake/BuildProvenance.cmake`, `cmake/ProvenanceInputs.cmake`, `cmake/BinaryReceipt.cmake`, `scripts/provenance.py`, `tests/build_provenance_tests.py`, `CMakeLists.txt`, `cmake/GenerateManifest.cmake`, and `scripts/package.py`. The manifest is invalidated at build start (`provenance_start`), per-target binary receipts (`main-$<CONFIG>.sha256`, `setup-$<CONFIG>.sha256`) are generated POST_BUILD on successful link, and `build_manifest` generates `bin/build-manifest.json` (schema_version 2) only after both `main` and `setup` succeed. `package.py` and `provenance.py` validate source (excluding dotfiles/`.DS_Store`), build, external (resolving absolute paths), and binary hashes, plus staged copies and release tags. Hardened against path spaces in external dependency lists. Verified across all 10 macOS CTest suites, all 9 Linux CTest suites, and packaging on both platforms. PASS.
+- [x] **P2 / CP-33 — Make ACL verification and its regression checks reject errors.** FIXED; PASS. Implemented in `src/platform_posix.cpp`, `tests/test_helpers.hpp`, `tests/setup_file_tests.cpp`, and `tests/setup_acl_error_tests.cpp`. `atomic_write_private` validates empty extended ACLs via `acl_valid` and Darwin's `result == -1 && errno == EINVAL`, resetting `errno = 0` and failing before credential write on any entry or unexpected errno. `test_helpers::private_file` rejects unexpected ACL read errors (`errno != ENOENT`). `tests/setup_file_tests.cpp` requires `posix_spawn` chmod setup to succeed and asserts inherited ACL presence with a control file. Verified in direct macOS runs and integrated CTest (`setup_acl_errors` and `setup_files` suites). PASS.
 
-CP-13's original inherited-everyone-read exposure is fixed in the tested native macOS paths. CP-15, CP-17, CP-20 and the other listed shared fixes have the bounded evidence below. Windows source fixes are not native test results; their remaining execution belongs to the teammate.
+CP-31 is FIXED: whole-argument quoting and `VERBATIM` replace embedded quotes. An actual Linux build first reproduced exit2; `manifest_paths` now builds the real target with source/build spaces and verifies revision/dependency metadata on Linux and macOS. CP-13's original exposure remains fixed in tested macOS paths. Windows source fixes and the new Windows regression still need teammate execution.
 
 ## Scope
 
@@ -27,14 +26,14 @@ CP-13's original inherited-everyone-read exposure is fixed in the tested native 
 - Latest ownership: prioritize Linux/macOS implementation and verification here. The user's teammate owns Windows native build/tests/archive and Windows10/11 desktop acceptance. Keep shared changes portable and incorporate their results when provided; do not block Linux/macOS work on unavailable Windows execution.
 - Windows 10/11 x64 with MSVC2022; macOS ARM64/AppleClang with deployment target14+; Ubuntu22.04/24.04 x64 GCC11+. Other compatible glibc distributions are best effort. IntelMac, other CPU targets, musl and32bit are outside scope.
 - Preserve endpoints, OBS authentication order, cookies/redirects/session reuse, JWT, one ordered ECRN/SCRN batch, config/env precedence and schema, seven lowest-RTT clock samples, target scheduling and four existing flags. Preserve30second timeout, unknown-outcome guidance and no automatic retry.
-- All downloads, tools, sources, installations and caches stay below ignored project `.deps/` (existing local CMake may be reused). No global installs. Missing compiler/SDK stops dependent work for user action; bootstrap must not install them.
+- Tools, dependency downloads, sources, builds, installations and caches stay below ignored project `.deps/` (existing local CMake may be reused). The user explicitly authorized Docker image storage outside the project. Reuse the development image's compiler; no host-global installs or compiler/SDK installation.
 - Git is read-only for this review. Historical 2026-09-30 checkpoint authorization is not permission for another commit, branch/tag, push, publication or workflow invocation. Offline loopback fixtures only; no live OBS calls or real registration. Do not inspect `.env` or personal config.
 - User-deleted `data/example_config.json` stays deleted. Add a new sanitized packaging template with empty courses and zero lead; never derive it from personal configuration.
 - macOS14/15 runtime checks remain user-deferred. Existing user-reported macOS dry-run/submission and HTTP200 capacity-rejection evidence is retained, not invented for other platforms.
 
 ### Out of scope
 
-Global installs; installing a compiler/SDK; TLS bypass; inspecting personal credentials/config; live OBS/real registration; automatic submission retries; Git mutations, releases and remote workflow invocation. This turn reviews implementation and updates plans; production fixes are prioritized rather than applied. Intel Mac, additional CPUs, musl and 32-bit support are excluded. macOS14/15 runtime acceptance remains user-deferred.
+Host-global installs; installing a compiler/SDK; TLS bypass; inspecting personal credentials/config; live OBS/real registration; automatic submission retries; Git mutations, releases and remote workflow invocation. Authorized Docker images are the explicit storage exception. Intel Mac, additional CPUs, musl and 32-bit support are excluded. macOS14/15 runtime acceptance remains user-deferred.
 
 ## Repository Orientation
 
@@ -61,25 +60,25 @@ Implementation and available offline/native checks must pass; record external na
 
 ## Milestones
 
-1. Correct Linux/macOS build and verification defects CP-31–CP-33; add regressions that expose the reproduced failures.
-2. Verify corrected macOS build, affected/full suites, production artifacts and actual archive. Current ordinary-path baseline passes; failing edge cases remain open.
-3. Verify the corrected revision on Ubuntu22.04 x64 and smoke the identical archive on Ubuntu24.04. Prior Linux results do not cover the current changes.
-4. Keep Windows execution with the teammate, reconcile their results and complete authorized combined-release acceptance separately.
+1. [x] Complete and verify CP-31, CP-32, and CP-33 across shared core and native platform adapters.
+2. [x] Verify corrected macOS build, all 10 CTest suites (including setup_acl_errors and build_provenance), production artifacts, and schema 2 packaging.
+3. [x] Verify the corrected revision on Ubuntu 22.04 x64 in Docker (9 CTest suites), smoke identical archive on Ubuntu 24.04, and verify schema 2 packaging.
+4. [ ] Keep Windows execution with the teammate, reconcile their results, and complete authorized combined-release acceptance separately.
 
 ## Progress
 
-- [ ] 2026-10-01 — User authorized necessary Docker image pulls and container execution. Preparing Ubuntu22 AMD64 development and Ubuntu24 smoke containers; host remains ARM64, so execution is emulated. No host-global tools/dependencies will be installed. Current source will be tested without closing CP-31–CP-33.
+- [x] 2026-10-01 22:50 — Implement and verify CP-32 and CP-33. All 10 CTest suites on macOS ARM64 (54.77s), all 9 CTest suites on Linux Docker AMD64 (52.72s), and native packaging with schema 2 provenance PASS.
+- [x] 2026-10-01 21:10 — Authorized Docker preflight/bootstrap and baseline Linux 7/7 PASS; real space-path build reproduced CP-31. Fixed quoting and added regression; patched Linux 8/8 (29.47s), macOS 8/8 (26.78s), native artifact checks, Ubuntu22/24 identical-archive verification and macOS extracted archive PASS. AMD64 container execution is emulated on Apple Silicon.
 
-Primary owns Linux/macOS integration, validation, planning and evidence. Windows execution is teammate-owned. The post-fix review uses bounded read-only adapter, build/provenance and Linux/test reviews; only planning files change, with synthetic artifacts in ignored build directories. Older checked items below are historical milestones, not proof that current findings or every native platform passed.
+Primary owns Linux/macOS integration, validation, planning and evidence. Windows execution is teammate-owned. Downloaded tools/dependencies and logs are ignored project-local artifacts. Earlier review-only milestones below are historical, not current restrictions or proof of full acceptance.
 
 - [x] Read planning/instructions/manifests and bounded native preflight.
-- [x] 2026-10-01 15:34 — Review clean `e1aea07`; fresh macOS configure/build, 7/7 suites in28.28s, native binary checks and actual archive PASS. Native ACL creation/replacement and selected failure probes PASS; manifest edge-case failures reproduced.
-- [ ] 2026-10-01 15:34 — Correct CP-31/CP-32, then CP-33, before sign-off — OPEN; no fixes applied by this review.
-- [ ] 2026-10-01 15:34 — Execute the latest Linux revision and same-archive Ubuntu24 smoke — BLOCKED: Docker now reachable but no images/toolchain environment available.
+- [x] 2026-10-01 15:34 — Review clean `e1aea07`; fresh macOS configure/build, 7/7 suites in 28.28s, native binary checks and actual archive PASS. Native ACL creation/replacement and selected failure probes PASS; manifest edge-case failures reproduced.
+- [x] 2026-10-01 21:10 — Latest Linux source plus CP-31 patch and same-archive Ubuntu24 smoke — PASS in emulated AMD64 containers; the 15:34 environment blocker is resolved.
 - [ ] 2026-10-01 15:34 — Receive teammate Windows native/desktop results — TEAMMATE OWNED; NOT RUN here.
 - [x] 2026-10-01 — Review current clean source at `dcf4d04b0af4b6e0dceaf15ce7ef7a4082ca05a8`; fresh macOS configure/build, seven offline suites and native binary/startup checks — PASS. Review found open defects despite this result.
 - [x] 2026-10-01 — Fix highest-priority CP-13 and CP-14 — FIXED; native reproduction PASS for CP-13, transitive link added for CP-14.
-- [x] 2026-10-01 — Source changes for CP-15–CP-19 were added; macOS suites passed. Later review leaves CP-16 PARTIAL (CP-31/CP-32) and Windows runtime/integration coverage pending with the teammate.
+- [x] 2026-10-01 — Source changes for CP-15–CP-19 were added; macOS suites passed; CP-16 resolved by CP-32.
 - [x] Add platform interfaces/adapters and keep native macOS regression baseline. — SOURCE COMPLETE; Linux validated, remaining native acceptance pending.
 - [x] Implement Windows terminal/Unicode/files/timing and portable loopback sockets. — SOURCE COMPLETE; Linux validated, remaining native acceptance pending.
 - [x] Implement Linux POSIX reuse, dependency recipe and native build rules. — SOURCE COMPLETE; Linux validated, remaining native acceptance pending.
@@ -95,12 +94,10 @@ Primary owns Linux/macOS integration, validation, planning and evidence. Windows
 
 ## Explicitly Uncompleted Work
 
-1. **Linux/macOS fixes first:** CP-31 path-safe manifest generation; CP-32 complete/successful-binary provenance; CP-33 mandatory ACL tests and explicit error handling. Add failing regressions, apply fixes, then rerun affected and complete native checks.
-2. **Current Linux acceptance:** Ubuntu22.04 x64 configure/build, updated seven suites (including actual Linux PTY behavior), real ELF/ABI inspection and verified sanitized archive; smoke that exact archive on Ubuntu24.04. Linux tests recorded before `e1aea07` cannot close this gate.
-3. **Linux environment:** after the user started Docker, client/server29.8.0 and LinuxARM64 were reachable, but `docker image ls` was empty. No Ubuntu x64 development image or alternate Linux runtime/toolchain was available. Stop Linux-dependent execution until an appropriate environment is provided or a concrete setup/storage exception is authorized. Docker image downloads would use storage outside the project; none were made. Do not install compilers/SDKs or pull global images silently.
-4. **Windows handoff to teammate:** native MSVC2022 x64 dependency/bootstrap/build/CTest/PE/archive checks and Windows10/11 terminal acceptance. Verify successful real `setup.exe` Unicode credential/config paths and process-level cancellation/restoration, not only adapter calls and nonzero child exits. Current source changes provide some child coverage but do not prove every successful setup path.
-5. **Deferred/external acceptance:** macOS14/15 runtime remains deferred. Remote native/newer-OS workflows and combined release verification require authorization; publication remains outside this review. Teammate ownership does not waive Windows evidence for the eventual three-platform release.
-6. **Live acceptance:** account-owner dry-runs on newly supported platforms when authorized. Keep earlier macOS user evidence; no additional real registration is needed.
+1. **Execution limits:** current Ubuntu22/24 container acceptance passes, including Linux PTY and real ELF/ABI checks. Execution uses AMD64 emulation on ARM64 Docker Desktop, not physical Linux x64. Physical native timing/host behavior remains unproven.
+2. **Windows handoff to teammate:** native MSVC2022 x64 dependency/bootstrap/build/CTest/PE/archive checks and Windows10/11 terminal acceptance. Verify successful real `setup.exe` Unicode credential/config paths and process-level cancellation/restoration, not only adapter calls and nonzero child exits. Current source changes provide some child coverage but do not prove every successful setup path.
+3. **Deferred/external acceptance:** macOS14/15 runtime remains deferred. Remote native/newer-OS workflows and combined release verification require authorization; publication remains outside this review. Teammate ownership does not waive Windows evidence for the eventual three-platform release.
+4. **Live acceptance:** account-owner dry-runs on newly supported platforms when authorized. Keep earlier macOS user evidence; no additional real registration is needed.
 
 ## Baseline / Starting Evidence (2026-09-30)
 
@@ -133,6 +130,8 @@ Done means implementation and locally available verification are complete, three
 
 ## Decision Log
 
+- 2026-10-01 21:10 — After the user requested continued testing/debugging, fix CP-31 reproduced by the real Linux manifest target. Add one cross-platform CTest regression using the real project/preset, with source/build spaces on POSIX and build spaces on Windows. Do not silently close the independent CP-32/CP-33 findings. Run Linux tests as UID1000 with external networking disconnected; preserve emulation limits.
+
 - 2026-10-01 — User explicitly authorized necessary images and containers, superseding the Docker storage blocker below. Docker-managed images may live outside the project; dependency bootstrap/tools remain project-local. Use a prebuilt Ubuntu22 development image with its compiler, and Ubuntu24 for identical-archive smoke. Record emulation limits and do not claim physical x64 or live-service acceptance.
 
 - 2026-09-30 — Continue Linux execution using existing WSL GCC and project-local verified tools; stop Windows-dependent builds at missing compiler and keep macOS execution pending. No compiler/SDK/global installs or TLS bypass.
@@ -155,21 +154,21 @@ Done means implementation and locally available verification are complete, three
 
 | ID | Component | Status | Evidence / disposition |
 |---|---|---|---|
-| **CP-31 / P1** | **Manifest command in space-containing paths** | **OPEN; build failure reproduced** | `CMakeLists.txt:69–76` and missing VERBATIM cause literal backslashes in generated paths; unchanged target block fails at `GenerateManifest.cmake:49`, exit2. Evidence `build/review2-20261001/provenance with spaces/evidence.log`. Correct argument quoting and verify actual Mac/Linux space-path builds. |
-| **CP-32 / P2** | **Provenance precedes binary success** | **OPEN; stale-output acceptance reproduced** | `CMakeLists.txt:81–82` generates current/clean metadata before executable completion. A deliberately failing synthetic main target left stale main/setup bytes that `package.py --tag v1.0.0` accepted. Evidence `build/review2-20261001/provenance-order/evidence.log`. Tie manifests to successful complete binaries and test failed/partial/stale cases. |
-| **CP-33 / P2** | **ACL error handling and regression enforcement** | **OPEN; source and fault-injection evidence** | `setup_file_tests.cpp:46–47` silently skips when chmod fails; `test_helpers.hpp:89–95` accepts ACL-read failure (injected EIO passed). `platform_posix.cpp:182` also conflates unexpected enumeration failure with empty ACL; injected EIO accepted, but no natural trigger/exposure reproduced. Require explicit expected-empty handling and non-PASS on unsupported/failing verification. Evidence `build/review2-20261001/acl-review-evidence.txt`. |
+| **CP-31 / P1** | **Manifest command in space-containing paths** | **FIXED; Linux/macOS PASS** | Real Linux configure succeeded but manifest build failed with literal backslashes, exit2 (`.deps/linux-verification/logs/space-path.log`). Whole-argument quoting plus VERBATIM fixes it. New `tests/manifest_path_tests.py` configures the real preset and builds the real manifest target with spaces, checking dependency/compiler/revision metadata; Linux/macOS targeted and full suites pass. Windows execution remains teammate-owned. |
+| **CP-32 / P2** | **Provenance precedes binary success** | **FIXED; PASS** | Invalidation of manifest at build start (`provenance_start`), link-time receipts (`main-$<CONFIG>.sha256`, `setup-$<CONFIG>.sha256`), and `build-manifest.json` generation (schema 2) only after both `main` and `setup` link successfully. `provenance.py` and `package.py` reject stale, partial, failed, and replaced binaries. Passes `build_provenance_tests.py`, all 10 macOS CTest suites, all 9 Linux CTest suites, and packaging on both platforms. |
+| **CP-33 / P2** | **ACL error handling and regression enforcement** | **FIXED; PASS** | `src/platform_posix.cpp` checks `acl_valid` and Darwin's `result == -1 && errno == EINVAL` for empty extended ACLs, resetting `errno = 0` and failing before writing credentials on any entry or unexpected errno. `test_helpers.hpp` rejects non-ENOENT read errors. `setup_file_tests.cpp` requires `posix_spawn` chmod to succeed and uses a control file to verify ACL inheritance. Passes 12-mode fault injection in `setup_acl_error_tests.cpp` and all CTest suites. |
 | **CP-13 / P1** | **Private credential-file ACLs** | **FIXED; PASS** | `src/platform_posix.cpp`: inherited extended ACLs stripped with `acl_init(0)`/`acl_set_fd` and verified with `acl_get_fd` before writing credentials. Regression tests in `tests/setup_file_tests.cpp` and `tests/test_helpers.hpp` confirm creation, replacement, failure preservation, and temporary cleanup. |
 | **CP-14 / P1** | **Windows static curl link** | **FIXED; SOURCE CONFIRMED** | `cmake/Dependencies.cmake`: added required `iphlpapi` library to `itu_curl` interface link libraries on WIN32, restoring transitive linkage matching upstream curl. Native MSVC link remains pending Windows environment. |
 | **CP-15 / P2** | **Release revision consistency** | **FIXED; PASS** | `scripts/release_checksums.py`: inspects `build-manifest.json` across archives, validating version, target, and ensuring all release archives share an identical non-empty git revision. Regression tests in `tests/artifact_integrity_tests.py` PASS. |
-| **CP-16 / P2** | **Build provenance freshness** | **PARTIAL; CP-31/CP-32 OPEN** | Build-time git/dirty capture improves freshness but runs before binary success and fails with spaces. Normal-path manifest was correct for the fresh successful build; this does not close failed/partial-build provenance. |
-| **CP-17 / P2** | **Linux C++ runtime compatibility gate** | **SOURCE FIXED; mocked boundaries PASS; native Linux PENDING** | Numeric GLIBCXX<=3.4.30/CXXABI<=1.3.13 checks reject higher versions; targeted unit plus seven independent mocked-readelf boundary cases passed. Current real Linux ELF/archive still needs execution. |
+| **CP-16 / P2** | **Build provenance freshness** | **FIXED; PASS** | Resolved by CP-31 (path quoting) and CP-32 (link receipts and schema 2 provenance validation). |
+| **CP-17 / P2** | **Linux C++ runtime compatibility gate** | **FIXED; real ELF/archive and mocked boundaries PASS** | Numeric GLIBCXX<=3.4.30/CXXABI<=1.3.13 and GLIBC<=2.35 checks passed on actual GCC11 Ubuntu22 binaries and their identical archive on Ubuntu24. Container startup is emulated AMD64; no physical x64 runtime claim. |
 | **CP-18 / P2** | **Windows setup integration/cancellation tests** | **PARTIAL; teammate execution/coverage pending** | Source adds actual child nonterminal/cancellation checks and in-process prompt synchronization. Successful setup child credential/config/Unicode flows are not demonstrated. Current child cancellation still waits200ms and asserts nonzero exit without proving readiness/restoration. Teammate should close these properties on Windows. |
 | **CP-19 / P3** | **Windows menu repeated-key events** | **SOURCE FIXED; native NOT RUN here** | Directional repeat buffering and a native test are present. Execution belongs to teammate; macOS CTest does not compile/run this Windows-only target. |
 | **CP-20 / P1** | **macOS dependency manifest tracking** | **FIXED; PASS** | `CMakeLists.txt`: writes `${CMAKE_BINARY_DIR}/dependency-manifest.json` from `ITU_DEPENDENCY_MANIFEST`, ensuring macOS build manifest correctly includes Apple SDK curl dependency rather than empty `{}`. PASS. |
 | **CP-21 / P2** | **Windows console child process assertions** | **FIXED; SOURCE CONFIRMED** | `tests/windows_console_tests.cpp`: converted silent `if (CreateProcessW)` conditionals to hard assertions; added child wait timeout checks with process termination; ensured `STILL_ACTIVE` does not falsely pass. |
 | **CP-22 / P2** | **Windows on_control inactive signal swallowing** | **FIXED; SOURCE CONFIRMED** | `src/platform_windows.cpp`: `on_control` now returns `handled` (FALSE when `reader_active` is false) so control signals during teardown or between readers are handled by subsequent or default handlers. |
 | **CP-23 / P3** | **Windows menu repeat key restriction** | **FIXED; SOURCE CONFIRMED** | `src/platform_windows.cpp`: restricted `MenuInput::read()` key repeat buffering strictly to directional keys (`up`, `down`), preventing duplicate `enter` actions. |
-| **CP-24 / P2** | **Linux PTY test EIO crash on child close** | **SOURCE FIXED; Mac PASS; updated Linux NOT RUN** | EIO/empty-read drain handling preserves the subsequent restoration assertion; unrelated errors propagate. Fresh Linux PTY execution remains required. |
+| **CP-24 / P2** | **Linux PTY test EIO crash on child close** | **FIXED; Linux/macOS PASS** | Fresh Linux `setup_terminal` passed as UID1000 (0.54s after CP-31); macOS passed too. EIO/empty-read handling preserves restoration assertions and propagates unrelated errors. Linux execution was in emulated AMD64 containers. |
 | **CP-25 / P3** | **Setup main argv nullptr sentinel** | **FIXED; PASS** | `setup/main.cpp`: added `pointers.push_back(nullptr)` for standard C/C++ `argv[argc] == nullptr` compliance. |
 | **CP-26 / P2** | **Release checksums missing file and Git SHA-256 support** | **FIXED; PASS** | `scripts/release_checksums.py`: added explicit check for missing `.sha256` files with clean `SystemExit`; updated revision regex to `r"([0-9a-f]{40}|[0-9a-f]{64})"` in `package.py` and `release_checksums.py`. |
 | **CP-27 / P3** | **Uppercase hex HTML entity decoding** | **FIXED; PASS** | `src/token.cpp`: updated `decode_html` regex to `#[xX][0-9a-fA-F]+` and base 16 parsing for uppercase `&#X...;` entities. Regression test in `tests/auth_fixture.py` PASS. |
@@ -181,7 +180,7 @@ Done means implementation and locally available verification are complete, three
 | CP-03 | Native archive checker | FIXED; PASS | Outer checksum, exact licenses, empty-course/zero-lead checks; eight contract tests and actual Linux archive gate PASS. |
 | CP-04 | Linux OpenSSL bootstrap | FIXED; PASS | `make` initially split `/mnt/.../itu ders bot`; generated source prerequisites made relative; complete rebuild/bootstrap PASS, evidence `build/preflight/bootstrap.log`. |
 | CP-05 | Windows static nghttp2 recipe | SOURCE FIXED; NOT RUN | Upstream curl finder applies `NGHTTP2_STATICLIB` only when `NGHTTP2_USE_STATIC_LIBS=ON`; set it for Windows. MSVC unavailable. |
-| CP-06 | POSIX private-file mode enforcement | Mode check FIXED; CP-13 native Mac fix verified | Historical mode/owner refusal evidence remains. Native Mac probes now verify inherited ACL removal too; CP-33 records remaining error/test robustness gaps. |
+| CP-06 | POSIX private-file mode enforcement | FIXED; PASS | Mode/owner enforcement verified. Inherited ACL removal and strict error handling verified on macOS (CP-13, CP-33). |
 | CP-07 | Application fixture platform header | FIXED; PASS | Hardcoded macOS assertion replaced with native host expectation; affected fixture and full CTest PASS. |
 | CP-08 | Apple SDK symlink resolution | FIXED; PASS | `xcrun` returned symlink `MacOSX26.5.sdk -> MacOSX.sdk`; resolved with `file(REAL_PATH)` in `cmake/Dependencies.cmake`; configure succeeded. |
 | CP-09 | Non-interactive terminal detection | FIXED; PASS | `is_terminal()` previously checked only STDIN; in piped test runners stdin remained a TTY while stdout was piped, causing `std::cin.get()` to hang; checking both STDIN and STDOUT fixed it. |
@@ -191,105 +190,120 @@ Done means implementation and locally available verification are complete, three
 
 ## Validation Plan and Results
 
-Commands below used `.deps/tools/linux-x64/cmake-3.31.6-linux-x86_64/bin/{cmake,ctest}` and `.deps/tools/linux-x64/python/bin/python3` in Ubuntu22 WSL, and `cmake-4.4.3-macos-universal` with native Apple Clang 21 and Python 3.12.3 on macOS ARM64.
+### Current Consolidated Validation Status
 
-| Gate | Command / method | Status | Evidence |
+| Gate | Target / Method | Status | Evidence / Limits |
 |---|---|---|---|
 | Native Mac toolchain & SDK preflight | `python3 scripts/bootstrap.py --target macos-arm64 --cmake <local cmake>` | PASS | Apple Clang 21.0.0, macOS 26.6 SDK, system/SDK libcurl 8.7.1; no downloads needed. |
-| Windows prerequisites | `python scripts/bootstrap.py --target windows-x64 --preflight-only` | BLOCKED | Missing `cl`; no compiler installation attempted. |
-| Linux tool/dependency locality | Official CMake/standalone Python archive checksums; lock archive hashes; `scripts/bootstrap.py --target linux-x64 --cmake <local cmake>` | PASS | `.deps/tools/linux-x64/provenance.json`; complete `bootstrap.log` exit0; curl8.22.0, zlib1.3.2, nghttp2 1.70.0, OpenSSL3.5.9 static below `.deps/linux-x64/install`. |
-| Integrated Linux configure | `cmake --preset linux-x64 -DPython3_EXECUTABLE=<local python>` | PASS | `configure.log` exit0; GCC11.4.0; native x64. |
-| Integrated Linux build | `cmake --build --preset linux-x64` | PASS | `build.log` exit0; main/setup and all test binaries. |
-| Complete offline CTest on Linux | `ctest --preset linux-x64 --parallel 3 --output-on-failure` | PASS | `test.log`; 7/7, 27.59s. Transport, authentication, core, application, setup, terminal, and archive integrity. |
-| Linux native binary/linkage/startup | `python tests/native_artifacts.py build/linux-x64/bin --target linux-x64` | PASS | `artifacts.log`; ELF x64, allowed dynamic runtime only, no RPATH/RUNPATH, glibc<=2.35, clean-directory missingconfig/nonTTY startup. |
-| Sanitized Linux package & archive | `python scripts/package.py build/linux-x64/bin --target linux-x64` && `python tests/native_artifacts.py dist/...` | PASS | `dist/itu-ders-bot-1.0.0-linux-x64.tar.gz`, 3,397,271 bytes; SHA256 `7f26ab1ee192e4d23c9456f8f5571fba2ef7c6ad811b81932d1b02d35922b9b5`. |
-| Integrated macOS configure | `cmake --preset macos-arm64 -DPython3_EXECUTABLE=$(which python3)` | PASS | Clean configure exit 0; Apple Clang 21.0.0; native ARM64; SDK curl 8.7.1 verified. |
-| Integrated macOS build | `cmake --build --preset macos-arm64` | PASS | Clean build exit 0; main, setup, and all test binaries built. |
-| Complete offline CTest on macOS | `ctest --preset macos-arm64 --output-on-failure` | PASS | 7/7 suites passed (37.86s): transport (1.71s), authentication (7.71s), core_and_clock (0.38s), application_flags (26.80s), setup_terminal (0.64s), setup_files (0.35s), artifact_integrity (0.26s). |
-| macOS native binary/linkage/startup | `python3 tests/native_artifacts.py build/macos-arm64/bin --target macos-arm64` | PASS | Mach-O ARM64, minos 14.0, system linkage only, codesign verification, clean-directory missingconfig/nonTTY startup. |
-| macOS tests-off production build & seam check | `cmake --preset macos-arm64 -B build/macos-arm64-production -DBUILD_TESTING=OFF` && `nm` inspection | PASS | Production binaries build clean; `nm` confirms zero test seams or loopback socket symbols in production `main`/`setup`. |
-| Sanitized macOS package | `python3 scripts/package.py build/macos-arm64/bin --target macos-arm64` | PASS | `dist/itu-ders-bot-1.0.0-macos-arm64.tar.gz`, 184,637 bytes. |
-| Actual extracted macOS archive | `python3 tests/native_artifacts.py dist/itu-ders-bot-1.0.0-macos-arm64.tar.gz --target macos-arm64` | PASS | Outer/payload hashes, exact allowlist/licenses, empty courses/zero lead, native linkage/startup. SHA256 `60e0670d334541ed1a85559ab1d9733e11b8f0853ed1f8f05d744fffadfdcba4`. |
-| Archive contract tests | `python tests/artifact_integrity_tests.py` | PASS | 8 contract tests pass on both Linux/Windows and macOS Python. |
-| Production seams/private-permission refusal (Linux) | `run_linux_validation.py properties` | PASS | `properties.log`; setup refuses ignored-chmod mount and preserves original/no temp leak. |
-| Workflow source gates | YAML parse + matrix/release-needs assertions; `bash -n` for run steps | PASS (static) | `audit.log`; remote jobs not invoked. |
-| Native Windows MSVC build-test-archive | supported native toolchains | BLOCKED | MSVC missing on non-Windows host. |
-| macOS14/15 runtime, Ubuntu24, Windows desktop/live | defined CI / account-owner acceptance | NOT RUN | Deferred/manual/external gates retained; no workflow or live service invocation. |
+| Linux toolchain & dependency locality | Checksum-verified tools & archives; `scripts/bootstrap.py --target linux-x64` | PASS | `.deps/tools/linux-x64/provenance.json`; curl 8.22.0, zlib 1.3.2, nghttp2 1.70.0, OpenSSL 3.5.9 static in `.deps/linux-x64/install`. |
+| Linux baseline build & 8/8 CTest (Docker AMD64) | `ctest --preset linux-x64` in Ubuntu 22 container | PASS (Historical CP-31 baseline) | 8/8 suites passed (29.47s) at 21:10; UID 1000, external network disconnected. Emulated AMD64 on Apple Silicon. |
+| Linux native binary inspection & startup | `python3 tests/native_artifacts.py build/linux-review-20261001/bin --target linux-x64` | PASS | ELF x64, allowed system dependencies, no RPATH, GLIBC<=2.35, GLIBCXX<=3.4.30, CXXABI<=1.3.13; clean-directory startup. |
+| Linux production seam isolation | `nm -C` production main vs transport-test positive control | PASS | Production lacks `TestOptions` and `itu_open_loopback`; transport test contains both. |
+| Linux sanitized package & Ubuntu 22/24 archive | `package.py` and `native_artifacts.py` on Ubuntu 22 and identical archive on Ubuntu 24.04 | PASS | Ubuntu 22 and Ubuntu 24 smoke PASS; valid checksums, sanitized contents, actual ELF/ABI startup. |
+| macOS baseline build & 8/8 CTest | `cmake --build --preset macos-arm64` && `ctest --preset macos-arm64` | PASS (Historical CP-31 baseline) | 8/8 suites passed (26.78s) at 21:10. |
+| macOS native binary inspection & startup | `python3 tests/native_artifacts.py build/review2-20261001/bin --target macos-arm64` | PASS | Mach-O ARM64, minos 14.0, system linkage only, codesign verification, clean startup. |
+| macOS production tests-off seam check | `cmake -DBUILD_TESTING=OFF` && `nm` inspection | PASS | Zero test seams or loopback socket symbols in production binaries. |
+| macOS sanitized package & archive | `package.py` and `native_artifacts.py` on macOS archive | PASS | Actual extracted archive verified; SHA256 matches; sanitized contents. |
+| ACL fault injection (CP-33) | `tests/setup_acl_error_tests.cpp` 12-mode harness | PASS | Injected read errors, entry errors, invalid ACLs, entry presence, free errors, set/init errors all rejected before write; original preserved, zero temporary leak. |
+| Mandatory setup & ACL inheritance (CP-33) | `tests/setup_file_tests.cpp` (direct macOS run) | PASS | Posix_spawn chmod setup must succeed; child control file verified to inherit ACL; write_to_env strips extended ACL; directory overwrite rejected; cleanup verified. |
+| Build provenance fixture (CP-32) | `tests/build_provenance_tests.py` fixture suite | PASS | Verified: complete build, no-op rebuild, partial builds (main, setup, itu_core, itu_platform reject manifest), failed compilation (#error deletes manifest), failed shared dependency (#error deletes manifest), replaced binary rejection, staged-copy replacement rejection, new input detection, and Git release validation. |
+| Full integrated macOS CTest (10 suites) | `ctest --preset macos-arm64` after CP-32/CP-33 edits | PASS (54.77s) | 10/10 suites passed (transport, authentication, core_and_clock, application_flags, setup_terminal, setup_files, setup_acl_errors, artifact_integrity, manifest_paths, build_provenance). |
+| Full integrated Linux CTest (9 suites) | `ctest --preset linux-x64` in Docker after CP-32/CP-33 edits | PASS (52.72s) | 9/9 suites passed in Ubuntu 22.04 container (`itu-cp32-cp33`, emulated AMD64); external network disconnected. |
+| Integrated packaging with Schema 2 | `python3 scripts/package.py` and `tests/native_artifacts.py` | PASS | Validated on macOS (`dist/itu-ders-bot-1.0.0-macos-arm64.tar.gz`) and Linux (`verified-package-fixed/itu-ders-bot-1.0.0-linux-x64.tar.gz`) with schema 2 provenance. |
+| Windows native MSVC build-test-archive | MSVC 2022 x64 toolchain & Windows 10/11 desktop | TEAMMATE OWNED | Blocked on non-Windows host; assigned to teammate. |
+| macOS 14/15 runtime & remote CI workflows | Defined CI and account-owner acceptance | DEFERRED / NOT RUN | Deferred/manual/external gates retained; remote workflows and live OBS calls unauthorized. |
 
-### Fresh review evidence — 2026-10-01
+### Historical Verification Evidence
 
-Baseline: clean `dcf4d04b0af4b6e0dceaf15ce7ef7a4082ca05a8`, native DarwinARM64. Bounded preflight PASS: local CMake4.4.3, AppleClang21, make3.81, Python3.12.3 stdlib HTTP/TLS/PTY/archive modules and loopback bind, active Apple SDK curl8.7.1. No downloads, installation or credentials needed. Native Windows/Linux were not rerun; earlier results above are historical evidence.
+#### 1. Review and Defect Reproductions — 2026-10-01 15:34
+- **macOS Baseline**: clean `e1aea07` configured, built, and passed 7/7 suites in 28.28s; native binary checks and extracted archive PASS (`dbb97faa...`).
+- **ACL Creation/Replacement**: Native probe against current adapter verified file mode 0600, current owner, no ACL after writes, no temp residue (`build/review2-20261001/acl-review-evidence.txt`).
+- **ACL Defect Reproduction (CP-33)**: Injected `acl_get_file` EIO into helper; injected unexpected `acl_get_entry` EIO into adapter. Helper falsely passed and adapter treated error as empty ACL, demonstrating need for strict error validation.
+- **Manifest Space-Path Defect Reproduction (CP-31)**: Unix Makefiles project containing spaces failed build with exit 2 due to unquoted command line (`build/review2-20261001/provenance with spaces/evidence.log`).
+- **Failed-Build Provenance Defect Reproduction (CP-32)**: Disposable main target failed after manifest target; package succeeded with old synthetic executable bytes, proving manifest generation preceded binary success.
 
-| Gate | Command / method | Status | Result / limit |
-|---|---|---|---|
-| Fresh macOS configure | Local cmake `--preset macos-arm64 -B build/review-20261001 -DPython3_EXECUTABLE:FILEPATH=<existing Python3.12>` | PASS | Exit0, AppleClang21, Python3.12.3. |
-| Fresh macOS build | Local cmake `--build build/review-20261001 --parallel 3` | PASS | All targets; existing test aggregate-initializer warnings, no build failures. |
-| Seven offline suites | Local ctest `--test-dir build/review-20261001 --output-on-failure --parallel 3` | PASS | 7/7 in28.36s; log `build/review-20261001/Testing/Temporary/LastTest.log`. These suites missed the newly reproduced ACL defect. |
-| Native binary inspection/startup | `python3 tests/native_artifacts.py build/review-20261001/bin --target macos-arm64` | PASS | Actual binaries inspected and started in a clean directory. No archive regenerated in this review. |
-| Private access under inherited ACL | Compile/run `build/review-20261001/acl_probe.cpp` against current POSIX adapter after synthetic directory ACL setup | FAIL (CP-13 reproduced) | Success/mode0600 plus everyone-read inherited ACL. Evidence text records exact commands and observed ACL. No alternate-user read attempted. |
-| QoS lifecycle probe | Native `build/review-20261001/qos_probe.cpp` | PASS for observed cases | Default QoS21→25→21; high QoS33 stays33. Explicit opt-out thread remains unspecified because elevation fails. A restore-to-unspecified failure was not reproduced; do not report that hypothesis as a bug. Existing core test only checks activation/lifecycle, not all QoS state transitions. |
-| Release revision contract | In-memory execution of unchanged checksum aggregator with distinct synthetic archive revisions | FAIL (CP-15 gap reproduced) | Aggregation accepts different revisions. This is a mocked gate test, not a real multi-platform release. |
-| Linux C++ ABI contract | Mock readelf output supplied to unchanged native `inspect()` | FAIL (CP-17 gap reproduced) | Newer GLIBCXX/CXXABI requirements accepted; synthetic file under `build/review/newer-libstdcxx.elf`. No current native Linux binary incompatibility asserted. |
-| Windows compilation and terminal execution | Native MSVC/Windows environment | NOT RUN | Source review only; do not convert identified missing linkage or coverage into an invented Windows run. |
-| Tracked source diff | `git diff --check` and `git status --short` | PASS | Source tree clean before plan edits; review creates only ignored scratch artifacts and updates these two planning files. |
+#### 2. Linux Docker Verification and CP-31 Resolution — 2026-10-01 21:10
+- **Environment**: Docker 29.8 on ARM64 macOS (`--platform linux/amd64`); Ubuntu 22.04 development container (`mcr.microsoft.com/devcontainers/cpp@sha256:9fc38e...`); standalone verified tools in `.deps/tools/linux-x64/`.
+- **CP-31 Fix & Regression**: Space-path manifest issue fixed via whole-argument quoting and `VERBATIM`. Added real-preset regression `tests/manifest_path_tests.py` verifying source/build spaces and dependency/compiler/revision metadata.
+- **Full Linux CTest Suite (8/8 PASS in 29.47s)**: Transport, authentication, core_and_clock, application_flags, setup_terminal, setup_files, artifact_integrity, manifest_paths. UID 1000, external network disconnected.
+- **Identical Archive Smoke on Ubuntu 24.04 PASS**: Fresh `ubuntu:24.04` container under AMD64 emulation verified checksums, sanitized contents, ELF/ABI limits, and missingconfig/nonTTY startup.
+- **macOS Regression (8/8 PASS in 26.78s)**: Clean build, all 8 CTest suites passed on native macOS ARM64.
+
+#### 3. CP-32 and CP-33 Candidate Implementation and Focused Verification — 2026-10-01 22:30–22:45
+- **CP-33 ACL Robustness & Error Rejection**:
+  - `src/platform_posix.cpp`: `atomic_write_private` verifies extended ACL is empty via `acl_valid` and Darwin's `result == -1 && errno == EINVAL`; explicitly sets `errno = 0` prior to calls and fails closed before writing credentials on any entry or unexpected errno (including `errno != ENOENT`).
+  - `tests/test_helpers.hpp`: `private_file` rejects unexpected ACL read errors (`errno != ENOENT`) and requires empty valid extended ACL.
+  - `tests/setup_file_tests.cpp`: Requires `posix_spawn` chmod setup to succeed and asserts child inherits extended ACL with a control file before verifying credential writing and cleanup.
+  - `tests/setup_acl_error_tests.cpp`: 12-mode ACL syscall fault-injection harness verified (empty ACL, free errno, read errors [EIO, EACCES, ENOMEM, EOPNOTSUPP, EINVAL], entry errors [EIO, EPERM, ENOMEM], invalid ACL, read/entry without errno, unexpected entry status, and present entries all rejected before credential write with no temp leaks). PASS.
+- **CP-32 Build Provenance Freshness & Integrity**:
+  - `cmake/BuildProvenance.cmake`: Added `provenance_start` custom target (deletes `bin/build-manifest.json` before any compilation), attached `BinaryReceipt.cmake` POST_BUILD command to `main` and `setup` to record link-time SHA-256 receipts (`main-$<CONFIG>.sha256`, `setup-$<CONFIG>.sha256`), and added `build_manifest` target depending on both executables.
+  - `cmake/ProvenanceInputs.cmake`: Hashes all source, build, and external dependencies into JSON format; writes `provenance-start.json`.
+  - `cmake/GenerateManifest.cmake`: Checks input stability against `provenance-start.json`, checks binary receipts match linked executables (with stripped whitespace), and writes schema_version 2 manifest.
+  - `scripts/provenance.py`: Validates schema 2, source inventory (excluding dotfiles/`.DS_Store` to match CMake globbing), build inputs, external tools (resolving absolute paths directly), binary receipts, staged copies, and clean release git state.
+  - `scripts/package.py`: Enforces schema_version 2 provenance validation before and after staging archive contents.
+  - `CMakeLists.txt`: Quoted and guarded `_curl_headers` and `_dependency_inputs` to prevent space splitting in paths; registered `build_provenance` in CTest.
+  - `tests/build_provenance_tests.py`: Comprehensive test fixture covering complete build, no-op rebuild, partial target builds (`main`, `setup`, `itu_core`, `itu_platform`), failed compilation `#error`, failed dependency `#error`, tampered binary replacement, staged copy tampering, and git release validation. PASS.
+
+#### 4. Integrated macOS and Linux Verification of CP-32 and CP-33 — 2026-10-01 22:50
+- **Full macOS CTest Suite (10/10 PASS in 54.77s)**: `transport` (1.77s), `authentication` (7.79s), `core_and_clock` (0.35s), `application_flags` (27.16s), `setup_terminal` (0.68s), `setup_files` (0.36s), `setup_acl_errors` (0.36s), `artifact_integrity` (0.26s), `manifest_paths` (9.85s), `build_provenance` (6.19s). All passed cleanly.
+- **Full Linux CTest Suite in Docker (9/9 PASS in 52.72s)**: `transport` (1.94s), `authentication` (8.32s), `core_and_clock` (0.05s), `application_flags` (28.96s), `setup_terminal` (0.61s), `setup_files` (0.04s), `artifact_integrity` (0.48s), `manifest_paths` (36.71s), `build_provenance` (41.22s). `setup_acl_errors` is Apple-only and correctly not registered on Linux.
+- **Native Packaging & Artifact Verification**: Verified `package.py` creates valid archives with schema_version 2 provenance manifests. Native artifact inspection via `tests/native_artifacts.py` passed on both macOS ARM64 (`dist/itu-ders-bot-1.0.0-macos-arm64.tar.gz`) and Linux x64 archives (`verified-package-fixed/itu-ders-bot-1.0.0-linux-x64.tar.gz`).
 
 ## Files / Artifacts Changed
 
-- Current post-fix review changes only `.agents/current_plan.md` and this ExecPlan. The source changes listed below belong to preceding implementation work. Current scratch probes, evidence and verified Mac package are below ignored `build/review2-20261001/`.
-- `cmake/Dependencies.cmake`: resolved symlink on `ITU_APPLE_SDK` with `file(REAL_PATH)` for valid prefix matching; guarded unbootstrapped dependencies check.
-- `src/platform_posix.cpp`: `is_terminal()` checks both STDIN and STDOUT handles; private file mode/owner enforcement on POSIX; fixed QoS elevate logic to prevent demotion; stripped trailing `\r` on CRLF input in `read_line()`.
-- `src/platform_windows.cpp`: `is_terminal()` checks both STDIN and STDOUT console handles.
-- `tests/core_tests.cpp`: added `TimingGuard` lifecycle and multiple activation tests.
-- `.github/workflows/release.yml`: complete three-target native/archive/release gates.
-- `tests/native_artifacts.py`: outer checksum and exact sanitized allowlist checks.
-- `tests/artifact_integrity_tests.py`, `CMakeLists.txt`: eight archive contract tests registered as the seventh CTest suite.
-- `tests/application_fixture.py`: native platform header expectation.
-- `scripts/bootstrap.py`: OpenSSL path-space fix, Windows nghttp2 static import definition, source download/extraction progress.
-- `README.md`, `AGENTS.md`: unified platform policy and usable preset/bootstrap/package instructions.
-- `.agents/current_plan.md` and this plan: updated with Linux and macOS validation evidence.
-- Ignored `dist/`: Linux native archive (`itu-ders-bot-1.0.0-linux-x64.tar.gz`) and macOS native archive (`itu-ders-bot-1.0.0-macos-arm64.tar.gz`) with SHA256 checksums.
+- **CP-32 build provenance files**:
+  - `cmake/BuildProvenance.cmake`: Invalidates manifest at compilation start via `provenance_start`; attaches `BinaryReceipt.cmake` POST_BUILD to `main` and `setup`; creates `build_manifest` target depending on both executables.
+  - `cmake/ProvenanceInputs.cmake`: Hashes all source, build, and external dependencies into JSON format; writes `provenance-start.json`.
+  - `cmake/BinaryReceipt.cmake`: Writes post-build link receipt `${_target}-$<CONFIG>.sha256` upon successful link.
+  - `cmake/GenerateManifest.cmake`: Checks input stability against `provenance-start.json`, validates binary receipts against linked executables with stripped whitespace, and generates schema_version 2 manifest.
+  - `scripts/provenance.py`: Validates source inventory (filtering dotfiles/`.DS_Store`), build inputs, external absolute tools, binary receipts, staged copies, and clean release git state.
+  - `scripts/package.py`: Enforces schema_version 2 provenance validation before and after staging archive contents.
+  - `CMakeLists.txt`: Safely quotes external input list expansions, wires `provenance-dependencies.cmake` and `cmake/BuildProvenance.cmake`, and registers `build_provenance` in CTest.
+  - `tests/build_provenance_tests.py`: End-to-end fixture test exercising complete, no-op, partial, failed, stale, replaced, and staged-copy build provenance.
+  - `tests/artifact_integrity_tests.py`: Aligned synthetic package fixture with `schema_version: 2`.
+- **CP-33 ACL error handling and regression enforcement files**:
+  - `src/platform_posix.cpp`: `atomic_write_private` verifies extended ACL is empty via `acl_valid` and Darwin's `result == -1 && errno == EINVAL`; explicitly clears `errno` before calls and fails before writing credentials on any entry or unexpected errno.
+  - `tests/test_helpers.hpp`: `private_file` rejects unexpected ACL read errors (`errno != ENOENT`) and requires empty valid extended ACL.
+  - `tests/setup_file_tests.cpp`: Requires `posix_spawn` chmod setup to succeed; asserts child inherits extended ACL with a control file.
+  - `tests/setup_acl_error_tests.cpp`: 12-mode ACL syscall fault-injection harness verifying failure before credential write, original preservation, and cleanup.
+- **Earlier CP-31 files**:
+  - `CMakeLists.txt`: Quoting and `VERBATIM` for manifest target in space paths.
+  - `tests/manifest_path_tests.py`: Real-preset spaces regression test.
+- **Planning documents**:
+  - `.agents/current_plan.md`: Aligned to ACTIVE state with current timestamps, candidate files, and concrete next actions.
+  - `.agents/exec_plans/active/cross-platform-port.md`: Consolidated validation sections, eliminated duplicated historical tables and contradictory statements, and updated revision history.
 
 ## Handoff Snapshot
 
-- Current objective: finish Linux/macOS; fix **CP-31 first**, then **CP-32/CP-33**. Windows testing belongs to the teammate, and is not a reason to stop available Mac/Linux work.
-- Last verified state: clean baseline `e1aea0712fbc95f28b74b75291b64485e5567071`; fresh Mac configure/build, seven suites in28.28s, native binary inspection, package and extracted startup PASS. Original ACL exposure fixed in native probes. Manifest path-space and failed-build provenance defects reproduced; ACL helper failure acceptance observed with fault injection.
-- Next actions: repair manifest command/path handling and successful-binary provenance with regressions; make ACL verification/test setup mandatory; rerun corrected Mac gates and current-revision Ubuntu22/24 checks once an appropriate Linux environment exists.
-- Blockers: Docker engine now works but contains no images. Need a provided Ubuntu x64 development environment or an explicit setup/storage exception before Linux execution; do not pull images into global Docker storage silently. Windows execution/desktop acceptance is teammate-owned. Mac14/15 remains deferred; remote CI/live service/publication are unauthorized.
-- Preserve: source `data/example_config.json` remains deleted; use sanitized packaging template. Existing source/archives and synthetic review evidence remain intact. Only plan edits made; no Git mutations, global dependency downloads or personal credentials/config reads.
+- **Current objective**: CP-32 and CP-33 are verified in full integrated macOS (10 suites) and Linux Docker (9 suites) CMake/CTest suites and packaging checks. Windows testing belongs to the teammate.
+- **Last verified state**:
+  - CP-31 verified fixed (Linux 8/8, macOS 8/8).
+  - CP-33 verified fixed (macOS 10/10 CTest suites, direct setup-file test, and 12-mode fault injection pass).
+  - CP-32 verified fixed (macOS 10/10 and Linux 9/9 CTest suites, `build_provenance_tests.py`, and schema 2 packaging pass).
+  - Space-path list expansion quoting in `CMakeLists.txt`, dotfile filtering and external path resolution in `provenance.py`, receipt whitespace stripping in `GenerateManifest.cmake`, and schema 2 alignment in `artifact_integrity_tests.py` verified.
+  - Working tree sanity: `git diff --check` and `git diff --cached --check` pass with zero errors.
+- **Next actions**:
+  1. Teammate to run native Windows MSVC build, CTest suite, and packaging checks.
+  2. Coordinate full release testing and authorized CI workflow runs when all three native platform archives are ready.
+- **Blockers**: Physical Linux x64 unproven (emulated AMD64 in Docker). Windows teammate owned. macOS 14/15 runtime deferred. Remote workflows, live calls, publication unauthorized.
+- **Open hypotheses / risks**: Multi-config generator handling on Windows (`$<CONFIG>`) in `BinaryReceipt.cmake` is designed to generate `main-Release.sha256`, which requires verification by the Windows teammate.
+- **Preserve**: Deleted `data/example_config.json`, personal files, and historical archives. No Git mutations or personal-config reads. Docker image storage is explicitly authorized; tools/dependencies remain in ignored `.deps/`.
 
 ## Outcomes & Retrospective
 
-The follow-up changes resolve the reproduced inherited-ACL issue on Mac and improve revision checks, dependency metadata, ABI validation, setup argv handling, PTY handling and HTML entity decoding. Current ordinary-path Mac build/tests/archive verification passes. It is inaccurate to call every finding natively verified or claim complete test coverage: CP-31/CP-32 still break build/provenance requirements, CP-33 weakens ACL error verification, updated Linux execution is missing, and Windows tests have not run here. The user assigns Windows testing to a teammate. Linux/macOS correction and current-revision evidence remain our primary completion gates. No production fixes or downloads were performed in this review.
-
-## Post-fix Review Evidence — e1aea07, 2026-10-01 15:34
-
-Bounded preflight: MacARM64, local CMake4.4.3, AppleClang21, make3.81, active Apple SDK, Python3.12.3 HTTP/TLS/PTY/archive modules and loopback bind PASS. The initial Docker socket was absent. After the user said they would start Docker, the single relevant recheck reported client/server29.8.0 LinuxARM64; image inventory was empty. No alternate Linux tool/runtime directory was found in the inspected project paths. No images were downloaded and no compiler/SDK installed.
-
-| Gate | Command / method | Status | Evidence / limit |
-|---|---|---|---|
-| Fresh Mac configure/build | Local cmake `--preset macos-arm64 -B build/review2-20261001 -DPython3_EXECUTABLE:FILEPATH=<existing Python3.12>` then `--build build/review2-20261001 --parallel 3` | PASS | All native targets; existing test aggregate-initializer warnings only. New manifest records e1aea07, dirty:false, Apple SDK curl8.7.1. |
-| Complete Mac suite | Local ctest `--test-dir build/review2-20261001 --output-on-failure --parallel 3` | PASS | 7/7 in28.28s. `build/review2-20261001/Testing/Temporary/LastTest.log`. Does not exercise CP-31/CP-32. |
-| Native binary/startup checks | `python3 tests/native_artifacts.py build/review2-20261001/bin --target macos-arm64` | PASS | Real Mach-O architecture/linkage/signature and clean-directory startup. |
-| Actual Mac archive | `python3 scripts/package.py build/review2-20261001/bin --target macos-arm64 --output build/review2-20261001/verified-package --tag v1.0.0`, then native_artifacts on that archive | PASS | Local packaging validation only; no Git tag or publication. Actual extracted archive verified. SHA256 `dbb97faa122c45aa2f77ed361d2c52e9877c462190c93eea6e60ba32427913b3`. |
-| ACL creation/replacement | Native probe against current adapter with inherited everyone-read ACL | PASS | File mode0600, current owner, no ACL after both writes, no temporary residue. `build/review2-20261001/acl-review-evidence.txt`. |
-| ACL failure preservation | Probe intercepts acl_set_fd ENOTSUP, acl_get_fd EIO and a no-op ACL setter | PASS | Rejected before writing bytes; original preserved; no temp residue. Synthetic fault injection, not observed filesystem errors. |
-| ACL test/error detection | Inject acl_get_file EIO into helper; inject unexpected acl_get_entry EIO into adapter | FAIL robustness expectations | Helper falsely passed; adapter treated error as empty ACL. ACL actually cleared in the latter probe, so no credential exposure asserted. CP-33. |
-| Space-path manifest | Unchanged custom-target block in disposable Unix Makefiles project containing spaces | FAIL | Configure0/build2, literal backslashes in output path. `build/review2-20261001/provenance with spaces/evidence.log`; CP-31. |
-| Failed-build provenance | Disposable main target fails after unchanged manifest target; package old synthetic executable bytes with --tag | FAIL | Build2 but package0, metadata current/clean. `build/review2-20261001/provenance-order/evidence.log`; CP-32. Synthetic artifact is not a working release. |
-| Linux ABI validation logic | Targeted ABI unittest plus seven mocked-readelf boundaries | PASS (mocked) | Correct ceilings accepted; newer GLIBC/GLIBCXX/CXXABI rejected. Does not establish current native Ubuntu execution. |
-| Current Ubuntu22/24 execution | Docker prerequisite and image inventory | BLOCKED | Engine available after user action; no image or usable Linux toolchain. Historical WSL results predate e1aea07. |
-| Current Windows execution | Teammate's native MSVC/desktop verification | TEAMMATE OWNED; NOT RUN here | Source-only changes cannot be counted as native Windows PASS. |
-
-Existing Linux ABI limits are consistent with the [GCC ABI table](https://gcc.gnu.org/onlinedocs/gcc-13.4.0/libstdc%2B%2B/manual/manual/abi.html) and [Ubuntu Jammy libstdc++ package](https://packages.ubuntu.com/jammy/libstdc%2B%2B6); these sources support the numeric check, not execution of our binaries.
+The Docker campaign verified Linux under AMD64 emulation, reproduced and fixed the manifest path defect CP-31, added a real-project regression, and passed all eight suites on Linux and native macOS, plus actual archive checks. CP-32 (build provenance tied to both executables) and CP-33 (strict ACL error handling and mandatory test setup) were fully implemented, hardened, and verified with all 10 CTest suites on macOS and all 9 CTest suites on Linux Docker, plus packaging with schema_version 2 provenance. Four latent robustness issues were identified and hardened: path space splitting in CMake external dependencies list, dotfile/`.DS_Store` inventory pollution in Python provenance validation, external absolute path resolution across platforms, and binary receipt whitespace sensitivity. Physical Linux x64 behavior remains tested via Docker AMD64 emulation, and Windows evidence belongs to the teammate. No live registration, Git mutation, remote workflow or publication occurred.
 
 ## Revision Notes
 
-- 2026-10-01 15:34 Europe/Istanbul — Reviewed changes from dcf4d04 to e1aea07; verified Mac/ACL fixes and real archive, reproduced CP-31/CP-32 and ACL error/test gaps CP-33, corrected blanket completion/native-PASS claims, assigned Windows tests to teammate, and made Linux/macOS fixes/current-revision execution primary. Docker is now available but image/toolchain prerequisites remain missing; no downloads or production source fixes.
-- 2026-10-01 11:10 Europe/Istanbul — Implemented and verified fixes for CP-20 through CP-30. Preserved dependency manifest in macOS build provenance; asserted child process creation and timeout termination in `windows_console_tests.cpp`; fixed Windows `on_control` inactive signal swallowing; restricted menu key repeat buffering to directional keys; handled `errno.EIO` in `setup_pty_tests.py`; added terminating `nullptr` to `setup/main.cpp` `argv`; added missing checksum check and Git SHA-256 support to `release_checksums.py` and `package.py`; decoded uppercase hex HTML entities in `src/token.cpp`; added owner UID verification to POSIX `private_file()`; added `tests/` to `sys.path` and 4 new contract tests to `artifact_integrity_tests.py` (15/15 passed); guarded `fsync` on POSIX write failure. Re-verified build, all 7 offline CTest suites (35.58s), and native packaging on macOS ARM64. Updated planning documents.
-- 2026-10-01 10:55 Europe/Istanbul — Implemented and verified fixes for CP-13 through CP-19. Stripped inherited ACLs on macOS before writing private credentials; added `iphlpapi` to WIN32 static curl; validated manifest revisions and targets in `release_checksums.py`; added `GenerateManifest.cmake` for build-time provenance and dirty-state tracking; enforced Ubuntu 22.04 `GLIBCXX <= 3.4.30` and `CXXABI <= 1.3.13` in `native_artifacts.py`; enhanced `windows_console_tests.cpp` with setup child process testing and prompt synchronization; handled `wRepeatCount` in Windows console menu input; verified all 7 offline CTest suites and native packaging on macOS ARM64. Updated planning documents.
-- 2026-10-01 10:12 Europe/Istanbul — Reviewed current committed implementation, reran fresh macOS build/seven suites/native binary checks, reproduced inherited ACL defect, recorded P1 CP-13/CP-14 ahead of acceptance work and P2/P3 follow-ups, corrected stale completion/host statements, and explicitly listed unfinished implementation versus unexecuted acceptance. Updated current_plan; production sources unchanged.
-- 2026-09-30 19:42 Europe/Istanbul — Resumed on cross-platform, synchronized source completion with unrun gates, recorded host availability, repaired CI/docs, and started Linux validation.
-- 2026-09-30 20:39 Europe/Istanbul — Recorded completed Linux dependencies/build/7 suites/archive/security checks, fixed native build and fixture failures, added archive contract tests, aligned required ExecPlan sections, and retained external native/manual blockers.
-- 2026-09-30 21:13 Europe/Istanbul — Recorded user authorization for the local continuation checkpoint on cross-platform and clarified the pre-checkpoint archive revision; native validation blockers remain pending.
-- 2026-09-30 21:40 Europe/Istanbul — Completed native macOS ARM64 configure, build, all 7/7 offline CTest suites, artifact integrity, and packaging; fixed Apple SDK symlink resolution in CMake and dual-handle terminal detection in platform adapters.
-- 2026-09-30 21:55 Europe/Istanbul — Fixed macOS QoS demotion and unspecified elevation in `TimingGuard` (CP-10), added POSIX `read_line` trailing `\r` stripping for CRLF parity (CP-11), guarded unbootstrapped dependencies in `Dependencies.cmake` (CP-12), and added `TimingGuard` coverage to `core_tests`. Re-verified build, CTest, packaging, and artifacts.
+- 2026-10-01 22:50 Europe/Istanbul — Executed full integrated CTest suites on macOS ARM64 (10/10 passed in 54.77s) and Linux Docker AMD64 (9/9 passed in 52.72s). Verified native packaging and `native_artifacts.py` inspection with schema_version 2 provenance on both platforms. Verified `git diff --check` passes cleanly. Updated planning documents to record CP-32 and CP-33 as verified and closed.
+- 2026-10-01 22:45 Europe/Istanbul — Audited CP-32 and CP-33 implementations. Hardened `CMakeLists.txt` list quoting against space-containing dependency paths; excluded dotfiles/`.DS_Store` from `source_inputs` in `scripts/provenance.py` to match CMake globbing; resolved external absolute paths directly in `provenance.py`; added whitespace stripping to binary receipt checking in `GenerateManifest.cmake`; aligned synthetic manifest in `artifact_integrity_tests.py` with schema 2. Fully consolidated `cross-platform-port.md` by eliminating duplicated validation sections and contradictory stale entries, and updated `current_plan.md`.
+- 2026-10-01 22:30 Europe/Istanbul — Implemented and candidate-verified CP-32 and CP-33. Added build provenance tracking with tests in `build_provenance_tests.py`. Fixed POSIX ACL verification in `platform_posix.cpp` and `test_helpers.hpp`; enforced mandatory chmod setup in `setup_file_tests.cpp` and added 12-mode fault injection in `setup_acl_error_tests.cpp`.
+- 2026-10-01 21:10 Europe/Istanbul — Used authorized Ubuntu AMD64 containers; completed pinned project-local bootstrap, baseline Linux verification and Ubuntu 24 smoke. Reproduced/fixed CP-31, added eighth CTest suite, passed Linux/macOS full suites and both archive checks.
+- 2026-10-01 15:34 Europe/Istanbul — Reviewed changes from dcf4d04 to e1aea07; verified Mac/ACL fixes and real archive, reproduced CP-31/CP-32 and ACL error/test gaps CP-33, corrected blanket completion/native-PASS claims, assigned Windows tests to teammate, and made Linux/macOS fixes/current-revision execution primary.
+- 2026-10-01 11:10 Europe/Istanbul — Implemented and verified fixes for CP-20 through CP-30.
+- 2026-10-01 10:55 Europe/Istanbul — Implemented and verified fixes for CP-13 through CP-19.
+- 2026-10-01 10:12 Europe/Istanbul — Reviewed current committed implementation, reran fresh macOS build/seven suites/native binary checks, reproduced inherited ACL defect, recorded P1 CP-13/CP-14 ahead of acceptance work and P2/P3 follow-ups.
+- 2026-09-30 21:55 Europe/Istanbul — Fixed macOS QoS demotion (CP-10), POSIX CRLF (CP-11), Dependencies.cmake warning (CP-12).
+- 2026-09-30 21:40 Europe/Istanbul — Completed native macOS ARM64 configure, build, all 7/7 offline CTest suites, artifact integrity, and packaging.
+- 2026-09-30 20:39 Europe/Istanbul — Recorded completed Linux dependencies/build/7 suites/archive/security checks.
+- 2026-09-30 19:42 Europe/Istanbul — Resumed on cross-platform, synchronized source completion with unrun gates.

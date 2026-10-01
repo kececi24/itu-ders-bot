@@ -5,6 +5,11 @@
 #include <cassert>
 #include <filesystem>
 #include "test_helpers.hpp"
+#ifdef __APPLE__
+#include <spawn.h>
+#include <sys/wait.h>
+extern char** environ;
+#endif
 
 static std::string read_file(const std::string& path) {
     std::ifstream file(test_helpers::path(path));
@@ -43,8 +48,28 @@ int main() {
 #ifdef __APPLE__
     const auto acl_dir = root + "/acl_inherited";
     std::filesystem::create_directory(test_helpers::path(acl_dir));
-    int chmod_res = std::system(("chmod +a 'everyone allow read,file_inherit' \"" + acl_dir + "\"").c_str());
-    if (chmod_res == 0) {
+    char* chmod_args[] = {const_cast<char*>("/bin/chmod"), const_cast<char*>("+a"),
+        const_cast<char*>("everyone allow read,file_inherit"), const_cast<char*>(acl_dir.c_str()), nullptr};
+    pid_t chmod_pid;
+    test_helpers::require(posix_spawn(&chmod_pid, "/bin/chmod", nullptr, nullptr, chmod_args, environ) == 0,
+                          "start inherited-ACL fixture setup");
+    int chmod_status = 0;
+    pid_t waited;
+    do { waited = waitpid(chmod_pid, &chmod_status, 0); } while (waited < 0 && errno == EINTR);
+    test_helpers::require(waited == chmod_pid && WIFEXITED(chmod_status) && WEXITSTATUS(chmod_status) == 0,
+                          "inherited-ACL fixture setup must succeed");
+    {
+        // Prove the filesystem actually inherits the ACL, rather than silently
+        // passing when the fixture had no effect.
+        const auto control = test_helpers::path(acl_dir) / "inherited-control";
+        { std::ofstream out(control); out << "synthetic control"; }
+        acl_t inherited = acl_get_file(control.c_str(), ACL_TYPE_EXTENDED);
+        test_helpers::require(inherited != nullptr, "read inherited-ACL control");
+        acl_entry_t first_entry;
+        const bool has_entry = acl_get_entry(inherited, ACL_FIRST_ENTRY, &first_entry) == 0;
+        acl_free(inherited);
+        test_helpers::require(has_entry, "fixture child must inherit an extended ACL entry");
+        std::filesystem::remove(control);
         const auto acl_env = acl_dir + "/.env";
         assert(write_to_env(acl_env, "user", "secret_one"));
         assert(read_file(acl_env).find("secret_one") != std::string::npos);

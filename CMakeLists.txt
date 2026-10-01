@@ -62,24 +62,26 @@ add_executable(setup setup/main.cpp)
 target_link_libraries(setup PRIVATE itu_platform)
 
 file(WRITE "${CMAKE_BINARY_DIR}/dependency-manifest.json" "${ITU_DEPENDENCY_MANIFEST}\n")
+set(_provenance_external "${CMAKE_CXX_COMPILER}")
+if(APPLE)
+    list(APPEND _provenance_external "${ITU_CURL_LIBRARY}")
+    file(GLOB _curl_headers "${ITU_CURL_INCLUDE_DIR}/curl/*.h")
+    if(_curl_headers)
+        list(APPEND _provenance_external "${_curl_headers}")
+    endif()
+else()
+    file(GLOB_RECURSE _dependency_inputs LIST_DIRECTORIES false
+        "${ITU_DEPS_PREFIX}/include/*" "${ITU_DEPS_PREFIX}/lib/*")
+    if(_dependency_inputs)
+        list(APPEND _provenance_external "${_dependency_inputs}")
+    endif()
+    list(APPEND _provenance_external
+        "${ITU_DEPS_PREFIX}/itu-dependencies.cmake" "${ITU_DEPS_PREFIX}/dependency-manifest.json")
+endif()
+file(WRITE "${CMAKE_BINARY_DIR}/provenance-dependencies.cmake"
+    "set(PROVENANCE_EXTERNAL_FILES [==[${_provenance_external}]==])\n")
 
-# A machine-readable package input generated with the actual build.
-add_custom_target(build_manifest ALL
-    COMMAND "${CMAKE_COMMAND}"
-        -DSOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-        -DBINARY_DIR="${CMAKE_BINARY_DIR}"
-        -DOUTPUT_FILE="${CMAKE_BINARY_DIR}/bin/build-manifest.json"
-        -DPROJECT_VERSION="${PROJECT_VERSION}"
-        -DITU_TARGET="${ITU_TARGET}"
-        -DCOMPILER_ID="${CMAKE_CXX_COMPILER_ID}"
-        -DCOMPILER_VERSION="${CMAKE_CXX_COMPILER_VERSION}"
-        -DDEPENDENCY_MANIFEST_FILE="${CMAKE_BINARY_DIR}/dependency-manifest.json"
-        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateManifest.cmake"
-    BYPRODUCTS "${CMAKE_BINARY_DIR}/bin/build-manifest.json"
-    COMMENT "Generating build manifest with current build provenance"
-)
-add_dependencies(main build_manifest)
-add_dependencies(setup build_manifest)
+include(cmake/BuildProvenance.cmake)
 
 include(CTest)
 if(BUILD_TESTING)
@@ -115,7 +117,21 @@ if(BUILD_TESTING)
         add_test(NAME setup_terminal COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/setup_pty_tests.py" "$<TARGET_FILE:setup>")
     endif()
     add_test(NAME setup_files COMMAND setup_file_tests)
+    if(APPLE)
+        add_executable(setup_acl_error_tests tests/setup_acl_error_tests.cpp)
+        target_include_directories(setup_acl_error_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+        add_test(NAME setup_acl_errors COMMAND setup_acl_error_tests)
+        set_tests_properties(setup_acl_errors PROPERTIES TIMEOUT 30)
+    endif()
     set_tests_properties(transport authentication core_and_clock application_flags setup_files setup_terminal PROPERTIES TIMEOUT 90)
     add_test(NAME artifact_integrity COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/artifact_integrity_tests.py")
     set_tests_properties(artifact_integrity PROPERTIES TIMEOUT 30)
+    add_test(NAME manifest_paths COMMAND "${Python3_EXECUTABLE}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/manifest_path_tests.py"
+        "${CMAKE_COMMAND}" "${CMAKE_CURRENT_SOURCE_DIR}" "${ITU_TARGET}" "${ITU_DEPS_PREFIX}")
+    set_tests_properties(manifest_paths PROPERTIES TIMEOUT 300)
+    add_test(NAME build_provenance COMMAND "${Python3_EXECUTABLE}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/build_provenance_tests.py"
+        "${CMAKE_COMMAND}" "${CMAKE_CURRENT_SOURCE_DIR}" "${ITU_TARGET}" "${ITU_DEPS_PREFIX}")
+    set_tests_properties(build_provenance PROPERTIES TIMEOUT 300)
 endif()

@@ -35,6 +35,7 @@ class ArchiveIntegrityTests(unittest.TestCase):
                 'time': {'lead_millisecond': 0}, 'courses': {'crn': [], 'scrn': []}
             }).encode(),
             'build-manifest.json': json.dumps({
+                'schema_version': 2,
                 'version': '1.0.0', 'target': target, 'compiler': {},
                 'dependencies': {}, 'revision': '0' * 40
             }).encode(),

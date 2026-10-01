@@ -1,12 +1,28 @@
-# Generate build-manifest.json during build with fresh provenance
+# Generate only after both production executables succeeded.
+include("${SOURCE_DIR}/cmake/ProvenanceInputs.cmake")
+file(READ "${BINARY_DIR}/provenance-start.json" _started_inputs)
+if(NOT _started_inputs STREQUAL PROVENANCE_INPUTS)
+    message(FATAL_ERROR "Build inputs changed during compilation; rebuild before packaging")
+endif()
+file(SHA256 "${MAIN_FILE}" MAIN_SHA256)
+file(SHA256 "${SETUP_FILE}" SETUP_SHA256)
+foreach(_target main setup)
+    file(READ "${BINARY_DIR}/${_target}-${BUILD_CONFIG}.sha256" _linked_hash)
+    string(STRIP "${_linked_hash}" _linked_hash)
+    string(TOUPPER "${_target}" _upper_target)
+    if(NOT _linked_hash STREQUAL "${${_upper_target}_SHA256}")
+        message(FATAL_ERROR "${_target} differs from its successful link; rebuild the executable")
+    endif()
+endforeach()
 execute_process(
     COMMAND git log -1 --format=%H
     WORKING_DIRECTORY "${SOURCE_DIR}"
+    RESULT_VARIABLE REVISION_RESULT
     OUTPUT_VARIABLE ITU_GIT_REVISION
     OUTPUT_STRIP_TRAILING_WHITESPACE
     ERROR_QUIET
 )
-if(NOT ITU_GIT_REVISION MATCHES "^[0-9a-f]+$")
+if(NOT REVISION_RESULT EQUAL 0 OR NOT ITU_GIT_REVISION MATCHES "^[0-9a-f]+$")
     set(ITU_GIT_REVISION "unknown")
 endif()
 
@@ -14,11 +30,12 @@ set(ITU_IS_DIRTY FALSE)
 execute_process(
     COMMAND git status --porcelain --untracked-files=no
     WORKING_DIRECTORY "${SOURCE_DIR}"
+    RESULT_VARIABLE STATUS_RESULT
     OUTPUT_VARIABLE ITU_GIT_STATUS
     OUTPUT_STRIP_TRAILING_WHITESPACE
     ERROR_QUIET
 )
-if(ITU_GIT_STATUS)
+if(NOT STATUS_RESULT EQUAL 0 OR ITU_GIT_STATUS)
     set(ITU_IS_DIRTY TRUE)
 endif()
 
@@ -35,7 +52,7 @@ else()
     set(ITU_DEPS_JSON "{}")
 endif()
 
-set(NEW_MANIFEST_CONTENT "{\n  \"schema_version\": 1,\n  \"version\": \"${PROJECT_VERSION}\",\n  \"target\": \"${ITU_TARGET}\",\n  \"compiler\": {\"id\": \"${COMPILER_ID}\", \"version\": \"${COMPILER_VERSION}\"},\n  \"revision\": \"${ITU_GIT_REVISION}\",\n  \"dirty\": ${DIRTY_JSON},\n  \"dependencies\": ${ITU_DEPS_JSON}\n}\n")
+set(NEW_MANIFEST_CONTENT "{\n  \"schema_version\": 2,\n  \"version\": \"${PROJECT_VERSION}\",\n  \"target\": \"${ITU_TARGET}\",\n  \"compiler\": {\"id\": \"${COMPILER_ID}\", \"version\": \"${COMPILER_VERSION}\"},\n  \"revision\": \"${ITU_GIT_REVISION}\",\n  \"dirty\": ${DIRTY_JSON},\n  \"inputs\": ${PROVENANCE_INPUTS},\n  \"binaries\": {\"main\": \"${MAIN_SHA256}\", \"setup\": \"${SETUP_SHA256}\"},\n  \"dependencies\": ${ITU_DEPS_JSON}\n}\n")
 
 if(EXISTS "${OUTPUT_FILE}")
     file(READ "${OUTPUT_FILE}" EXISTING_MANIFEST_CONTENT)

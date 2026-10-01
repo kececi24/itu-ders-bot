@@ -1,5 +1,6 @@
 #pragma once
 #include <chrono>
+#include <cerrno>
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
@@ -86,13 +87,19 @@ inline void private_file(const std::filesystem::path& file) {
 #else
     struct stat info{}; require(stat(file.c_str(), &info) == 0 && (info.st_mode & 0777) == 0600 && info.st_uid == geteuid(), "private file mode must be 0600 and owned by current user");
 #ifdef __APPLE__
+    errno = 0;
     acl_t acl = acl_get_file(file.c_str(), ACL_TYPE_EXTENDED);
     if (acl != nullptr) {
-        acl_entry_t entry;
-        bool has_entry = (acl_get_entry(acl, ACL_FIRST_ENTRY, &entry) == 0);
+        bool empty = false;
+        if (acl_valid(acl) == 0) {
+            acl_entry_t entry;
+            errno = 0;
+            const int result = acl_get_entry(acl, ACL_FIRST_ENTRY, &entry);
+            empty = result == -1 && errno == EINVAL;
+        }
         acl_free(acl);
-        require(!has_entry, "private file must have no extended ACL entries");
-    }
+        require(empty, "private file must have a valid empty extended ACL");
+    } else require(errno == ENOENT, "read private file extended ACL");
 #endif
 #endif
 }

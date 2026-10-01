@@ -176,11 +176,17 @@ bool atomic_write_private(const std::filesystem::path& path, const std::string& 
             written = false;
         }
         if (written) {
+            errno = 0;
             acl_t acl = acl_get_fd(fd);
             if (acl != nullptr) {
-                acl_entry_t entry;
-                if (acl_get_entry(acl, ACL_FIRST_ENTRY, &entry) == 0) {
-                    written = false;
+                written = acl_valid(acl) == 0;
+                if (written) {
+                    acl_entry_t entry;
+                    errno = 0;
+                    const int result = acl_get_entry(acl, ACL_FIRST_ENTRY, &entry);
+                    // Darwin reports an exhausted valid ACL as -1/EINVAL.
+                    // Any entry or unexpected error must fail before writing.
+                    written = result == -1 && errno == EINVAL;
                 }
                 acl_free(acl);
             } else if (errno != ENOENT) {
