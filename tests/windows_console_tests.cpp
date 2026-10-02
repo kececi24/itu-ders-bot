@@ -6,6 +6,8 @@
 #include <thread>
 #include <cstdio>
 #include <vector>
+#include <fstream>
+#include "include/nlohmann_json.hpp"
 
 namespace {
 using test_helpers::require;
@@ -82,80 +84,201 @@ void interrupt_case(DWORD signal) {
     require(capture.buffer.saw_prompt && capture.buffer.prompt_hidden, "control-signal password prompt exposed echo");
 }
 
-void test_setup_child_process(const std::wstring& setup_exe) {
-    test_helpers::TemporaryDirectory temp_dir;
-    auto env_file = temp_dir.root / test_helpers::path("setup.env");
-    auto config_file = temp_dir.root / test_helpers::path("setup.json");
-
-    // 1. Non-terminal rejection: redirected input must cause setup to fail
-    {
-        STARTUPINFOW si{};
-        si.cb = sizeof(si);
-        si.dwFlags = STARTF_USESTDHANDLES;
-        HANDLE null_in = CreateFileW(L"NUL", GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
-        HANDLE null_out = CreateFileW(L"NUL", GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
-        require(null_in != INVALID_HANDLE_VALUE && null_out != INVALID_HANDLE_VALUE, "open NUL handles");
-        si.hStdInput = null_in;
-        si.hStdOutput = null_out;
-        si.hStdError = null_out;
-        PROCESS_INFORMATION pi{};
-        std::wstring cmd = L"\"" + setup_exe + L"\"";
-        std::vector<wchar_t> cmd_buf(cmd.begin(), cmd.end());
-        cmd_buf.push_back(0);
-        require(CreateProcessW(nullptr, cmd_buf.data(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &si, &pi),
-                "spawn setup without terminal");
-        DWORD wait_res = WaitForSingleObject(pi.hProcess, 5000);
-        if (wait_res != WAIT_OBJECT_0) {
-            TerminateProcess(pi.hProcess, 1);
-            CloseHandle(pi.hThread);
-            CloseHandle(pi.hProcess);
-            CloseHandle(null_in);
-            CloseHandle(null_out);
-            require(false, "setup child process timed out waiting to exit on redirected input");
-        }
-        DWORD code = 0;
-        require(GetExitCodeProcess(pi.hProcess, &code) && code != 0,
-                "setup must exit non-zero when not connected to a terminal");
-        CloseHandle(pi.hThread);
-        CloseHandle(pi.hProcess);
-        CloseHandle(null_in);
-        CloseHandle(null_out);
+// The real child shares this private console with the test. Read rendered
+// prompts before sending input: timing sleeps cannot prove a reader is ready.
+struct ConsoleSnapshot {
+    DWORD input_mode = mode(), output_mode = 0;
+    UINT input_cp = GetConsoleCP(), output_cp = GetConsoleOutputCP();
+    ConsoleSnapshot() {
+        require(GetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), &output_mode), "save child output mode");
     }
-
-    // 2. Child process cancellation test
-    {
-        STARTUPINFOW si{};
-        si.cb = sizeof(si);
-        PROCESS_INFORMATION pi{};
-        std::wstring cmd = L"\"" + setup_exe + L"\" --env-path \"" + env_file.wstring() + L"\" --config-path \"" + config_file.wstring() + L"\"";
-        std::vector<wchar_t> cmd_buf(cmd.begin(), cmd.end());
-        cmd_buf.push_back(0);
-        require(CreateProcessW(nullptr, cmd_buf.data(), nullptr, nullptr, FALSE, CREATE_NEW_PROCESS_GROUP, nullptr, nullptr, &si, &pi),
-                "spawn setup child in new process group");
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        BOOL delivered = GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, pi.dwProcessId);
-        require(delivered, "GenerateConsoleCtrlEvent delivery to setup child failed");
-        DWORD wait_res = WaitForSingleObject(pi.hProcess, 5000);
-        if (wait_res != WAIT_OBJECT_0) {
-            TerminateProcess(pi.hProcess, 1);
-            CloseHandle(pi.hThread);
-            CloseHandle(pi.hProcess);
-            require(false, "cancelled setup child process timed out without exiting");
-        }
-        DWORD code = 0;
-        require(GetExitCodeProcess(pi.hProcess, &code) && code != 0,
-                "cancelled setup child process should return non-zero exit code");
-        CloseHandle(pi.hThread);
-        CloseHandle(pi.hProcess);
+    void check() const {
+        DWORD current_output = 0;
+        require(mode() == input_mode, "setup child did not restore input mode");
+        require(GetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), &current_output) && current_output == output_mode,
+                "setup child did not restore output mode");
+        require(GetConsoleCP() == input_cp && GetConsoleOutputCP() == output_cp,
+                "setup child did not restore code pages");
     }
+    void restore() const noexcept {
+        SetConsoleMode(input_handle, input_mode);
+        SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), output_mode);
+        SetConsoleCP(input_cp);
+        SetConsoleOutputCP(output_cp);
+    }
+};
+
+std::wstring screen() {
+    HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO info{};
+    require(GetConsoleScreenBufferInfo(output, &info), "inspect child screen");
+    std::wstring contents(static_cast<size_t>(info.dwSize.X) * info.dwSize.Y, L' ');
+    DWORD count = 0;
+    require(ReadConsoleOutputCharacterW(output, contents.data(), static_cast<DWORD>(contents.size()), {0, 0}, &count),
+            "read child screen");
+    contents.resize(count);
+    return contents;
 }
+
+struct SetupChild {
+    const ConsoleSnapshot saved_console;
+    PROCESS_INFORMATION process{};
+    SetupChild(const SetupChild&) = delete;
+    SetupChild& operator=(const SetupChild&) = delete;
+    SetupChild(const std::wstring& exe, const std::filesystem::path& env,
+               const std::filesystem::path& config, const std::filesystem::path& cwd,
+               bool redirected = false) {
+        require(FlushConsoleInputBuffer(input_handle), "clear child input");
+        HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+        CONSOLE_SCREEN_BUFFER_INFO info{};
+        DWORD written = 0;
+        require(GetConsoleScreenBufferInfo(output, &info) &&
+                FillConsoleOutputCharacterW(output, L' ', static_cast<DWORD>(info.dwSize.X) * info.dwSize.Y,
+                                            {0, 0}, &written) &&
+                SetConsoleCursorPosition(output, {0, 0}), "clear child screen");
+        STARTUPINFOW startup{};
+        startup.cb = sizeof(startup);
+        SECURITY_ATTRIBUTES security{sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE};
+        HANDLE null_in = INVALID_HANDLE_VALUE, null_out = INVALID_HANDLE_VALUE;
+        if (redirected) {
+            null_in = CreateFileW(L"NUL", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                  &security, OPEN_EXISTING, 0, nullptr);
+            null_out = CreateFileW(L"NUL", GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                   &security, OPEN_EXISTING, 0, nullptr);
+            if (null_in == INVALID_HANDLE_VALUE || null_out == INVALID_HANDLE_VALUE) {
+                if (null_in != INVALID_HANDLE_VALUE) CloseHandle(null_in);
+                if (null_out != INVALID_HANDLE_VALUE) CloseHandle(null_out);
+                require(false, "open inheritable NUL handles");
+            }
+            startup.dwFlags = STARTF_USESTDHANDLES;
+            startup.hStdInput = null_in;
+            startup.hStdOutput = startup.hStdError = null_out;
+        }
+        std::wstring command = L"\"" + exe + L"\" --env-path \"" + env.wstring() +
+                               L"\" --config-path \"" + config.wstring() + L"\"";
+        std::vector<wchar_t> buffer(command.begin(), command.end());
+        buffer.push_back(0);
+        const BOOL created = CreateProcessW(exe.c_str(), buffer.data(), nullptr, nullptr, redirected,
+                                           CREATE_NEW_PROCESS_GROUP, nullptr, cwd.c_str(), &startup, &process);
+        if (null_in != INVALID_HANDLE_VALUE) CloseHandle(null_in);
+        if (null_out != INVALID_HANDLE_VALUE) CloseHandle(null_out);
+        require(created, "spawn setup child");
+    }
+    ~SetupChild() {
+        if (process.hProcess) {
+            if (WaitForSingleObject(process.hProcess, 0) != WAIT_OBJECT_0) {
+                TerminateProcess(process.hProcess, 1);
+                WaitForSingleObject(process.hProcess, 5000);
+            }
+            CloseHandle(process.hProcess);
+            CloseHandle(process.hThread);
+        }
+        // Assertions run before destruction, so cleanup cannot hide a failed
+        // restoration check. It keeps the test console usable after a timeout.
+        saved_console.restore();
+        FlushConsoleInputBuffer(input_handle);
+    }
+    void prompt(const wchar_t* text) {
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+        while (std::chrono::steady_clock::now() < deadline) {
+            require(WaitForSingleObject(process.hProcess, 0) == WAIT_TIMEOUT, "setup exited before expected prompt");
+            if (screen().find(text) != std::wstring::npos) return;
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        }
+        require(false, "setup prompt readiness timed out");
+    }
+    void finish(bool success) {
+        require(WaitForSingleObject(process.hProcess, 5000) == WAIT_OBJECT_0, "setup child exit timed out");
+        DWORD code = 0;
+        require(GetExitCodeProcess(process.hProcess, &code) && (success ? code == 0 : code != 0),
+                "unexpected setup child exit code");
+    }
+    void credentials() {
+        prompt(L"1. Update user credentials");
+        key(VK_RETURN, L'\r');
+        prompt(L"Enter your username: ");
+        line(L"öğrenci-東京");
+        prompt(L"Enter your password: ");
+        require(!(mode() & ENABLE_ECHO_INPUT) && (mode() & ENABLE_LINE_INPUT),
+                "setup child password prompt exposed echo or lost line editing");
+    }
+};
+
+std::string read_file(const std::filesystem::path& path) {
+    std::ifstream stream(path, std::ios::binary);
+    require(stream.good(), "open child output file");
+    std::ostringstream contents;
+    contents << stream.rdbuf();
+    require(!stream.bad(), "read child output file");
+    return contents.str();
+}
+
+void test_setup_child_process(const std::wstring& setup_exe) {
+    test_helpers::TemporaryDirectory directory;
+    const auto env = directory.root / test_helpers::path(u8"秘密.env");
+    const auto config = directory.root / test_helpers::path(u8"設定.json");
+    const ConsoleSnapshot original;
+    {
+        SetupChild child(setup_exe, env, config, directory.root, true);
+        child.finish(false);
+        original.check();
+        require(!std::filesystem::exists(env) && !std::filesystem::exists(config), "redirected setup wrote files");
+    }
+    {
+        SetupChild child(setup_exe, env, config, directory.root);
+        child.credentials();
+        line(L"SECRET-MARKER-şifre-東京-🙂");
+        child.finish(true);
+        original.check();
+        require(read_file(env) == u8"ITU_USERNAME=\"öğrenci-東京\"\nITU_PASSWORD=\"SECRET-MARKER-şifre-東京-🙂\"\n",
+                "setup child UTF-8 credential round trip failed");
+        test_helpers::private_file(env);
+        require(screen().find(L"SECRET-MARKER") == std::wstring::npos, "setup child echoed password");
+    }
+    {
+        SetupChild child(setup_exe, env, config, directory.root);
+        child.prompt(L"2. Update add/drop list and time");
+        key(VK_DOWN);
+        key(VK_RETURN, L'\r');
+        child.prompt(L"Enter date for course selection"); line(L"2030/02/28");
+        child.prompt(L"Enter time of course selection"); line(L"10:20:30:456");
+        child.prompt(L"Enter lead milliseconds"); line(L"0");
+        child.prompt(L"Enter add CRNs"); line(L"12345, 67890");
+        child.prompt(L"Enter drop CRNs"); line(L"54321");
+        child.finish(true);
+        original.check();
+        const auto actual = nlohmann::json::parse(read_file(config));
+        const auto expected = nlohmann::json::parse(R"({"time":{"year":2030,"month":2,"day":28,"hour":10,"minute":20,"second":30,"millisecond":456,"lead_millisecond":0},"courses":{"crn":["12345","67890"],"scrn":["54321"]}})");
+        require(actual == expected, "setup child config round trip failed");
+        test_helpers::private_file(config);
+    }
+    // Cancellation is observed after the actual password reader is ready, with
+    // an existing destination so an accidental partial write is detectable.
+    const auto saved_env = read_file(env), saved_config = read_file(config);
+    {
+        SetupChild child(setup_exe, env, config, directory.root);
+        child.credentials();
+        require(GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, child.process.dwProcessId), "interrupt setup child");
+        child.finish(false);
+        original.check();
+        require(read_file(env) == saved_env && read_file(config) == saved_config, "cancelled setup changed files");
+    }
+    size_t files = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(directory.root)) {
+        require(entry.path() == env || entry.path() == config, "setup left temporary files");
+        ++files;
+    }
+    require(files == 2, "setup output files missing");
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
     try {
         std::wstring setup_exe;
-        if (argc > 1) {
-            setup_exe = test_helpers::path(argv[1]).wstring();
+        const auto arguments = itu::platform::arguments(argc, argv);
+        if (arguments.size() > 1) {
+            setup_exe = std::filesystem::absolute(test_helpers::path(arguments[1])).wstring();
         }
 
         FreeConsole();

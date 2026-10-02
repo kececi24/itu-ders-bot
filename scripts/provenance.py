@@ -8,12 +8,19 @@ def sha256(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def tracked_file(path, *, relative_to=None):
+    # Mirror ProvenanceInputs.cmake. Hidden source files remain build inputs;
+    # only named OS metadata and Python caches are excluded.
+    parts = path.relative_to(relative_to).parts if relative_to is not None else path.parts
+    return (path.is_file() and "__pycache__" not in parts
+            and path.suffix != ".pyc" and path.name != ".DS_Store")
+
+
 def source_inputs(root):
     paths = {"CMakeLists.txt", "CMakePresets.json", "README.md"}
     for directory in ("src", "setup", "include", "cmake", "scripts", "packaging", "third_party"):
         paths.update(path.relative_to(root).as_posix() for path in (root / directory).rglob("*")
-                     if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
-                     and not path.name.startswith("."))
+                     if tracked_file(path, relative_to=root))
     return paths
 
 
@@ -26,6 +33,16 @@ def validate_provenance(manifest, root, bin_dir, *, binary_dir=None):
         raise SystemExit("Build source inventory changed; perform a full build")
     if set(inputs.get("build", {})) != {"CMakeCache.txt", "dependency-manifest.json", "provenance-dependencies.cmake"}:
         raise SystemExit("Missing build input provenance")
+    if not isinstance(inputs.get("external_files"), list) or not isinstance(inputs.get("external_roots"), list):
+        raise SystemExit("Missing dependency inventory provenance; perform a full build")
+    external = {Path(path).as_posix() for path in inputs["external_files"] if tracked_file(Path(path))}
+    for directory in inputs["external_roots"]:
+        root_path = Path(directory)
+        if not root_path.is_dir():
+            raise SystemExit(f"Dependency directory missing: {directory}; perform a full build")
+        external.update(path.as_posix() for path in root_path.rglob("*") if tracked_file(path))
+    if external != set(inputs.get("external", {})):
+        raise SystemExit("Dependency inventory changed; perform a full build")
     for group, base in (("source", root), ("build", bin_dir.parent), ("external", Path("/"))):
         for relative, expected in inputs.get(group, {}).items():
             path = Path(relative) if group == "external" else base / relative
@@ -48,7 +65,7 @@ def validate_release(manifest, root):
     try:
         head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True,
                               text=True, check=True).stdout.strip()
-        status = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"],
+        status = subprocess.run(["git", "status", "--porcelain"],
                                 cwd=root, capture_output=True, text=True, check=True).stdout.strip()
     except (OSError, subprocess.CalledProcessError) as error:
         raise SystemExit(f"Cannot verify release Git provenance: {error}") from error

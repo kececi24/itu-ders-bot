@@ -63,23 +63,18 @@ target_link_libraries(setup PRIVATE itu_platform)
 
 file(WRITE "${CMAKE_BINARY_DIR}/dependency-manifest.json" "${ITU_DEPENDENCY_MANIFEST}\n")
 set(_provenance_external "${CMAKE_CXX_COMPILER}")
+set(_provenance_roots)
 if(APPLE)
     list(APPEND _provenance_external "${ITU_CURL_LIBRARY}")
-    file(GLOB _curl_headers "${ITU_CURL_INCLUDE_DIR}/curl/*.h")
-    if(_curl_headers)
-        list(APPEND _provenance_external "${_curl_headers}")
-    endif()
+    list(APPEND _provenance_roots "${ITU_CURL_INCLUDE_DIR}/curl")
 else()
-    file(GLOB_RECURSE _dependency_inputs LIST_DIRECTORIES false
-        "${ITU_DEPS_PREFIX}/include/*" "${ITU_DEPS_PREFIX}/lib/*")
-    if(_dependency_inputs)
-        list(APPEND _provenance_external "${_dependency_inputs}")
-    endif()
+    list(APPEND _provenance_roots "${ITU_DEPS_PREFIX}/include" "${ITU_DEPS_PREFIX}/lib")
     list(APPEND _provenance_external
         "${ITU_DEPS_PREFIX}/itu-dependencies.cmake" "${ITU_DEPS_PREFIX}/dependency-manifest.json")
 endif()
 file(WRITE "${CMAKE_BINARY_DIR}/provenance-dependencies.cmake"
-    "set(PROVENANCE_EXTERNAL_FILES [==[${_provenance_external}]==])\n")
+    "set(PROVENANCE_EXTERNAL_FILES [==[${_provenance_external}]==])\n"
+    "set(PROVENANCE_EXTERNAL_ROOTS [==[${_provenance_roots}]==])\n")
 
 include(cmake/BuildProvenance.cmake)
 

@@ -6,12 +6,17 @@ if(NOT _started_inputs STREQUAL PROVENANCE_INPUTS)
 endif()
 file(SHA256 "${MAIN_FILE}" MAIN_SHA256)
 file(SHA256 "${SETUP_FILE}" SETUP_SHA256)
+string(SHA256 _input_fingerprint "${PROVENANCE_INPUTS}")
 foreach(_target main setup)
-    file(READ "${BINARY_DIR}/${_target}-${BUILD_CONFIG}.sha256" _linked_hash)
-    string(STRIP "${_linked_hash}" _linked_hash)
+    file(READ "${BINARY_DIR}/${_target}-${BUILD_CONFIG}.sha256" _receipt)
+    string(JSON _linked_hash GET "${_receipt}" binary)
+    string(JSON _linked_inputs GET "${_receipt}" inputs)
     string(TOUPPER "${_target}" _upper_target)
     if(NOT _linked_hash STREQUAL "${${_upper_target}_SHA256}")
         message(FATAL_ERROR "${_target} differs from its successful link; rebuild the executable")
+    endif()
+    if(NOT _linked_inputs STREQUAL _input_fingerprint)
+        message(FATAL_ERROR "${_target} was linked against different inputs; rebuild the executable")
     endif()
 endforeach()
 execute_process(
@@ -28,7 +33,7 @@ endif()
 
 set(ITU_IS_DIRTY FALSE)
 execute_process(
-    COMMAND git status --porcelain --untracked-files=no
+    COMMAND git status --porcelain
     WORKING_DIRECTORY "${SOURCE_DIR}"
     RESULT_VARIABLE STATUS_RESULT
     OUTPUT_VARIABLE ITU_GIT_STATUS
