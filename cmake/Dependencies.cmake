@@ -15,6 +15,7 @@ if(APPLE)
     add_library(CURL::libcurl UNKNOWN IMPORTED)
     set_target_properties(CURL::libcurl PROPERTIES IMPORTED_LOCATION "${ITU_CURL_LIBRARY}"
         INTERFACE_INCLUDE_DIRECTORIES "${ITU_CURL_INCLUDE_DIR}")
+    set(ITU_CONFIGURE_INPUT_FILES "${ITU_CURL_INCLUDE_DIR}/curl/curlver.h")
     file(STRINGS "${ITU_CURL_INCLUDE_DIR}/curl/curlver.h" _version_line REGEX "^#define LIBCURL_VERSION \"")
     string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" ITU_CURL_VERSION "${_version_line}")
     if(ITU_CURL_VERSION VERSION_LESS "7.85.0")
@@ -33,6 +34,12 @@ else()
         message(FATAL_ERROR "Run python scripts/bootstrap.py --target ${ITU_TARGET}; only project-local .deps prefixes are accepted")
     endif()
     file(SHA256 "${CMAKE_SOURCE_DIR}/cmake/dependencies.lock.json" ITU_EXPECTED_LOCK_SHA256)
+    # These files select imported libraries and release dependency metadata at
+    # configure time. A later content change requires CMake regeneration even
+    # when its timestamp is retained.
+    set(ITU_CONFIGURE_INPUT_FILES
+        "${ITU_DEPS_PREFIX}/itu-dependencies.cmake"
+        "${ITU_DEPS_PREFIX}/dependency-manifest.json")
     include("${ITU_DEPS_PREFIX}/itu-dependencies.cmake")
     if(NOT ITU_INSTALLED_LOCK_SHA256 STREQUAL ITU_EXPECTED_LOCK_SHA256 OR NOT ITU_INSTALLED_TARGET STREQUAL ITU_TARGET)
         message(FATAL_ERROR "Dependencies do not match target/lock; rerun project-local bootstrap")

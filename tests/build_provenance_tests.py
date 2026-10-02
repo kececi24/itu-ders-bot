@@ -1,4 +1,5 @@
 """Exercise real CMake scheduling with tiny binaries and production provenance code."""
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -7,6 +8,78 @@ import subprocess
 import sys
 import tempfile
 from unittest import mock
+
+
+def verify_receipt_line_endings(cmake, repository, temporary):
+    """Windows text-mode writes must bind the same inputs as the finalizer."""
+    directory = Path(temporary) / "receipt newlines"
+    directory.mkdir()
+    binary = directory / "synthetic executable"
+    binary.write_bytes(b"synthetic binary\x00\r\n\xff")
+    inputs = directory / "inputs.json"
+    receipt = directory / "receipt.json"
+    command = [cmake, f"-DBINARY_FILE={binary}", f"-DINPUT_FILE={inputs}",
+               f"-DRECEIPT_FILE={receipt}", "-P", str(repository / "cmake/BinaryReceipt.cmake")]
+    original = json.dumps({"source": {"synthetic.cpp": "original input"}}, indent=2).encode()
+    expected = hashlib.sha256(original).hexdigest()
+    for newline in (b"\n", b"\r\n"):
+        inputs.write_bytes(original.replace(b"\n", newline))
+        subprocess.run(command, check=True)
+        actual = json.loads(receipt.read_text())
+        assert actual["inputs"] == expected, (newline, actual)
+        assert actual["binary"] == hashlib.sha256(binary.read_bytes()).hexdigest()
+    changed = original.replace(b"original input", b"modified input")
+    inputs.write_bytes(changed.replace(b"\n", b"\r\n"))
+    subprocess.run(command, check=True)
+    changed_hash = json.loads(receipt.read_text())["inputs"]
+    assert changed_hash == hashlib.sha256(changed).hexdigest() and changed_hash != expected
+    print("LF/CRLF receipt fingerprints agree; changed input and raw binary bytes remain bound.")
+
+
+def verify_hidden_untracked_release(repository, temporary, validate_release):
+    """Exercise real Git settings without changing a repository or its index."""
+    try:
+        git_dir = subprocess.run(["git", "rev-parse", "--absolute-git-dir"], cwd=repository,
+                                 capture_output=True, text=True, check=True).stdout.strip()
+        revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repository,
+                                  capture_output=True, text=True, check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        print("SKIP real Git settings regression: checkout metadata unavailable")
+        return
+    worktree = Path(temporary) / "git worktree"
+    worktree.mkdir()
+    untracked = "untracked_source.cpp"
+    (worktree / untracked).write_text("// synthetic release input\n")
+    environment = dict(os.environ, GIT_DIR=git_dir, GIT_WORK_TREE=str(worktree),
+                       GIT_OPTIONAL_LOCKS="0")
+    command = ["git", "-c", "status.showUntrackedFiles=no", "-c", f"safe.directory={worktree}"]
+    real_run = subprocess.run
+    control = real_run(command + ["status", "--porcelain", "--", untracked], cwd=worktree,
+                       env=environment, capture_output=True, text=True, check=True)
+    assert not control.stdout.strip(), control.stdout
+    statuses = []
+
+    def configured_git(args, **kwargs):
+        assert args[0] == "git", args
+        args = command + args[1:]
+        if "status" in args:
+            # Filter out tracked files absent from this synthetic worktree, so
+            # they cannot mask the missing-untracked-files regression.
+            args += ["--", untracked]
+        completed = real_run(args, env=environment, **kwargs)
+        if "status" in args:
+            statuses.append(completed.stdout.strip())
+        return completed
+
+    with mock.patch("provenance.subprocess.run", side_effect=configured_git):
+        try:
+            validate_release({"revision": revision, "dirty": False}, worktree)
+        except SystemExit as error:
+            assert str(error) == "Release checkout differs from completed build", error
+        else:
+            raise AssertionError("release ignored an untracked file hidden by Git settings")
+    assert statuses == [f"?? {untracked}"], statuses
+    print("Real Git status.showUntrackedFiles=no release regression passed.")
 
 
 def main():
@@ -23,6 +96,7 @@ def main():
         raise AssertionError("stale/incomplete provenance was accepted")
 
     with tempfile.TemporaryDirectory(prefix="itu provenance ") as temporary:
+        verify_receipt_line_endings(cmake, repository, temporary)
         root = Path(temporary) / "source with spaces"
         build = Path(temporary) / "build with spaces"
         external = Path(temporary) / "dependency with spaces"
@@ -34,10 +108,12 @@ def main():
         dependency_source.mkdir()
         dependency_cpp = dependency_source / "value.cpp"
         dependency_cpp.write_text("int external_value() {return 0;}\n")
+        (dependency_source / "alternate.cpp").write_text("int external_value() {return 11;}\n")
         (dependency_source / "CMakeLists.txt").write_text('''cmake_minimum_required(VERSION 3.25)
 project(DependencyFixture LANGUAGES CXX)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "''' + external.as_posix() + '''/lib/$<0:>")
 add_library(fixture STATIC value.cpp)
+add_library(alternate STATIC alternate.cpp)
 ''')
         dependency_build = Path(temporary) / "dependency build"
         generator = ["-G", "Visual Studio 17 2022", "-A", "x64"] if target == "windows-x64" else []
@@ -48,6 +124,11 @@ add_library(fixture STATIC value.cpp)
 
         build_dependency()
         dependency_library = external / "lib" / ("fixture.lib" if target == "windows-x64" else "libfixture.a")
+        alternate_library = external / "lib" / ("alternate.lib" if target == "windows-x64" else "libalternate.a")
+        dependency_config = external / "itu-dependencies.cmake"
+        dependency_config.write_text(f'set(FIXTURE_LIBRARY "{dependency_library.as_posix()}")\n')
+        dependency_metadata = external / "dependency-manifest.json"
+        dependency_metadata.write_text('{"fixture": "initial"}')
         root.mkdir()
         for directory in ("cmake", "src", "setup", "include"):
             (root / directory).mkdir()
@@ -55,14 +136,23 @@ add_library(fixture STATIC value.cpp)
             shutil.copyfile(repository / "cmake" / name, root / "cmake" / name)
         (root / "README.md").write_text("fixture\n")
         (root / "CMakePresets.json").write_text("{}")
+        (root / "cmake/modules").mkdir()
+        nested_module = root / "cmake/modules/features.cmake"
+        nested_module.write_text("add_compile_definitions(MODULE_VALUE=0)\n")
         (root / "src/lib.cpp").write_text('''#include <value.hpp>
+#ifndef CONFIG_VALUE
+#define CONFIG_VALUE 0
+#endif
+#ifndef CONFIG_LIST_VALUE
+#define CONFIG_LIST_VALUE 0
+#endif
 #if __has_include(<added.hpp>)
 #include <added.hpp>
 #else
 #define ADDED_VALUE 0
 #endif
 int external_value();
-int helper() {return DEPENDENCY_VALUE + ADDED_VALUE + external_value();}
+int helper() {return DEPENDENCY_VALUE + ADDED_VALUE + external_value() + CONFIG_VALUE + CONFIG_LIST_VALUE + MODULE_VALUE;}
 ''')
         for name in ("main", "setup"):
             (root / "src" / f"{name}.cpp").write_text("int helper(); int main() {return helper();}\n")
@@ -70,13 +160,17 @@ int helper() {return DEPENDENCY_VALUE + ADDED_VALUE + external_value();}
 project(ProvenanceFixture VERSION 1.0.0 LANGUAGES CXX)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<0:>")
 set(ITU_TARGET "''' + target + '''")
-file(WRITE "${CMAKE_BINARY_DIR}/dependency-manifest.json" "{}")
+set(ITU_CONFIGURE_INPUT_FILES "''' + dependency_config.as_posix() + '''" "''' + dependency_metadata.as_posix() + '''")
+include("''' + dependency_config.as_posix() + '''")
+include(cmake/modules/features.cmake)
+file(READ "''' + dependency_metadata.as_posix() + '''" dependency_metadata)
+file(WRITE "${CMAKE_BINARY_DIR}/dependency-manifest.json" "${dependency_metadata}")
 file(WRITE "${CMAKE_BINARY_DIR}/provenance-dependencies.cmake"
     "set(PROVENANCE_EXTERNAL_FILES [==[${CMAKE_CXX_COMPILER}]==])\\n"
     "set(PROVENANCE_EXTERNAL_ROOTS [==[''' + external.as_posix() + '''/include;''' + external.as_posix() + '''/lib]==])\\n")
 include_directories("''' + external.as_posix() + '''/include")
 add_library(itu_platform STATIC src/lib.cpp)
-target_link_libraries(itu_platform PUBLIC "''' + dependency_library.as_posix() + '''")
+target_link_libraries(itu_platform PUBLIC "${FIXTURE_LIBRARY}")
 add_library(itu_core STATIC src/lib.cpp)
 target_link_libraries(itu_core PUBLIC itu_platform)
 add_executable(main src/main.cpp)
@@ -88,7 +182,7 @@ include(cmake/BuildProvenance.cmake)
         configure = [cmake, "-S", str(root), "-B", str(build)]
         if target == "windows-x64":
             configure += ["-G", "Visual Studio 17 2022", "-A", "x64"]
-        subprocess.run(configure, check=True)
+        subprocess.run(configure + ["-DCMAKE_CXX_FLAGS=-DCONFIG_VALUE=0"], check=True)
         manifest_path = build / "bin/build-manifest.json"
 
         def run(target_name="build_manifest", success=True):
@@ -102,6 +196,37 @@ include(cmake/BuildProvenance.cmake)
             manifest = json.loads(manifest_path.read_text())
             validate_provenance(manifest, root, build / "bin")
             return manifest
+
+        suffix = ".exe" if target == "windows-x64" else ""
+
+        def result(expected):
+            for name in ("main", "setup"):
+                assert subprocess.run([str(build / "bin" / (name + suffix))]).returncode == expected
+
+        def replace_preserving_time(path, before, after):
+            stamp = path.stat()
+            contents = path.read_text()
+            assert before in contents
+            path.write_text(contents.replace(before, after))
+            os.utime(path, ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+
+        # A configure snapshot must already bind the final cache and imported
+        # library choice before the FIRST build; neither may be learned later.
+        cache = build / "CMakeCache.txt"
+        replace_preserving_time(cache, "CMAKE_CXX_FLAGS:STRING=-DCONFIG_VALUE=0",
+                                "CMAKE_CXX_FLAGS:STRING=-DCONFIG_VALUE=1")
+        run(success=False)
+        assert not manifest_path.exists()
+        subprocess.run(configure, check=True)
+        replace_preserving_time(dependency_config, dependency_library.as_posix(), alternate_library.as_posix())
+        run(success=False)
+        assert not manifest_path.exists()
+        subprocess.run(configure, check=True)
+        run()
+        validate()
+        result(12)
+        replace_preserving_time(dependency_config, alternate_library.as_posix(), dependency_library.as_posix())
+        subprocess.run(configure + ["-DCMAKE_CXX_FLAGS=-DCONFIG_VALUE=0"], check=True)
 
         run()
         first = validate()
@@ -119,12 +244,6 @@ include(cmake/BuildProvenance.cmake)
         receipt_path.write_text(receipt)
         run()
         validate()
-        suffix = ".exe" if target == "windows-x64" else ""
-
-        def result(expected):
-            for name in ("main", "setup"):
-                assert subprocess.run([str(build / "bin" / (name + suffix))]).returncode == expected
-
         # Source and dependency contents, not timestamp ordering, determine
         # whether compiled objects and their successful-link receipts are fresh.
         result(0)
@@ -238,7 +357,8 @@ include(cmake/BuildProvenance.cmake)
         cmakelists = root / "CMakeLists.txt"
         saved_cmakelists = cmakelists.read_text()
         cmakelists_stamp = cmakelists.stat()
-        cmakelists.write_text(saved_cmakelists + "\n# configure input change\n")
+        cmakelists.write_text(saved_cmakelists.replace('set(ITU_TARGET',
+                             'add_compile_definitions(CONFIG_LIST_VALUE=2)\nset(ITU_TARGET'))
         os.utime(cmakelists, ns=(cmakelists_stamp.st_atime_ns, cmakelists_stamp.st_mtime_ns))
         rejected(validate)
         run(success=False)
@@ -246,10 +366,12 @@ include(cmake/BuildProvenance.cmake)
         subprocess.run([cmake, "-S", str(root), "-B", str(build)] + generator, check=True)
         run()
         validate()
+        result(7)
         cmakelists.write_text(saved_cmakelists)
         subprocess.run([cmake, "-S", str(root), "-B", str(build)] + generator, check=True)
         run()
         validate()
+        result(5)
 
         module = root / "cmake/BinaryReceipt.cmake"
         saved_module = module.read_text()
@@ -267,28 +389,88 @@ include(cmake/BuildProvenance.cmake)
         run()
         validate()
 
-        cache = build / "CMakeCache.txt"
-        saved_cache = cache.read_text()
-        cache_stamp = cache.stat()
-        cache.write_text(saved_cache + "\nINJECTED_TEST_FLAG:STRING=some_value\n")
-        os.utime(cache, ns=(cache_stamp.st_atime_ns, cache_stamp.st_mtime_ns))
+        # Recursive module inventory includes nested files and detects new or
+        # deleted inputs even when CMake's generated dependency timestamps do not.
+        replace_preserving_time(nested_module, "MODULE_VALUE=0", "MODULE_VALUE=6")
+        rejected(validate)
+        run(success=False)
+        assert not manifest_path.exists()
+        subprocess.run(configure, check=True)
+        run()
+        validate()
+        result(11)
+        replace_preserving_time(nested_module, "MODULE_VALUE=6", "MODULE_VALUE=0")
+        subprocess.run(configure, check=True)
+        run()
+        validate()
+        result(5)
+        new_module = root / "cmake/modules/new.cmake"
+        new_module.write_text("# new configuration input\n")
+        rejected(validate)
+        run(success=False)
+        assert not manifest_path.exists()
+        subprocess.run(configure, check=True)
+        run()
+        validate()
+        new_module.unlink()
+        rejected(validate)
+        run(success=False)
+        assert not manifest_path.exists()
+        subprocess.run(configure, check=True)
+        run()
+        validate()
+
+        replace_preserving_time(dependency_config, dependency_library.as_posix(), alternate_library.as_posix())
+        rejected(validate)
+        run(success=False)
+        assert not manifest_path.exists()
+        subprocess.run(configure, check=True)
+        run()
+        validate()
+        result(14)
+        replace_preserving_time(dependency_config, alternate_library.as_posix(), dependency_library.as_posix())
+        subprocess.run(configure, check=True)
+        run()
+        validate()
+        result(5)
+        replace_preserving_time(dependency_metadata, "initial", "updated")
+        rejected(validate)
+        run(success=False)
+        assert not manifest_path.exists()
+        subprocess.run(configure, check=True)
+        run()
+        assert validate()["dependencies"] == {"fixture": "updated"}
+
+        # Reconfiguring must replace the immutable cache snapshot, rather than
+        # re-enable the old first-build learning gap.
+        subprocess.run(configure, check=True)
+        replace_preserving_time(cache, "CMAKE_CXX_FLAGS:STRING=-DCONFIG_VALUE=0",
+                                "CMAKE_CXX_FLAGS:STRING=-DCONFIG_VALUE=4")
         rejected(validate)
         run(success=False)
         assert not manifest_path.exists()
         subprocess.run([cmake, "-S", str(root), "-B", str(build)] + generator, check=True)
         run()
         validate()
-        cache.write_text(saved_cache)
-        subprocess.run([cmake, "-S", str(root), "-B", str(build)] + generator, check=True)
+        result(9)
+        subprocess.run(configure + ["-DCMAKE_CXX_FLAGS=-DCONFIG_VALUE=0"], check=True)
         run()
         validate()
+        result(5)
 
-        (build / "provenance-configure.json").unlink()
-        run(success=False)
-        assert not manifest_path.exists()
-        subprocess.run([cmake, "-S", str(root), "-B", str(build)] + generator, check=True)
-        run()
-        validate()
+        for missing_snapshot in ("provenance-configure.json", "provenance-configured-cache.txt"):
+            (build / missing_snapshot).unlink()
+            rejected(validate)
+            # The start script must fail closed, while a normal CMake build is
+            # allowed to regenerate a missing file(GENERATE) output first.
+            probe = subprocess.run([cmake, f"-DSOURCE_DIR={root}", f"-DBINARY_DIR={build}",
+                                    "-DSTART_BUILD=ON", "-P", str(root / "cmake/ProvenanceInputs.cmake")],
+                                   capture_output=True, text=True)
+            assert probe.returncode != 0, probe.stdout + probe.stderr
+            assert not manifest_path.exists()
+            run()
+            validate()
+            result(5)
 
         # Both unavailable Git and Git reporting an error must fail closed.
         release = dict(manifest, revision="a" * 40, dirty=False)
@@ -303,7 +485,8 @@ include(cmake/BuildProvenance.cmake)
                 subprocess.CompletedProcess([], 0, "a" * 40),
                 subprocess.CompletedProcess([], 0, "")]):
             validate_release(release, root)
-        print("Completed, no-op, preserved-mtime source/header/archive/configure/cache, dependency additions/removals, hidden-file parity, partial, failed, replaced, untracked release and staged-copy provenance checks passed.")
+        verify_hidden_untracked_release(repository, temporary, validate_release)
+        print("Completed, no-op, preserved-mtime source/header/archive, generated cache/flags and imported-library binding before first build and after reconfigure, recursive configure inventories, dependency additions/removals, hidden-file parity, partial, failed, replaced, untracked release and staged-copy provenance checks passed.")
 
 
 if __name__ == "__main__":

@@ -33,7 +33,7 @@ endif()
 
 set(ITU_IS_DIRTY FALSE)
 execute_process(
-    COMMAND git status --porcelain
+    COMMAND git status --porcelain --untracked-files=normal
     WORKING_DIRECTORY "${SOURCE_DIR}"
     RESULT_VARIABLE STATUS_RESULT
     OUTPUT_VARIABLE ITU_GIT_STATUS

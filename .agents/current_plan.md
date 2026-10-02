@@ -1,19 +1,21 @@
 # Current Plan
 
-Last updated: 2026-10-02 09:55 Europe/Istanbul
+Last updated: 2026-10-02 23:46 Europe/Istanbul
 Primary ExecPlan: `.agents/exec_plans/active/cross-platform-port.md`
 State: ACTIVE
 
 ## Current Objective
 
-CP-32 provenance configure binding (including all configure files and CMake cache) & untracked release checks, CP-34 inventory parity, and CP-18 Windows test-source work are complete. Final macOS (10/10) and Linux (9/9) test suites, packaging, and Ubuntu 24 archive smoke tests have passed. Windows teammate execution remains pending.
+Obtain native Windows and macOS 14 CI rerun evidence for the corrected source.
 
 ## Next Actions
 
-1. Teammate: execute native Windows build, nine CTest suites, packaging, desktop verification, and CP-18 setup-child tests on Windows 10/11.
-2. Reconcile clean three-target release assets and remaining native/live gates once hosts and authorization are available.
+1. Teammate: run the Windows preset build, all nine CTest suites, binary/archive checks and Windows 10/11 desktop/CP-18 flows.
+2. CI owner: rerun the supplied macOS 14 failure on corrected sources; record native and downstream archive-smoke results.
+3. Reconcile the ExecPlan with that evidence before closing the workstream or preparing an authorized clean release.
 
 ## Blockers / Risks
 
-- Linux Docker execution uses AMD64 emulation; native Linux x64 host acceptance remains pending.
-- macOS 14/15 runtime is deferred; remote CI, publication, and live OBS calls remain unauthorized.
+- Windows and macOS 14 hosts are unavailable here; preserve the uncommitted fixes for the reruns.
+- Linux evidence uses AMD64 emulation. macOS 15, live-service and release gates remain deferred/external as recorded in the ExecPlan.
+- Git mutations, remote workflow invocation and publication need explicit authorization.

@@ -49,7 +49,20 @@ class Session:
 
     def finish(self, expected):
         try:
-            assert self.process.wait(timeout=5) == expected, self.output
+            # Drain while waiting: a child writing terminal output must not
+            # block on a full PTY while the parent waits for it to exit.
+            deadline = time.monotonic() + 5
+            while self.process.poll() is None:
+                if select.select([self.master], [], [], 0.1)[0]:
+                    try:
+                        chunk = os.read(self.master, 65536)
+                    except OSError as error:
+                        if error.errno != errno.EIO:
+                            raise
+                    else:
+                        self.output += chunk
+                if self.process.poll() is None:
+                    assert time.monotonic() < deadline, ("setup did not exit", self.output)
             while select.select([self.master], [], [], 0)[0]:
                 try:
                     chunk = os.read(self.master, 65536)
@@ -60,6 +73,7 @@ class Session:
                 if not chunk:
                     break
                 self.output += chunk
+            assert self.process.returncode == expected, self.output
             restored = termios.tcgetattr(self.slave)
             # Darwin may set PENDIN when canonical mode resumes; it is kernel
             # pending-input bookkeeping, not a user terminal setting.
@@ -93,12 +107,14 @@ with tempfile.TemporaryDirectory(prefix="itu-pty-") as directory:
     result = subprocess.run([EXE], input=b"\n", capture_output=True)
     assert result.returncode != 0 and b"requires a terminal" in result.stderr
 
-    # Up wraps from the first option to Exit. A split escape sequence works.
+    # Send a complete key event; a scheduled sleep between escape bytes can
+    # exceed the parser's inter-byte timeout on a busy CI runner. Observe the
+    # selection before Enter so this check cannot enter credentials by mistake.
     session = Session(directory)
     session.until("3. Exit")
-    session.send(b"\x1b")
-    time.sleep(0.02)
-    session.send(b"[A\r")
+    session.send(b"\x1b[A")
+    session.until("\x1b[1;36m> 3. Exit")
+    session.send(b"\r")
     session.finish(0)
     assert not (Path(directory) / ".env").exists()
 
@@ -130,7 +146,9 @@ with tempfile.TemporaryDirectory(prefix="itu-pty-") as directory:
     session = Session(directory)
     session.until("3. Exit")
     # Down cycles through all three choices and ends on config.
-    session.send(b"\x1b[B" * 4 + b"\r")
+    session.send(b"\x1b[B" * 4)
+    session.until("\x1b[1;36m> 2. Update add/drop list and time")
+    session.send(b"\r")
     for prompt, answer in (
         ("Enter date", b"2028/02/29\n"),
         ("Enter time", b"09:01:02:003\n"),
