@@ -7,6 +7,9 @@
 void check(bool value, const char* message) { if (!value) throw std::runtime_error(message); }
 int main() {
     try {
+        // Set the fixture timezone before filesystem/CRT calls can initialize
+        // Windows timezone state from the host's current zone.
+        test_helpers::eastern_timezone();
         const auto mixed = json::parse(R"({"courses":{"crn":["001","002"],"scrn":["003"]}})");
         check(registration_payload(mixed).dump() == R"({"ECRN":["001","002"],"SCRN":["003"]})", "payload string/order preservation");
         check(registration_payload(json::parse(R"({"courses":{"crn":[]}})"))["SCRN"].empty(), "missing SCRN");
@@ -51,11 +54,10 @@ int main() {
         check(SystemClock::deadline(wall-std::chrono::seconds(1),wall,steady,0,0)<steady, "past target");
         // Once computed, a monotonic deadline does not read later wall-clock changes.
         check(deadline-(steady+std::chrono::seconds(2))==std::chrono::milliseconds(2750), "monotonic countdown");
-        test_helpers::eastern_timezone();
         const auto summer=SystemClock::local_target(2026,7,1,12,0,0,125);
         const auto epoch=W::to_time_t(summer);
         std::tm utc = test_helpers::utc(epoch);
-        check(utc.tm_hour==16, "summer DST detected");
+        check(utc.tm_hour==16, ("summer DST detected; expected UTC hour 16, got " + std::to_string(utc.tm_hour)).c_str());
         check(std::chrono::duration_cast<std::chrono::milliseconds>(summer-W::from_time_t(epoch)).count()==125,"milliseconds");
         const auto winter=W::to_time_t(SystemClock::local_target(2026,1,1,12,0));
         utc = test_helpers::utc(winter); check(utc.tm_hour==17,"winter standard time");

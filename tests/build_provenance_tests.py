@@ -83,7 +83,9 @@ def verify_hidden_untracked_release(repository, temporary, validate_release):
 
 
 def main():
-    cmake, repository, target, _deps = sys.argv[1:]
+    cmake, repository, target, _deps = sys.argv[1:5]
+    preset = sys.argv[5] if len(sys.argv) > 5 else target
+    msvc = target == "windows-x64" and preset != "windows-mingw-x64"
     repository = Path(repository)
     sys.path.insert(0, str(repository / "scripts"))
     from provenance import validate_provenance, validate_release
@@ -116,15 +118,16 @@ add_library(fixture STATIC value.cpp)
 add_library(alternate STATIC alternate.cpp)
 ''')
         dependency_build = Path(temporary) / "dependency build"
-        generator = ["-G", "Visual Studio 17 2022", "-A", "x64"] if target == "windows-x64" else []
+        generator = (["-G", "Visual Studio 17 2022", "-A", "x64"] if msvc else
+                     ["-G", "MinGW Makefiles", "-DCMAKE_CXX_COMPILER=g++"] if preset == "windows-mingw-x64" else [])
         subprocess.run([cmake, "-S", str(dependency_source), "-B", str(dependency_build)] + generator, check=True)
 
         def build_dependency():
             subprocess.run([cmake, "--build", str(dependency_build), "--config", "Release"], check=True)
 
         build_dependency()
-        dependency_library = external / "lib" / ("fixture.lib" if target == "windows-x64" else "libfixture.a")
-        alternate_library = external / "lib" / ("alternate.lib" if target == "windows-x64" else "libalternate.a")
+        dependency_library = external / "lib" / ("fixture.lib" if msvc else "libfixture.a")
+        alternate_library = external / "lib" / ("alternate.lib" if msvc else "libalternate.a")
         dependency_config = external / "itu-dependencies.cmake"
         dependency_config.write_text(f'set(FIXTURE_LIBRARY "{dependency_library.as_posix()}")\n')
         dependency_metadata = external / "dependency-manifest.json"
@@ -180,8 +183,7 @@ target_link_libraries(setup PRIVATE itu_platform)
 include(cmake/BuildProvenance.cmake)
 ''')
         configure = [cmake, "-S", str(root), "-B", str(build)]
-        if target == "windows-x64":
-            configure += ["-G", "Visual Studio 17 2022", "-A", "x64"]
+        configure += generator
         subprocess.run(configure + ["-DCMAKE_CXX_FLAGS=-DCONFIG_VALUE=0"], check=True)
         manifest_path = build / "bin/build-manifest.json"
 

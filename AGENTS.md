@@ -9,7 +9,7 @@ This repository is the unified Windows, macOS, and Linux edition of the İTÜ co
 Target environment:
 
 ```text
-Windows 10/11 x64: Visual Studio 2022 MSVC + Windows SDK
+Windows 10/11 x64: Visual Studio 2022 MSVC + Windows SDK, or MinGW-w64 GCC 11+ + mingw32-make
 macOS 14+ ARM64: Apple Clang + macOS SDK
 Ubuntu 22.04/24.04 x64: GCC 11+, make, Perl
 Build system: CMake 3.25+, C++17
@@ -130,6 +130,8 @@ Refactoring is appropriate when required to isolate platform infrastructure clea
 ## Dependencies and Distribution
 
 Reuse existing native compilers/SDKs; if one is missing, stop that platform's dependent work and report it. Never install compilers, SDKs, or dependencies globally. Keep downloaded tools, archives, sources, builds, caches, and installations below ignored project `.deps/`. Bootstrap exact source URL/version/SHA-256 lock entries with TLS verification; do not bypass TLS, replace failed hashes, or silently fall back to global libraries.
+
+Windows has separate `windows-x64` (MSVC) and `windows-mingw-x64` presets. Use native MinGW-w64 GCC/G++ targeting `x86_64-w64-mingw32`, from PowerShell/cmd with `mingw32-make`; MSYS/Cygwin GCC is unsupported. MinGW dependencies live in `.deps/windows-mingw-x64`, separately from MSVC `.deps/windows-x64`; compiler identity is checked before linking. Statically link GNU C++/GCC/thread runtimes so Windows archives still import system DLLs only. Both compiler paths produce the same `windows-x64` platform archive; release CI uses MSVC and separately validates MinGW without publishing a fourth asset.
 
 Preserve the deleted source `data/example_config.json`. Package `packaging/example_config.json` into archive `data/example_config.json`; it must contain empty courses and zero lead, with no account data. Packages allow only native main/setup executables, README, that example, required licenses, build manifest, and checksums. Never derive package inputs from personal configuration.
 

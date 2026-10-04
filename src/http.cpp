@@ -141,6 +141,15 @@ void HttpSession::prepare(const HttpRequest& request) {
     if (s.loopback_only) {
         s.option(CURLOPT_PROXY, "");
         s.option(CURLOPT_OPENSOCKETFUNCTION, &itu_open_loopback);
+#ifdef _WIN32
+        if (!s.ca_file.empty()) {
+            // The offline CA has no CRL/OCSP service. Schannel may tolerate
+            // unavailable revocation data for this test CA; revoked chains,
+            // trust and hostname verification still fail normally. This seam
+            // never enters production or alters its native revocation policy.
+            s.option(CURLOPT_SSL_OPTIONS, static_cast<long>(CURLSSLOPT_REVOKE_BEST_EFFORT));
+        }
+#endif
     }
 #endif
     if (s.pending.method == "HEAD") s.option(CURLOPT_NOBODY, 1L);

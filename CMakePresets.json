@@ -5,16 +5,19 @@
     {"name":"base", "hidden":true, "binaryDir":"${sourceDir}/build/${presetName}", "cacheVariables":{"CMAKE_BUILD_TYPE":"Release", "BUILD_TESTING":"ON"}},
     {"name":"macos-arm64", "inherits":"base", "generator":"Unix Makefiles", "condition":{"type":"equals","lhs":"${hostSystemName}","rhs":"Darwin"}, "cacheVariables":{"CMAKE_OSX_ARCHITECTURES":"arm64", "CMAKE_OSX_DEPLOYMENT_TARGET":"14.0"}},
     {"name":"windows-x64", "inherits":"base", "generator":"Visual Studio 17 2022", "architecture":"x64", "condition":{"type":"equals","lhs":"${hostSystemName}","rhs":"Windows"}},
+    {"name":"windows-mingw-x64", "inherits":"base", "generator":"MinGW Makefiles", "condition":{"type":"equals","lhs":"${hostSystemName}","rhs":"Windows"}, "cacheVariables":{"CMAKE_CXX_COMPILER":"g++"}},
     {"name":"linux-x64", "inherits":"base", "generator":"Unix Makefiles", "condition":{"type":"equals","lhs":"${hostSystemName}","rhs":"Linux"}}
   ],
   "buildPresets": [
     {"name":"macos-arm64", "configurePreset":"macos-arm64", "jobs":3},
     {"name":"windows-x64", "configurePreset":"windows-x64", "configuration":"Release", "jobs":3},
+    {"name":"windows-mingw-x64", "configurePreset":"windows-mingw-x64", "jobs":3},
     {"name":"linux-x64", "configurePreset":"linux-x64", "jobs":3}
   ],
   "testPresets": [
     {"name":"macos-arm64", "configurePreset":"macos-arm64", "output":{"outputOnFailure":true}},
     {"name":"windows-x64", "configurePreset":"windows-x64", "configuration":"Release", "output":{"outputOnFailure":true}},
+    {"name":"windows-mingw-x64", "configurePreset":"windows-mingw-x64", "output":{"outputOnFailure":true}},
     {"name":"linux-x64", "configurePreset":"linux-x64", "output":{"outputOnFailure":true}}
   ]
 }

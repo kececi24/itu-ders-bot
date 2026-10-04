@@ -25,7 +25,7 @@ class ArchiveIntegrityTests(unittest.TestCase):
         self.folder = Path(self.directory.name)
         self.smoke = self.enterContext(patch.object(native_artifacts, 'smoke'))
 
-    def package(self, target='macos-arm64', mutate=None, extra_entries=()):
+    def package(self, target='macos-arm64', mutate=None, extra_entries=(), toolchain=None):
         suffix = '.exe' if target == 'windows-x64' else ''
         files = {
             'main' + suffix: b'opaque test executable',
@@ -37,13 +37,16 @@ class ArchiveIntegrityTests(unittest.TestCase):
             'build-manifest.json': json.dumps({
                 'schema_version': 2,
                 'version': '1.0.0', 'target': target, 'compiler': {},
-                'dependencies': {}, 'revision': '0' * 40
+                'dependencies': {'toolchain': toolchain} if toolchain else {}, 'revision': '0' * 40
             }).encode(),
             'licenses/nlohmann-json.txt': b'fixture license',
         }
         if target != 'macos-arm64':
             files.update({f'licenses/{name}.txt': b'fixture license' for name in ('curl', 'nghttp2', 'zlib')})
         if target == 'linux-x64': files['licenses/openssl.txt'] = b'fixture license'
+        if target == 'windows-x64' and toolchain == 'mingw':
+            files.update({f'licenses/{name}.txt': b'fixture license' for name in
+                          ('gcc-gpl3', 'gcc-runtime-exception', 'mingw-w64-runtime', 'winpthreads')})
         if mutate: mutate(files)
         files['SHA256SUMS'] = ''.join(
             f'{hashlib.sha256(content).hexdigest()}  {name}\n'
@@ -121,6 +124,16 @@ class ArchiveIntegrityTests(unittest.TestCase):
 
     def test_required_license_cannot_be_omitted(self):
         self.rejected(self.package('linux-x64', lambda files: files.pop('licenses/openssl.txt')), 'archive allowlist')
+
+    def test_mingw_runtime_notices_are_required(self):
+        for name in ('gcc-gpl3', 'gcc-runtime-exception', 'mingw-w64-runtime', 'winpthreads'):
+            with self.subTest(name=name):
+                self.rejected(self.package('windows-x64',
+                              lambda files: files.pop(f'licenses/{name}.txt'), toolchain='mingw'), 'archive allowlist')
+
+    def test_valid_mingw_archive_reaches_native_smoke(self):
+        native_artifacts.archive(self.package('windows-x64', toolchain='mingw'), 'windows-x64')
+        self.smoke.assert_called_once()
 
     def test_target_mismatch_is_rejected(self):
         self.rejected(self.package(), '', 'linux-x64')

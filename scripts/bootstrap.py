@@ -2,7 +2,8 @@
 """Build pinned static dependencies under .deps; never install global software.
 
 Requires Python 3.12+, CMake 3.25+, and the native compiler/build tools already
-installed. Windows: run from an x64 VS 2022 developer prompt. Linux: GCC11+, make,
+installed. Windows: x64 VS2022 prompt, or --toolchain mingw with x64 MinGW-w64
+GCC11+ and mingw32-make on PATH in PowerShell/cmd. Linux: GCC11+, make,
 Perl. macOS uses its SDK curl and needs no bootstrap downloads.
 """
 import argparse
@@ -73,6 +74,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target", choices=("windows-x64", "linux-x64", "macos-arm64"), required=True)
     parser.add_argument("--cmake", default="cmake")
+    parser.add_argument("--toolchain", choices=("msvc", "mingw"), help="Windows compiler (default: msvc)")
     parser.add_argument("--jobs", type=int, default=3)
     parser.add_argument("--preflight-only", action="store_true")
     args = parser.parse_args()
@@ -88,16 +90,30 @@ def main():
     match = re.search(r"cmake version (\d+)\.(\d+)", version)
     if not match or tuple(map(int, match.groups())) < (3, 25):
         raise RuntimeError("CMake 3.25+ required")
+    if args.toolchain and host != "windows-x64":
+        raise RuntimeError("--toolchain is only supported for windows-x64")
     if host == "macos-arm64":
         run([require("xcrun"), "--sdk", "macosx", "--show-sdk-path"])
         print("macOS uses SDK/system libcurl; no dependencies downloaded or installed.")
         return
     windows = host == "windows-x64"
+    mingw = windows and args.toolchain == "mingw"
+    toolchain = ("mingw" if mingw else "msvc") if windows else "gcc"
     if windows:
-        require("cl")
-        if os.environ.get("VSCMD_ARG_TGT_ARCH", "").lower() != "x64":
-            raise RuntimeError("Use the x64 Visual Studio 2022 developer command prompt")
-        generator = ["-G", "Visual Studio 17 2022", "-A", "x64"]
+        if mingw:
+            cc, cxx, make = require("gcc"), require("g++"), require("mingw32-make")
+            for compiler in (cc, cxx):
+                triple = subprocess.check_output([compiler, "-dumpmachine"], text=True).strip()
+                version = subprocess.check_output([compiler, "-dumpfullversion"], text=True).strip()
+                if triple != "x86_64-w64-mingw32" or int(version.split(".")[0]) < 11:
+                    raise RuntimeError("MinGW requires native x64 MinGW-w64 GCC/G++ 11+; MSYS/Cygwin compilers are unsupported")
+            generator = ["-G", "MinGW Makefiles", f"-DCMAKE_C_COMPILER={Path(cc).as_posix()}",
+                         f"-DCMAKE_CXX_COMPILER={Path(cxx).as_posix()}", f"-DCMAKE_MAKE_PROGRAM={Path(make).as_posix()}"]
+        else:
+            require("cl")
+            if os.environ.get("VSCMD_ARG_TGT_ARCH", "").lower() != "x64":
+                raise RuntimeError("Use the x64 Visual Studio 2022 developer command prompt")
+            generator = ["-G", "Visual Studio 17 2022", "-A", "x64"]
     else:
         require("gcc"); require("g++"); require("make"); require("perl")
         if int(subprocess.check_output(["gcc", "-dumpversion"], text=True).split(".")[0]) < 11:
@@ -106,7 +122,8 @@ def main():
         if not Path("/etc/ssl/certs/ca-certificates.crt").is_file():
             raise RuntimeError("Ubuntu system CA bundle missing: /etc/ssl/certs/ca-certificates.crt")
     deps = ROOT / ".deps"
-    work = deps / host
+    profile = "windows-mingw-x64" if mingw else host
+    work = deps / profile
     cache, sources, prefix = deps / "cache", work / "sources", work / "install"
     for path in (cache, sources, prefix):
         path.mkdir(parents=True, exist_ok=True)
@@ -116,8 +133,10 @@ def main():
     (preflight / "main.c").write_text("int main(void) { return 0; }\n")
     (preflight / "CMakeLists.txt").write_text(
         'cmake_minimum_required(VERSION 3.25)\nproject(preflight C)\n'
-        'if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)\nmessage(FATAL_ERROR "x64 required")\nendif()\n'
-        'if(WIN32 AND (NOT MSVC OR MSVC_VERSION LESS 1930))\nmessage(FATAL_ERROR "MSVC2022 required")\nendif()\n'
+        'if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)\nmessage(FATAL_ERROR "x64 required")\nendif()\n' +
+        ('if(NOT MINGW OR NOT CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_VERSION VERSION_LESS "11")\n'
+         'message(FATAL_ERROR "MinGW-w64 GCC11+ required")\nendif()\n' if mingw else
+         'if(WIN32 AND (NOT MSVC OR MSVC_VERSION LESS 1930))\nmessage(FATAL_ERROR "MSVC2022 required")\nendif()\n') +
         'add_executable(preflight main.c)\n')
     run([cmake, "-S", preflight, "-B", preflight / "build", *generator])
     run([cmake, "--build", preflight / "build", "--config", "Release"])
@@ -130,8 +149,11 @@ def main():
     # A failed download stops the entire operation immediately; no TLS bypass/fallback.
     source = {name: archive_source(name, specs[name], cache, sources) for name in names}
     (prefix / "licenses").mkdir(exist_ok=True)
-    common = [f"-DCMAKE_INSTALL_PREFIX={prefix.as_posix()}", "-DCMAKE_INSTALL_LIBDIR=lib", "-DCMAKE_BUILD_TYPE=Release",
-              "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded", "-DCMAKE_POLICY_DEFAULT_CMP0091=NEW", "-DBUILD_TESTING=OFF"]
+    common = [f"-DCMAKE_INSTALL_PREFIX={prefix.as_posix()}", "-DCMAKE_INSTALL_LIBDIR=lib", "-DCMAKE_BUILD_TYPE=Release", "-DBUILD_TESTING=OFF"]
+    if windows and not mingw:
+        common += ["-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded", "-DCMAKE_POLICY_DEFAULT_CMP0091=NEW"]
+    if mingw:
+        common += ["-DCMAKE_EXE_LINKER_FLAGS=-static -static-libgcc -static-libstdc++"]
 
     def build_cmake(name, options):
         build = work / "build" / name
@@ -161,8 +183,8 @@ def main():
         run(["make", f"-j{args.jobs}"], cwd=build)
         run(["make", "install_sw"], cwd=build)
     # Explicit archive locations keep CMake from silently finding globally installed variants.
-    zlib = prefix / "lib" / ("zs.lib" if windows else "libz.a")
-    nghttp2 = prefix / "lib" / ("nghttp2.lib" if windows else "libnghttp2.a")
+    zlib = prefix / "lib" / ("libzs.a" if mingw else "zs.lib" if windows else "libz.a")
+    nghttp2 = prefix / "lib" / ("nghttp2.lib" if windows and not mingw else "libnghttp2.a")
     for path in (zlib, nghttp2):
         if not path.is_file():
             raise RuntimeError(f"Expected static archive missing: {path}")
@@ -184,7 +206,7 @@ def main():
             f"-DOPENSSL_SSL_LIBRARY={prefix.as_posix()}/lib/libssl.a", f"-DOPENSSL_CRYPTO_LIBRARY={prefix.as_posix()}/lib/libcrypto.a",
             "-DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt", "-DCURL_CA_PATH=/etc/ssl/certs"]
     build_cmake("curl", options)
-    curl = prefix / "lib" / ("libcurl.lib" if windows else "libcurl.a")
+    curl = prefix / "lib" / ("libcurl.lib" if windows and not mingw else "libcurl.a")
     if not curl.is_file():
         raise RuntimeError(f"Expected static libcurl missing: {curl}")
     for name in names:
@@ -192,8 +214,10 @@ def main():
     manifest = {name: {"version": specs[name]["version"], "source_sha256": specs[name]["sha256"],
                        "linkage": "static"} for name in names}
     manifest["tls_backend"] = "Schannel" if windows else "OpenSSL"
+    manifest["toolchain"] = toolchain
     (prefix / "dependency-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     stamp = f'set(ITU_INSTALLED_LOCK_SHA256 "{hashlib.sha256(LOCK_PATH.read_bytes()).hexdigest()}")\nset(ITU_INSTALLED_TARGET "{host}")\n'
+    stamp += f'set(ITU_INSTALLED_TOOLCHAIN "{toolchain}")\n'
     for name, path in (("curl", curl), ("zlib", zlib), ("nghttp2", nghttp2)):
         stamp += f'set(ITU_{name}_LIBRARY "{path.relative_to(prefix).as_posix()}")\n'
     (prefix / "itu-dependencies.cmake").write_text(stamp, encoding="utf-8")

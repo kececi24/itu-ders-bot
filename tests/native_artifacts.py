@@ -128,6 +128,9 @@ def archive(path, requested):
         if target != 'macos-arm64':
             licenses |= {'licenses/curl.txt', 'licenses/nghttp2.txt', 'licenses/zlib.txt'}
         if target == 'linux-x64': licenses.add('licenses/openssl.txt')
+        if target == 'windows-x64' and manifest['dependencies'].get('toolchain') == 'mingw':
+            licenses |= {f'licenses/{name}.txt' for name in
+                         ('gcc-gpl3', 'gcc-runtime-exception', 'mingw-w64-runtime', 'winpthreads')}
         assert extras == licenses, ('archive allowlist', extras)
         example = json.loads((root/'data/example_config.json').read_text(encoding='utf-8'))
         assert set(example) == {'time', 'courses'}, 'unexpected example configuration keys'

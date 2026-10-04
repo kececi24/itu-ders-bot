@@ -5,6 +5,7 @@
 #include <sstream>
 #include <thread>
 #include <cstdio>
+#include <cstring>
 #include <vector>
 #include <fstream>
 #include "include/nlohmann_json.hpp"
@@ -13,6 +14,12 @@ namespace {
 using test_helpers::require;
 HANDLE input_handle;
 DWORD baseline;
+HANDLE diagnostics;
+void stage(const char* text) {
+    DWORD count = 0;
+    WriteFile(diagnostics, text, static_cast<DWORD>(std::strlen(text)), &count, nullptr);
+    WriteFile(diagnostics, "\n", 1, &count, nullptr);
+}
 
 void key(WORD code, wchar_t character = 0, DWORD modifiers = 0, WORD repeat_count = 1) {
     INPUT_RECORD records[2]{};
@@ -275,6 +282,7 @@ void test_setup_child_process(const std::wstring& setup_exe) {
 
 int main(int argc, char** argv) {
     try {
+        diagnostics = GetStdHandle(STD_ERROR_HANDLE);
         std::wstring setup_exe;
         const auto arguments = itu::platform::arguments(argc, argv);
         if (arguments.size() > 1) {
@@ -283,6 +291,11 @@ int main(int argc, char** argv) {
 
         FreeConsole();
         require(AllocConsole(), "allocate native test console");
+        // CTest may start us in a process group that inherits Ctrl-C ignoring.
+        // Enable delivery in this private test console before probing handlers.
+        require(SetConsoleCtrlHandler(nullptr, FALSE), "enable test console Ctrl-C delivery");
+        ShowWindow(GetConsoleWindow(), SW_HIDE);
+        stage("console allocated");
         input_handle = CreateFileW(L"CONIN$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
         HANDLE output = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
         require(input_handle != INVALID_HANDLE_VALUE && output != INVALID_HANDLE_VALUE, "open native console");
@@ -316,6 +329,7 @@ int main(int argc, char** argv) {
             restored();
 
             line(L"şifre-東京-🙂");
+            stage("Unicode password");
             std::string secret;
             require(itu::platform::read_line(secret, true, "PASSWORD-PROMPT"), "read Unicode password");
             require(secret == u8"şifre-東京-🙂", "cooked console UTF-8 conversion");
@@ -324,11 +338,13 @@ int main(int argc, char** argv) {
             restored();
 
             line(L"normal-ü");
+            stage("normal line");
             std::string value;
             require(itu::platform::read_line(value) && value == u8"normal-ü", "normal Unicode line");
             restored();
 
             key('Z', 26, LEFT_CTRL_PRESSED);
+            stage("Ctrl-Z");
             key(VK_RETURN, L'\r');
             bool ended = false;
             try {
@@ -340,8 +356,10 @@ int main(int argc, char** argv) {
             restored();
         }
 
+        stage("Ctrl-C");
         interrupt_case(CTRL_C_EVENT);
         restored();
+        stage("Ctrl-Break");
         interrupt_case(CTRL_BREAK_EVENT);
         restored();
 
@@ -375,6 +393,7 @@ int main(int argc, char** argv) {
         test_helpers::private_file(destination);
 
         if (!setup_exe.empty()) {
+            stage("setup child flows");
             test_setup_child_process(setup_exe);
         }
 
@@ -383,6 +402,7 @@ int main(int argc, char** argv) {
         FreeConsole();
         return 0;
     } catch (const std::exception& error) {
+        stage(error.what());
         OutputDebugStringA(error.what());
         std::cerr << error.what() << '\n';
         return 1;

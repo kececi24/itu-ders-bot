@@ -11,6 +11,7 @@ Supported targets:
 | Target / preset | Toolchain | HTTP / TLS dependencies |
 |---|---|---|
 | `windows-x64` — Windows 10/11 x64 | Visual Studio 2022 MSVC and Windows SDK | Static libcurl, nghttp2, zlib; native Schannel |
+| `windows-mingw-x64` — Windows 10/11 x64 | MinGW-w64 GCC/G++ 11+ and mingw32-make | Same Windows dependencies; static GNU runtimes |
 | `macos-arm64` — Apple Silicon, macOS 14+ | Apple Clang and macOS SDK from Xcode / Command Line Tools | Apple SDK/system libcurl |
 | `linux-x64` — Ubuntu 22.04/24.04 x64 | GCC 11+, make, Perl | Static libcurl, nghttp2, zlib, OpenSSL; system CA bundle and dynamic C/C++ runtime |
 
@@ -27,7 +28,7 @@ CMAKE="$PWD/cmake-4.4.3-macos-universal/CMake.app/Contents/bin/cmake"
 "${CMAKE%/cmake}/ctest" --preset macos-arm64 --parallel 3
 ```
 
-On Windows, use an **x64 Visual Studio 2022 developer prompt**. In PowerShell, point `CMAKE` to your existing or project-local executable:
+For Windows with MSVC, use an **x64 Visual Studio 2022 developer prompt**. In PowerShell, point `CMAKE` to your existing or project-local executable:
 
 ```powershell
 $CMAKE = 'cmake' # Or the full path to .deps/.../bin/cmake.exe
@@ -36,6 +37,20 @@ python scripts/bootstrap.py --target windows-x64 --cmake $CMAKE
 & $CMAKE --build --preset windows-x64
 & (Join-Path (Split-Path (Get-Command $CMAKE).Source) 'ctest.exe') --preset windows-x64 --parallel 3
 ```
+
+For Windows with MinGW-w64, use **PowerShell or cmd** with existing native x64 `gcc`, `g++` and `mingw32-make` on PATH. For an existing MSYS2 UCRT64 toolchain, prepend its `ucrt64\bin` directory to PATH in PowerShell. Use native Windows Python 3.12+; `python --version` must meet that floor. MSYS/Cygwin GCC and 32-bit MinGW are unsupported. This preset uses CMake's [MinGW Makefiles generator](https://cmake.org/cmake/help/latest/generator/MinGW%20Makefiles.html).
+
+```powershell
+$CMAKE = 'cmake'
+$PYTHON = 'python' # Or the full path to your native Python 3.12+ executable
+& $PYTHON scripts/bootstrap.py --target windows-x64 --toolchain mingw --cmake $CMAKE
+$pythonPath = (& $PYTHON -c "import sys; print(sys.executable)")
+& $CMAKE --preset windows-mingw-x64 "-DPython3_EXECUTABLE=$pythonPath"
+& $CMAKE --build --preset windows-mingw-x64
+& (Join-Path (Split-Path (Get-Command $CMAKE).Source) 'ctest.exe') --preset windows-mingw-x64 --parallel 3
+```
+
+MinGW builds use `build/windows-mingw-x64/bin` and isolated `.deps/windows-mingw-x64` dependencies. They retain the Windows Schannel TLS backend and statically link GNU runtimes; no MinGW DLLs need to accompany the executables. MSVC libraries cannot be reused for this preset. MinGW archives include GCC runtime licensing and the MinGW-w64/winpthreads notices. To package it, run `python scripts/package.py build/windows-mingw-x64/bin --target windows-x64 --output dist/mingw`, then `python tests/native_artifacts.py dist/mingw/itu-ders-bot-1.0.0-windows-x64.zip --target windows-x64`. The archive target remains `windows-x64`; use a separate output directory when comparing both compilers.
 
 On Linux, with existing GCC, make, Perl, and Python 3.12+:
 
@@ -147,7 +162,7 @@ After extraction, run `./setup` and `./main` (`.\setup.exe` and `.\main.exe` on 
 
 macOS archives retain normal linker signatures but are not Developer ID signed or notarized. macOS may block downloaded executables; use the per-app **Open Anyway** control in System Settings → Privacy & Security only after verifying the source and checksums. Do not disable Gatekeeper globally.
 
-CI defines native builds and the complete offline suite on Windows Server 2022/MSVC, macOS 14 ARM64, and Ubuntu 22.04/GCC. Each job verifies its extracted archive; macOS 15 and Ubuntu 24.04 smoke the identical archives produced on the older OS. Only `v*` tag pushes publish, after every native and archive job passes and all three matching versioned archives are aggregated into one release.
+CI defines native builds and the complete offline suite on Windows Server 2022/MSVC, macOS 14 ARM64, and Ubuntu 22.04/GCC. A separate Windows MinGW job reuses the runner's existing GCC toolchain, executes the offline suite and verifies its ZIP; it must pass before release but does not publish another Windows asset. Each platform job verifies its extracted archive; macOS 15 and Ubuntu 24.04 smoke the identical archives produced on the older OS. Only `v*` tag pushes publish, after every native and archive job passes and all three matching versioned archives are aggregated into one release.
 
 CI definitions alone are not execution evidence. Windows Server CI does not establish Windows 10/11 desktop-console acceptance; deployment-target and glibc checks do not replace execution on the supported OS. Current validation evidence and pending native/manual gates are recorded in `.agents/exec_plans/active/cross-platform-port.md`.
 

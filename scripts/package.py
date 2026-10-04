@@ -50,12 +50,17 @@ def main():
         raise SystemExit("Unexpected release template keys")
     if args.target != "macos-arm64":
         names = ["curl", "nghttp2", "zlib"] + (["openssl"] if args.target == "linux-x64" else [])
-        prefix = ROOT / ".deps" / args.target / "install"
+        profile = ("windows-mingw-x64" if args.target == "windows-x64" and
+                   manifest["dependencies"].get("toolchain") == "mingw" else args.target)
+        prefix = ROOT / ".deps" / profile / "install"
         lock = json.loads((ROOT / "cmake/dependencies.lock.json").read_text(encoding="utf-8"))["dependencies"]
         for name in names:
             if manifest["dependencies"][name]["source_sha256"] != lock[name]["sha256"]:
                 raise SystemExit("Build manifest dependency hash differs from lock")
             files.append((prefix / "licenses" / f"{name}.txt", f"licenses/{name}.txt"))
+        if profile == "windows-mingw-x64":
+            for name in ("gcc-gpl3", "gcc-runtime-exception", "mingw-w64-runtime", "winpthreads"):
+                files.append((ROOT / "third_party/licenses" / f"{name}.txt", f"licenses/{name}.txt"))
     for path, _ in files:
         if not path.is_file() or path.is_symlink():
             raise SystemExit(f"Missing or symlinked package input: {path}")

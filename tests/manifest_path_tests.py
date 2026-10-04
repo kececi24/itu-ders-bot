@@ -10,7 +10,8 @@ import tempfile
 
 
 def main():
-    cmake, source, target, deps_prefix = sys.argv[1:]
+    cmake, source, target, deps_prefix = sys.argv[1:5]
+    preset = sys.argv[5] if len(sys.argv) > 5 else target
     source = Path(source).resolve()
     revision = None
     if shutil.which("git"):
@@ -27,7 +28,7 @@ def main():
             alias.symlink_to(source, target_is_directory=True)
             source = alias
         build = root / "build with spaces"
-        command = [cmake, "--preset", target, "-S", str(source), "-B", str(build),
+        command = [cmake, "--preset", preset, "-S", str(source), "-B", str(build),
                    "-DBUILD_TESTING=OFF"]
         if deps_prefix:
             command.append(f"-DITU_DEPS_PREFIX={deps_prefix}")

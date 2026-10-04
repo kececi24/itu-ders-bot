@@ -39,7 +39,8 @@ int main(int argc, char** argv) {
         check(result.body == "GET||" && result.headers.at("x-auth") == "no", "cross-host auth/cookie leak");
         const std::string tls_base = argv[2];
         bool untrusted = false;
-        try { isolated.request({"GET", tls_base + "/echo"}); } catch (...) { untrusted = true; }
+        try { isolated.request({"GET", tls_base + "/echo"}); }
+        catch (const HttpTransportError& error) { untrusted = error.curl_code == 60; }
         check(untrusted, "untrusted TLS certificate accepted");
         HttpSession trusted(HttpSession::TestOptions{true, argv[3]});
         result = trusted.request({"GET", tls_base + "/echo"});
@@ -47,7 +48,8 @@ int main(int argc, char** argv) {
         auto mismatch = tls_base;
         mismatch.replace(mismatch.find("localhost"), 9, "127.0.0.1");
         bool hostname_rejected = false;
-        try { trusted.request({"GET", mismatch + "/echo"}); } catch (...) { hostname_rejected = true; }
+        try { trusted.request({"GET", mismatch + "/echo"}); }
+        catch (const HttpTransportError& error) { hostname_rejected = error.curl_code == 60; }
         check(hostname_rejected, "TLS hostname mismatch accepted");
         bool timed_out = false;
         try { session.request({"GET", base + "/slow", {}, {}, 40}); } catch (...) { timed_out = true; }
