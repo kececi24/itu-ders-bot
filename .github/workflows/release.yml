@@ -74,39 +74,6 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
-  mingw:
-    runs-on: windows-2022
-    defaults:
-      run:
-        shell: pwsh
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Verify existing native MinGW toolchain
-        run: python scripts/bootstrap.py --target windows-x64 --toolchain mingw --preflight-only
-      - name: Build verified project-local MinGW dependencies
-        run: python scripts/bootstrap.py --target windows-x64 --toolchain mingw
-      - name: Configure and build MinGW
-        run: |
-          cmake --preset windows-mingw-x64
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cmake --build --preset windows-mingw-x64
-      - name: Offline MinGW verification
-        run: |
-          ctest --preset windows-mingw-x64 --parallel 3
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python tests/native_artifacts.py build/windows-mingw-x64/bin --target windows-x64
-      - name: Package and verify MinGW archive
-        run: |
-          python scripts/package.py build/windows-mingw-x64/bin --target windows-x64 --output dist/mingw
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $archives = @(Get-ChildItem -LiteralPath dist/mingw -Filter '*-windows-x64.zip')
-          if ($archives.Count -ne 1) { throw 'Expected exactly one MinGW Windows archive' }
-          $archivePath = $archives[0].FullName
-          python tests/native_artifacts.py "$archivePath" --target windows-x64
-
   archive-smoke:
     needs: native
     strategy:
@@ -136,7 +103,7 @@ jobs:
 
   release:
     if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push'
-    needs: [native, mingw, archive-smoke]
+    needs: [native, archive-smoke]
     runs-on: ubuntu-24.04
     permissions:
       contents: write

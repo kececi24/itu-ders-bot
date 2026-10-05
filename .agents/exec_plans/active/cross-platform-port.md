@@ -2,7 +2,7 @@
 
 Status: BLOCKED — Windows and external acceptance evidence pending
 Created: 2026-09-30
-Last updated: 2026-10-05 21:54 Europe/Istanbul
+Last updated: 2026-10-05 23:02 Europe/Istanbul
 Owner: primary agent for implementation/fixes/integration; teammate for Windows verification and plan results only
 Primary scope: shared core, native adapters, CMake/bootstrap, offline tests and native release artifacts
 Queued successor: 2026-10-04-registration-polling.md; requires port completion AND separate explicit user authorization
@@ -29,7 +29,7 @@ Polling, registration retries/redesign, global dependency/tool installation, per
 - Build: CMakeLists.txt, CMakePresets.json, cmake/Dependencies.cmake, dependencies.lock.json and scripts/bootstrap.py.
 - CP-32: cmake/BuildProvenance.cmake, ProvenanceInputs.cmake, BinaryReceipt.cmake, GenerateManifest.cmake; scripts/provenance.py; tests/build_provenance_tests.py.
 - Acceptance: tests/windows_console_tests.cpp, shared offline fixtures, tests/native_artifacts.py, scripts/package.py and release_checksums.py.
-- CI: .github/workflows/release.yml; native jobs upload three platform assets, MinGW verifies without a fourth asset, archive-smoke tests newer OS versions, and tag release depends on all jobs.
+- CI: .github/workflows/release.yml; Windows MSVC/macOS/Linux jobs upload three native archives, archive-smoke tests newer OS versions, and tag release depends on native plus archive-smoke. MinGW remains supported for local builds/tests only.
 
 ## Invariants and Acceptance Criteria
 
@@ -45,7 +45,7 @@ Polling, registration retries/redesign, global dependency/tool installation, per
 
 ## Baseline / Starting Evidence
 
-Current Desktop source is `14c1ec4` (user committed the workflow-trigger/README/planning update) plus the uncommitted CP-39 test-only correction and these plan updates. Production provenance helpers are unchanged. User authorized fixing the demonstrated snapshot recovery failure; only the affected provenance test was executed locally. No commit/push/publication or remote workflow was invoked during this fix.
+Current Desktop checkout is `main` at `2cbbd92` (user committed CP-39 and renamed cross-platform to main), initially clean. Pending changes are platform-neutral README examples, removal of the MinGW CI job/release dependency, the corresponding AGENTS statement and these two plans. Native packaging/publication jobs and archive formats remain unchanged; the user chose Windows ZIP and macOS/Linux tar.gz. No Git mutation, remote invocation or publication was performed.
 
 The supplied Windows2022/MSVC run (revision/run URL absent) passed8/9 in29.45s. Only build_provenance failed: after replacing main's receipt input fingerprint with zeroes, the manifest build unexpectedly succeeded. The log did not prove whether linking occurred. The correction below supersedes the old instruction to investigate before choosing an implementation. Corrected-source Windows execution has not yet been supplied.
 
@@ -68,6 +68,8 @@ Planning-only audit on2026-10-05 used usable rg/git/Python3.12.3. It inspected s
 
 ## Progress
 
+- [x] 2026-10-05 23:02 Europe/Istanbul — User moved to main; neutral Windows/macOS/Linux README build/setup/usage/package examples SOURCE COMPLETE. Removed MinGW CI job/release dependency; static YAML comparison PASS with all other jobs/triggers/permissions/publishing preserved. AGENTS aligned; MinGW local support retained. Existing compressed native artifacts/release aggregation confirmed in source; no remote workflow or release invoked.
+
 - [x] 2026-10-05 21:54 Europe/Istanbul — CP-39 fixture recovery SOURCE COMPLETE; focused native MinGW build_provenance1/1 PASS in107.86s. Both missing snapshots reject before checked reconfigure/rebuild recovery; paths with spaces and all integrity guards retained. No full suite/archive run for this test-only request; native MSVC NOT RUN.
 
 - [x] 2026-10-05 21:40 Europe/Istanbul — Read latest ff6ee7b CI run37355657214/job111917284395: CP-38 relink case succeeds, production build and8/9 suites PASS; missing-snapshot fixture recovery FAILS at591 (CP-39). Linux/macOS14/MinGW jobs SUCCESS; archive-smoke/release SKIPPED.
@@ -84,6 +86,8 @@ Planning-only audit on2026-10-05 used usable rg/git/Python3.12.3. It inspected s
 - [ ] Corrected-source Windows and external acceptance — BLOCKED on execution/evidence, not known unimplemented test work.
 
 ## Surprises & Discoveries
+
+- 2026-10-05 — Packaging/publication was already implemented: each native job packages and verifies dist, release aggregation requires three version/revision-matched archives with checksums, and only matching version tag pushes publish. Existing public v1.0.0 release contains legacy main.exe/setup.exe assets. New source needs an unused matching version tag; documentation now explains main/version/tag steps rather than changing triggers or publishing automatically on branch pushes.
 
 - 2026-10-05 — [Observed repeat MSVC failure](https://github.com/kececi24/itu-ders-bot/actions/runs/37355657214/job/111925462017) uses the same ff6ee7b source and reaches the same missing-snapshot recovery step (old line591),8/9 PASS in139.90s. The initial test configuration already uses checked subprocess calls. The missing file is deliberately deleted late in the fixture; production rejection is correct. Explicit reconfigure recovery avoids assuming generator-specific automatic recreation.
 
@@ -102,6 +106,8 @@ Planning-only audit on2026-10-05 used usable rg/git/Python3.12.3. It inspected s
 
 ## Decision Log
 
+- 2026-10-05 — Latest user instruction removes MinGW CI and its release gate. Keep compiler support/presets/dependencies/local instructions; use MSVC for Windows release CI. Preserve Windows ZIP and macOS/Linux tar.gz as explicitly chosen, native/smoke/clean aggregate checks, PR/manual/tag triggers, and tag-only release publishing. Align AGENTS with this superseding CI policy.
+
 - 2026-10-05 — Under user fix authorization, explicitly reconfigure after the test's deliberate snapshot deletion. Require exact missing-file rejection, recreated snapshot, absent manifest until build, validated manifests and executable behavior. Keep spaced paths and production checks. Run only affected provenance locally as requested; retain native MSVC and full-suite/archive gates pending.
 
 - 2026-10-05 — Limit this request to the authorized Windows job retry and evidence recording. Do not apply Copilot's path/runtime suggestions or add a test-only workflow. Record the denied invocation and leave CP-39 as the next demonstrated fix; preserve spaces coverage and fail-closed checks.
@@ -110,7 +116,7 @@ Planning-only audit on2026-10-05 used usable rg/git/Python3.12.3. It inspected s
 
 - 2026-10-05 — Correct the test invariant, preserving all production checks: compare unchanged source/build/dependency metadata after validating each current executable; do not require identical binary bytes after a legitimate relink. Keep exact receipt byte/mtime preservation for explicit POST_BUILD-without-link controls. Add a real recompile/relink regression and field-level mismatch diagnostics. Do not add deterministic-linker flags or skip MSVC cases.
 
-- Preserve MinGW support, isolated compiler prefixes, static GNU runtimes/notices and MSVC as the Windows release compiler.
+- Preserve local MinGW support, isolated compiler prefixes and static GNU runtimes/notices; MSVC is the Windows release CI compiler. MinGW no longer gates release CI under the latest user instruction.
 - Invalid/missing receipts or replaced binaries are removed before target scheduling and recovered by actual linking. Direct finalizer rejection, no-link rejection, no-op stability and partial/failed-build cases remain tested.
 - Teammate owns running checks and recording results only. Primary agent owns any implementation fixes revealed by those checks; do not weaken assertions to obtain PASS.
 
@@ -124,7 +130,7 @@ Each finding appears once. Historical results retain their original scope; curre
 | **CP-39** | Missing configure-snapshot fixture recovery | **P2; SOURCE FIXED, focused MinGW PASS; native MSVC pending** | Explicit checked configure before recovery build, exact rejection diagnostic, restored snapshot and no premature manifest checks. Both cases passed in focused1/1,107.86s; native MSVC correction not executed locally. Old ff6ee7b retry failed at591. |
 | **CP-32** | Build/package provenance | **P1; production correction implemented; CP-38 fixture corrected, native MSVC acceptance pending** | Build-start admission removes invalid outputs; PRE_LINK supports legitimate relinks; POST_BUILD preserves valid receipts or consumes rebuild admission. Corrected Mac/Linux full provenance PASS. Latest MSVCff6ee7b production build and8/9 suites pass; CP-38 case passes, old missing-snapshot recovery fails under CP-39, now corrected locally with focused MinGW PASS. New local MinGW full9/9 passes; corrected MSVC rerun and artifact/seam acceptance remain required. |
 | **CP-35** | POSIX PTY timing | FIXED; macOS14 CI job success at2df7c3b | Complete keys, observed selection and output draining; current macOS26/Linux setup_terminal PASS; supplied run37275634354 macOS14 native job concluded success (before CP-38 fixture change). |
-| CP-36 | MinGW support/distribution | SOURCE COMPLETE; teammate native PASS | Separate preset/prefix/stamp, static GNU runtimes/notices; retain compiler isolation and one Windows asset. |
+| CP-36 | Local MinGW support/distribution | SOURCE COMPLETE; teammate native PASS | Separate preset/prefix/stamp and static GNU runtimes/notices retained. User removed MinGW CI job/release dependency; local verification remains available and one MSVC Windows asset is published. |
 | CP-37 | Windows TZ/Ctrl-C/TLS fixtures | FIXED; MinGW and supplied MSVC suite PASS | Early TZ, private-console Ctrl-C, guarded test CA and precise certificate errors. Recheck production seams with new artifacts. |
 | CP-18 | Windows setup integration | FIXED; MinGW and supplied MSVC setup_terminal PASS | Child credentials/config/Unicode/readiness/secrecy/cancellation coverage; desktop acceptance separate. |
 | CP-34 | Source inventory parity | FIXED; current Mac/Linux affected PASS | Ignore only named cache/metadata while tracking legitimate hidden inputs; retained provenance regression. |
@@ -147,7 +153,7 @@ Each finding appears once. Historical results retain their original scope; curre
 | CP-28 | POSIX file owner | FIXED; historical setup PASS | Verify private mode and current UID. |
 | CP-29 | Artifact test discovery | FIXED; artifact coverage | Checksum/revision/dirty cases remain discoverable. |
 | CP-30 | fsync ordering | FIXED; historical setup PASS | Synchronize only successful writes/checks. |
-| CP-01 | CI/release wiring | SOURCE COMPLETE; MSVC job supplied, other outcomes unknown | Three uploaded platforms; MinGW gates release; archive smoke needs native. |
+| CP-01 | CI/release wiring | SOURCE COMPLETE; current edit static PASS, native run pending | Three native uploaded platforms; release needs native plus archive-smoke; MinGW verification is local. Tag publication and matching version/revision/checksum aggregation retained. |
 | CP-02 | Support/docs | SOURCE COMPLETE | MSVC/MinGW support documented; plans reconciled here. |
 | CP-03 | Native artifact checker | FIXED; current Mac/Linux archive PASS | Corrected Windows ZIP execution remains pending. |
 | CP-04 | OpenSSL spaced paths | FIXED; historical bootstrap PASS | build/preflight/bootstrap.log; no hash/TLS bypass. |
@@ -228,11 +234,11 @@ Preflight used AppleClang21/SDK26.5/local CMake4.4.3/Python3.12.3 and system cur
 
 ## Handoff Snapshot
 
-- Work location: Desktop cross-platform checkout at14c1ec4 plus uncommitted CP-39 test and these two plans. Workflow/README/previous plans are user-committed; queued polling plan preserved.
-- Last verified state: CP-39 source complete; focused MinGW provenance1/1 PASS in107.86s; both deleted snapshots recover after explicit configure. Old ff6ee7b MSVC retry repeats failure; updated native MSVC acceptance NOT RUN.
-- Next actions: separately authorized Git availability of corrected source, native MSVC affected test, then remaining full-suite/archive/seam/desktop/external acceptance.
-- Blockers: local MSVC compiler absent; connector Actions retry denied403. Do not rerun old SHA expecting this new fix.
-- No commit/push/publication or remote invocation during this fix. Automated verification remained synthetic; no live account/config reads or global installs.
+- Work location: Desktop main at2cbbd92; user committed CP-39. Pending README/workflow/AGENTS/two-plan changes; queued polling plan preserved.
+- Last verified state: documentation/CI edit static PASS. MinGW CI/release gate removed; native/smoke/publication jobs and formats unchanged. Previous focused CP-39 MinGW1/1 PASS107.86s; current native pipeline NOT RUN.
+- Next actions: separately authorized Git availability, corrected native MSVC/manual verification, remaining port gates; publish only via an explicitly chosen unused version tag matching CMake VERSION.
+- Blockers: local MSVC unavailable; connector Actions retry denied403. Existing v1.0.0 refers to older source/assets and cannot test new commits through rerun.
+- No commit/push/tag/publication or remote invocation. Latest user request edits/docs only; local MinGW remains supported and registration/polling behavior unchanged.
 
 ## Outcomes & Retrospective
 
@@ -253,3 +259,5 @@ Local CP-38 command evidence: `.deps/verify-msvc-noop-20261005/{configure,build,
 - 2026-10-05 21:40 Europe/Istanbul — Recorded latest ff6ee7b MSVC snapshot-recovery failure, successful CP-38 case and other CI jobs; attempted user-authorized existing Windows job retry, rejected403 by GitHub integration. No new run/tests/source changes.
 
 - 2026-10-05 21:54 Europe/Istanbul — Fixed CP-39 with explicit checked configure recovery after deliberate snapshot deletion; focused MinGW1/1 PASS in107.86s. Read observed repeat MSVC failure on old source, retained native MSVC/full-suite/archive gates pending and synchronized current plan. No Git mutation or remote invocation.
+
+- 2026-10-05 23:02 Europe/Istanbul — Continued on user-renamed main; made README examples platform-neutral, removed MinGW CI/release gate under user authorization, preserved native archives and publication pipeline, aligned AGENTS/plans and recorded static validation. No native tests, remote workflow or publication executed.
