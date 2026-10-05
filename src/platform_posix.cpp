@@ -1,6 +1,8 @@
 #include "include/platform.hpp"
 #include <algorithm>
+#include <atomic>
 #include <cerrno>
+#include <chrono>
 #include <csignal>
 #include <cstdlib>
 #include <fcntl.h>
@@ -8,6 +10,8 @@
 #include <poll.h>
 #include <stdexcept>
 #include <sys/stat.h>
+#include <sys/file.h>
+#include <sys/timex.h>
 #include <termios.h>
 #include <unistd.h>
 #include <cstdio>
@@ -214,6 +218,232 @@ bool atomic_write_private(const std::filesystem::path& path, const std::string& 
     }
     return true;
 }
+
+ClockHealth clock_health() {
+    ClockHealth result;
+#ifdef __APPLE__
+    result.provider = "kernel-ntp_gettime";
+    ntptimeval value{};
+    const int state = ntp_gettime(&value);
+#else
+    result.provider = "kernel-adjtimex";
+    timex value{}; // modes == 0 is a read-only query, never a clock adjustment.
+    const int state = adjtimex(&value);
+#endif
+    if (state < 0) {
+        result.reason = errno == EACCES || errno == EPERM ? "kernel-query-permission-denied" : "kernel-query-unavailable";
+        return result;
+    }
+    if (state >= TIME_OK && state <= TIME_WAIT) result.synchronized = true;
+    else if (state == TIME_ERROR) result.synchronized = false;
+    if (value.maxerror >= 0) result.max_error_us = value.maxerror;
+    if (value.esterror >= 0) result.estimated_error_us = value.esterror;
+    result.reason = "kernel-state-only; network-time-enablement-and-UTC-offset-unverified";
+#ifndef __APPLE__
+    // This root-owned marker is evidence of a past timesyncd synchronization,
+    // not proof that its service is currently enabled or still accurate.
+    struct stat marker{};
+    if (lstat("/run/systemd/timesync/synchronized", &marker) == 0 &&
+        S_ISREG(marker.st_mode) && marker.st_uid == 0 && !(marker.st_mode & 0022)) {
+        const auto now = std::chrono::system_clock::now().time_since_epoch();
+        const auto age = std::chrono::duration_cast<std::chrono::milliseconds>(now).count() -
+                         static_cast<long long>(marker.st_mtim.tv_sec) * 1000 - marker.st_mtim.tv_nsec / 1000000;
+        if (age >= 0) result.age_ms = age;
+        result.provider += "; systemd-timesyncd-marker";
+    }
+#endif
+    return result;
+}
+
+namespace {
+std::atomic<bool> cancellation_active{false};
+volatile std::sig_atomic_t cancellation_signal = 0;
+void cancel_signal(int signal) { cancellation_signal = signal; }
+struct Descriptor {
+    int value = -1;
+    explicit Descriptor(int fd = -1) : value(fd) {}
+    ~Descriptor() { if (value >= 0) close(value); }
+    Descriptor(const Descriptor&) = delete;
+    Descriptor& operator=(const Descriptor&) = delete;
+    int release() { const int fd = value; value = -1; return fd; }
+};
+constexpr size_t polling_state_limit = 1024 * 1024;
+bool empty_acl(int fd) {
+#ifdef __APPLE__
+    errno = 0;
+    acl_t acl = acl_get_fd(fd);
+    if (!acl) return errno == ENOENT;
+    acl_entry_t entry;
+    const bool valid = acl_valid(acl) == 0;
+    errno = 0;
+    const int next = valid ? acl_get_entry(acl, ACL_FIRST_ENTRY, &entry) : 0;
+    const bool empty = valid && next == -1 && errno == EINVAL;
+    acl_free(acl);
+    return empty;
+#else
+    // A POSIX ACL granting other users access requires nonzero group-class mode
+    // bits; the exact owner-only mode check below rejects that case.
+    (void)fd;
+    return true;
+#endif
+}
+void clear_new_acl(int fd) {
+#ifdef __APPLE__
+    acl_t acl = acl_init(0);
+    if (!acl) throw std::runtime_error("Unable to initialize private polling permissions");
+    const int result = acl_set_fd(fd, acl);
+    acl_free(acl);
+    if (result != 0) throw std::runtime_error("Unable to set private polling permissions");
+#else
+    (void)fd;
+#endif
+}
+void private_descriptor(int fd, bool directory) {
+    struct stat st{};
+    if (fstat(fd, &st) != 0 || st.st_uid != geteuid() ||
+        (st.st_mode & 07777) != (directory ? 0700 : 0600) ||
+        (directory ? !S_ISDIR(st.st_mode) : (!S_ISREG(st.st_mode) || st.st_nlink != 1)) || !empty_acl(fd))
+        throw std::runtime_error("Polling storage requires private owner-only files and directory");
+}
+int open_polling_directory(const std::filesystem::path& path, bool create) {
+    if (path.empty() || path.filename().empty() || path.filename() == "." || path.filename() == "..")
+        throw std::runtime_error("Invalid polling storage directory");
+    Descriptor parent(open(path.is_absolute() ? "/" : ".", O_RDONLY | O_DIRECTORY | O_CLOEXEC));
+    if (parent.value < 0) throw std::runtime_error("Unable to open polling storage parent");
+    const auto relative = path.relative_path();
+    for (auto part = relative.begin(); part != relative.end(); ++part) {
+        if (*part == "..") throw std::runtime_error("Polling storage cannot traverse parent directories");
+        if (*part == "." || part->empty()) continue;
+        auto next = part;
+        const bool last = ++next == relative.end();
+        bool created = false;
+        if (last && create) {
+            if (mkdirat(parent.value, part->c_str(), 0700) == 0) created = true;
+            else if (errno != EEXIST) throw std::runtime_error("Unable to create polling storage directory");
+        }
+        Descriptor child(openat(parent.value, part->c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC));
+        if (child.value < 0) throw std::runtime_error("Polling storage directory is unavailable or a symlink");
+        if (created) clear_new_acl(child.value);
+        if (last) private_descriptor(child.value, true);
+        close(parent.value);
+        parent.value = child.release();
+    }
+    return parent.release();
+}
+}
+
+struct Cancellation::Impl {
+    struct sigaction old_int{}, old_term{};
+    bool int_set = false, term_set = false;
+    void restore() noexcept {
+        if (term_set) sigaction(SIGTERM, &old_term, nullptr);
+        if (int_set) sigaction(SIGINT, &old_int, nullptr);
+        cancellation_active.store(false);
+    }
+    Impl() {
+        if (cancellation_active.exchange(true)) throw std::runtime_error("Cancellation handler already active");
+        cancellation_signal = 0;
+        struct sigaction action{};
+        action.sa_handler = cancel_signal;
+        sigemptyset(&action.sa_mask);
+        try {
+            if (sigaction(SIGINT, &action, &old_int) != 0) throw std::runtime_error("Unable to install polling cancellation");
+            int_set = true;
+            if (sigaction(SIGTERM, &action, &old_term) != 0) throw std::runtime_error("Unable to install polling cancellation");
+            term_set = true;
+        } catch (...) { restore(); throw; }
+    }
+    ~Impl() { restore(); }
+};
+Cancellation::Cancellation() : impl_(std::make_unique<Impl>()) {}
+Cancellation::~Cancellation() = default;
+bool Cancellation::cancelled() const { return cancellation_signal != 0; }
+
+struct PollingStorage::Impl {
+    std::filesystem::path path;
+    Descriptor directory, lock;
+    explicit Impl(const std::filesystem::path& value) : path(value), directory(open_polling_directory(value, true)) {
+        bool created = false;
+        int fd = openat(directory.value, "lock", O_RDWR | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0600);
+        if (fd >= 0) created = true;
+        else if (errno == EEXIST) fd = openat(directory.value, "lock", O_RDWR | O_NOFOLLOW | O_CLOEXEC);
+        lock.value = fd;
+        if (fd < 0) throw std::runtime_error("Unable to open polling instance lock");
+        if (created) clear_new_acl(fd);
+        private_descriptor(fd, false);
+        if (flock(fd, LOCK_EX | LOCK_NB) != 0) throw std::runtime_error("Polling storage is already locked or locking is unavailable");
+        validate();
+    }
+    void validate() const {
+        private_descriptor(directory.value, true);
+        private_descriptor(lock.value, false);
+        Descriptor current(open_polling_directory(path, false));
+        struct stat saved{}, actual{}, lock_path{}, lock_fd{};
+        if (fstat(directory.value, &saved) != 0 || fstat(current.value, &actual) != 0 ||
+            saved.st_dev != actual.st_dev || saved.st_ino != actual.st_ino ||
+            fstatat(directory.value, "lock", &lock_path, AT_SYMLINK_NOFOLLOW) != 0 ||
+            fstat(lock.value, &lock_fd) != 0 || lock_path.st_dev != lock_fd.st_dev || lock_path.st_ino != lock_fd.st_ino)
+            throw std::runtime_error("Polling storage location changed while locked");
+    }
+    std::optional<std::string> read() const {
+        validate();
+        Descriptor state(openat(directory.value, "budget.json", O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK));
+        if (state.value < 0) {
+            if (errno == ENOENT) return std::nullopt;
+            throw std::runtime_error("Unable to read private polling state");
+        }
+        private_descriptor(state.value, false);
+        std::string contents;
+        char buffer[4096];
+        for (;;) {
+            const ssize_t count = ::read(state.value, buffer, sizeof(buffer));
+            if (count < 0 && errno == EINTR) continue;
+            if (count < 0) throw std::runtime_error("Unable to read polling state");
+            if (count == 0) break;
+            if (contents.size() + static_cast<size_t>(count) > polling_state_limit)
+                throw std::runtime_error("Polling state exceeds size limit");
+            contents.append(buffer, static_cast<size_t>(count));
+        }
+        return contents;
+    }
+    void write(const std::string& contents) {
+        if (contents.size() > polling_state_limit) throw std::runtime_error("Polling state exceeds size limit");
+        (void)read(); // Validate existing state before replacing it; unsafe state fails closed.
+        static std::atomic<unsigned long long> sequence{0};
+        Descriptor temporary;
+        std::string name;
+        for (int attempt = 0; attempt < 64; ++attempt) {
+            name = ".budget.tmp." + std::to_string(getpid()) + "." + std::to_string(sequence.fetch_add(1));
+            temporary.value = openat(directory.value, name.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0600);
+            if (temporary.value >= 0) break;
+            if (errno != EEXIST) throw std::runtime_error("Unable to create polling state replacement");
+        }
+        if (temporary.value < 0) throw std::runtime_error("Unable to create polling state replacement");
+        try {
+            clear_new_acl(temporary.value);
+            private_descriptor(temporary.value, false);
+            size_t offset = 0;
+            while (offset < contents.size()) {
+                const ssize_t count = ::write(temporary.value, contents.data() + offset, contents.size() - offset);
+                if (count < 0 && errno == EINTR) continue;
+                if (count <= 0) throw std::runtime_error("Unable to write polling state");
+                offset += static_cast<size_t>(count);
+            }
+            int synced;
+            do { synced = fsync(temporary.value); } while (synced < 0 && errno == EINTR);
+            if (synced != 0) throw std::runtime_error("Unable to persist polling state");
+            validate();
+            if (renameat(directory.value, name.c_str(), directory.value, "budget.json") != 0)
+                throw std::runtime_error("Unable to replace polling state");
+            do { synced = fsync(directory.value); } while (synced < 0 && errno == EINTR);
+            if (synced != 0) throw std::runtime_error("Unable to persist polling state directory");
+        } catch (...) { unlinkat(directory.value, name.c_str(), 0); throw; }
+    }
+};
+PollingStorage::PollingStorage(const std::filesystem::path& directory) : impl_(std::make_unique<Impl>(directory)) {}
+PollingStorage::~PollingStorage() = default;
+std::optional<std::string> PollingStorage::read() const { return impl_->read(); }
+void PollingStorage::write(const std::string& contents) { impl_->write(contents); }
 
 struct TimingGuard::Impl {
 #ifdef __APPLE__

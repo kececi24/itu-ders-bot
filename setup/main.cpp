@@ -8,6 +8,7 @@
 
 #include <include/nlohmann_json.hpp>
 #include <include/console.hpp>
+#include <include/polling_config.hpp>
 
 using json = nlohmann::json;
 
@@ -117,7 +118,58 @@ std::vector<std::string> parse_crns(const std::string& input) {
     return result;
 }
 
+bool load_config_for_update(const std::string& path, json& data) {
+    const auto native_path = std::filesystem::u8path(path);
+    std::error_code error;
+    const auto status = std::filesystem::symlink_status(native_path, error);
+    if (status.type() == std::filesystem::file_type::not_found &&
+        (!error || error == std::errc::no_such_file_or_directory)) {
+        data = json::object();
+        return true;
+    }
+    std::ifstream file(native_path);
+    if (error || !file) {
+        std::cerr << "Failed to read existing configuration\n";
+        return false;
+    }
+    std::vector<std::set<std::string>> keys;
+    bool duplicate = false;
+    data = json::parse(file, [&](int, json::parse_event_t event, json& parsed) {
+        if (event == json::parse_event_t::object_start) keys.emplace_back();
+        else if (event == json::parse_event_t::key && !keys.empty()) {
+            if (!keys.back().insert(parsed.get<std::string>()).second) duplicate = true;
+        } else if (event == json::parse_event_t::object_end && !keys.empty()) keys.pop_back();
+        return true;
+    }, false);
+    if (file.bad() || duplicate || data.is_discarded() || !data.is_object() ||
+        (data.contains("time") && !data.at("time").is_object()) ||
+        (data.contains("courses") && !data.at("courses").is_object())) {
+        std::cerr << "Existing configuration is malformed; no changes were written\n";
+        return false;
+    }
+    return true;
+}
+
+bool write_config_update(const std::string& path, json data, const json& time, const json& courses) {
+    if (!data.contains("time")) data["time"] = json::object();
+    if (!data.contains("courses")) data["courses"] = json::object();
+    data["time"].update(time);
+    data["courses"].update(courses);
+    // Keep existing legacy aliases consistent when setup updates canonical fields.
+    if (data["time"].contains("milisecond")) data["time"]["milisecond"] = time.at("millisecond");
+    if (data["time"].contains("lead_milisecond")) data["time"]["lead_milisecond"] = time.at("lead_millisecond");
+    try {
+        (void)itu::polling::parse(data);
+    } catch (const std::exception&) {
+        std::cerr << "Configuration conflicts with polling settings; no changes were written\n";
+        return false;
+    }
+    return replace_file(path, data.dump(4));
+}
+
 bool update_config(const std::string& path) {
+    json data;
+    if (!load_config_for_update(path, data)) return false;
     int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
     int millisecond = 0, lead_millisecond = 0;
     std::string date, time, lead_input, addlist, droplist;
@@ -148,16 +200,15 @@ bool update_config(const std::string& path) {
     std::cout << "Enter drop CRNs (separate by comma): ";
     if (!terminal::read_line(droplist)) return false;
 
-    json data;
-    data["time"] = {
+    const json updated_time = {
         {"year", year}, {"month", month}, {"day", day}, {"hour", hour},
         {"minute", minute}, {"second", second}, {"millisecond", millisecond},
         {"lead_millisecond", lead_millisecond}
     };
-    data["courses"] = {
+    const json updated_courses = {
         {"crn", parse_crns(addlist)}, {"scrn", parse_crns(droplist)}
     };
-    if (!replace_file(path, data.dump(4))) return false;
+    if (!write_config_update(path, std::move(data), updated_time, updated_courses)) return false;
     std::cout << "Config file updated successfully\n";
     return true;
 }

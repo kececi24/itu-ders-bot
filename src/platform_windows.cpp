@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <atomic>
 #include <climits>
+#include <csignal>
 #include <iostream>
 #include <stdexcept>
 
@@ -376,6 +377,209 @@ bool atomic_write_private(const std::filesystem::path& path, const std::string& 
     }
     return true;
 }
+
+ClockHealth clock_health() {
+    ClockHealth result;
+    result.provider = "W32Time";
+    // Native local registry/service queries have bounded buffers and never
+    // launch w32tm, parse localized text, contact a peer, or change settings.
+    wchar_t type[64]{};
+    DWORD type_size = sizeof(type), enabled = 0, enabled_size = sizeof(enabled);
+    const auto type_status = RegGetValueW(HKEY_LOCAL_MACHINE,
+        L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters", L"Type",
+        RRF_RT_REG_SZ, nullptr, type, &type_size);
+    auto enabled_status = RegGetValueW(HKEY_LOCAL_MACHINE,
+        L"SOFTWARE\\Policies\\Microsoft\\W32Time\\TimeProviders\\NtpClient", L"Enabled",
+        RRF_RT_REG_DWORD, nullptr, &enabled, &enabled_size);
+    // A configured policy overrides the service's local configuration. Do not
+    // treat inaccessible or malformed policy data as absence of a policy.
+    if (enabled_status == ERROR_FILE_NOT_FOUND || enabled_status == ERROR_PATH_NOT_FOUND) {
+        enabled_size = sizeof(enabled);
+        enabled_status = RegGetValueW(HKEY_LOCAL_MACHINE,
+            L"SYSTEM\\CurrentControlSet\\Services\\W32Time\\TimeProviders\\NtpClient", L"Enabled",
+            RRF_RT_REG_DWORD, nullptr, &enabled, &enabled_size);
+    }
+    if (type_status == ERROR_SUCCESS && enabled_status == ERROR_SUCCESS) {
+        if (_wcsicmp(type, L"NoSync") == 0 || enabled == 0) result.network_time_enabled = false;
+        else if (enabled == 1 && (_wcsicmp(type, L"NTP") == 0 || _wcsicmp(type, L"NT5DS") == 0 ||
+                                  _wcsicmp(type, L"AllSync") == 0)) result.network_time_enabled = true;
+    }
+    SC_HANDLE manager = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
+    if (!manager) {
+        result.reason = GetLastError() == ERROR_ACCESS_DENIED ? "W32Time-service-query-permission-denied" : "W32Time-service-query-unavailable";
+        return result;
+    }
+    SC_HANDLE service = OpenServiceW(manager, L"W32Time", SERVICE_QUERY_STATUS);
+    if (!service) {
+        result.reason = GetLastError() == ERROR_ACCESS_DENIED ? "W32Time-service-query-permission-denied" : "W32Time-service-unavailable";
+        CloseServiceHandle(manager);
+        return result;
+    }
+    SERVICE_STATUS_PROCESS status{};
+    DWORD returned = 0;
+    if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO, reinterpret_cast<LPBYTE>(&status), sizeof(status), &returned))
+        result.reason = "W32Time-service-status-unavailable";
+    else if (status.dwCurrentState != SERVICE_RUNNING)
+        result.reason = "W32Time-not-running; synchronization-unverified";
+    else result.reason = "W32Time-running; service-configuration-does-not-prove-synchronization";
+    CloseServiceHandle(service);
+    CloseServiceHandle(manager);
+    // Windows exposes no supported simple native equivalent of ntp_gettime.
+    // A running/enabled service is not sufficient evidence to set synchronized.
+    return result;
+}
+
+namespace {
+std::atomic<bool> cancellation_active{false}, cancellation_console{false};
+volatile std::sig_atomic_t cancellation_signal = 0;
+void cancel_signal(int signal) { cancellation_signal = signal; }
+BOOL WINAPI cancel_control(DWORD event) {
+    if (event != CTRL_C_EVENT && event != CTRL_BREAK_EVENT && event != CTRL_CLOSE_EVENT &&
+        event != CTRL_LOGOFF_EVENT && event != CTRL_SHUTDOWN_EVENT) return FALSE;
+    cancellation_console.store(true);
+    return TRUE;
+}
+constexpr size_t polling_state_limit = 1024 * 1024;
+void private_handle(HANDLE handle, bool directory, PSID expected_owner) {
+    BY_HANDLE_FILE_INFORMATION info{};
+    if (!GetFileInformationByHandle(handle, &info) || (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) ||
+        ((info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) != directory || (!directory && info.nNumberOfLinks != 1))
+        throw std::runtime_error("Polling storage requires ordinary files and directories without reparse points");
+    PSID owner = nullptr;
+    PACL acl = nullptr;
+    PSECURITY_DESCRIPTOR descriptor = nullptr;
+    if (GetSecurityInfo(handle, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                        &owner, nullptr, &acl, nullptr, &descriptor) != ERROR_SUCCESS)
+        throw std::runtime_error("Unable to verify private polling permissions");
+    SECURITY_DESCRIPTOR_CONTROL control = 0;
+    DWORD revision = 0;
+    bool valid = owner && EqualSid(owner, expected_owner) && acl && acl->AceCount == 1 &&
+                 GetSecurityDescriptorControl(descriptor, &control, &revision) && (control & SE_DACL_PROTECTED);
+    if (valid) {
+        void* raw = nullptr;
+        valid = GetAce(acl, 0, &raw) != FALSE;
+        if (valid) {
+            const auto* ace = static_cast<ACCESS_ALLOWED_ACE*>(raw);
+            valid = ace->Header.AceType == ACCESS_ALLOWED_ACE_TYPE && ace->Header.AceFlags == 0 &&
+                    (ace->Mask & FILE_ALL_ACCESS) == FILE_ALL_ACCESS &&
+                    EqualSid(const_cast<DWORD*>(&ace->SidStart), expected_owner);
+        }
+    }
+    LocalFree(descriptor);
+    if (!valid) throw std::runtime_error("Polling storage requires private owner-only permissions");
+}
+}
+
+struct Cancellation::Impl {
+    using Handler = void (*)(int);
+    Handler old_int = SIG_DFL, old_term = SIG_DFL;
+    bool int_set = false, term_set = false, console_set = false;
+    void restore() noexcept {
+        if (console_set) SetConsoleCtrlHandler(cancel_control, FALSE);
+        if (term_set) std::signal(SIGTERM, old_term);
+        if (int_set) std::signal(SIGINT, old_int);
+        cancellation_active.store(false);
+    }
+    Impl() {
+        if (cancellation_active.exchange(true)) throw std::runtime_error("Cancellation handler already active");
+        cancellation_signal = 0;
+        cancellation_console.store(false);
+        try {
+            old_int = std::signal(SIGINT, cancel_signal);
+            if (old_int == SIG_ERR) throw std::runtime_error("Unable to install polling cancellation");
+            int_set = true;
+            old_term = std::signal(SIGTERM, cancel_signal);
+            if (old_term == SIG_ERR) throw std::runtime_error("Unable to install polling cancellation");
+            term_set = true;
+            if (!SetConsoleCtrlHandler(cancel_control, TRUE)) throw std::runtime_error("Unable to install polling console cancellation");
+            console_set = true;
+        } catch (...) { restore(); throw; }
+    }
+    ~Impl() { restore(); }
+};
+Cancellation::Cancellation() : impl_(std::make_unique<Impl>()) {}
+Cancellation::~Cancellation() = default;
+bool Cancellation::cancelled() const { return cancellation_signal != 0 || cancellation_console.load(); }
+
+struct PollingStorage::Impl {
+    std::filesystem::path path;
+    PrivateSecurity security;
+    // Holding ancestors without delete sharing prevents rename/reparse swaps
+    // while path-based Win32 APIs create and atomically replace child files.
+    std::vector<std::unique_ptr<Handle>> directories;
+    Handle lock;
+    PSID owner() const { return reinterpret_cast<const TOKEN_USER*>(security.token_user.data())->User.Sid; }
+    explicit Impl(const std::filesystem::path& value) {
+        if (value.empty() || value.filename().empty() || value.filename() == L"." || value.filename() == L"..")
+            throw std::runtime_error("Invalid polling storage directory");
+        for (const auto& part : value) if (part == L"..") throw std::runtime_error("Polling storage cannot traverse parent directories");
+        path = std::filesystem::absolute(value);
+        if (!supports_private_permissions(path) || !security.initialize())
+            throw std::runtime_error("Private polling storage permissions are unavailable");
+        auto current = path.root_path();
+        const auto relative = path.relative_path();
+        for (auto part = relative.begin(); part != relative.end(); ++part) {
+            if (*part == L"." || part->empty()) continue;
+            current /= *part;
+            auto next = part;
+            const bool last = ++next == relative.end();
+            if (last && !CreateDirectoryW(current.c_str(), &security.attributes) && GetLastError() != ERROR_ALREADY_EXISTS)
+                throw std::runtime_error("Unable to create polling storage directory");
+            auto handle = std::make_unique<Handle>(CreateFileW(current.c_str(), FILE_READ_ATTRIBUTES | READ_CONTROL,
+                FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr));
+            BY_HANDLE_FILE_INFORMATION info{};
+            if (handle->value == INVALID_HANDLE_VALUE || !GetFileInformationByHandle(handle->value, &info) ||
+                !(info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) || (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))
+                throw std::runtime_error("Polling storage ancestor is unavailable or a reparse point");
+            if (last) private_handle(handle->value, true, owner());
+            directories.push_back(std::move(handle));
+        }
+        if (directories.empty()) throw std::runtime_error("Invalid polling storage directory");
+        lock.value = CreateFileW((path / L"lock").c_str(), GENERIC_READ | GENERIC_WRITE | READ_CONTROL,
+            0, &security.attributes, OPEN_ALWAYS, FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+        if (lock.value == INVALID_HANDLE_VALUE) throw std::runtime_error("Polling storage is already locked or unavailable");
+        private_handle(lock.value, false, owner());
+    }
+    void validate() const {
+        private_handle(directories.back()->value, true, owner());
+        private_handle(lock.value, false, owner());
+    }
+    std::optional<std::string> read() const {
+        validate();
+        Handle state(CreateFileW((path / L"budget.json").c_str(), GENERIC_READ | READ_CONTROL,
+            FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, nullptr));
+        if (state.value == INVALID_HANDLE_VALUE) {
+            if (GetLastError() == ERROR_FILE_NOT_FOUND) return std::nullopt;
+            throw std::runtime_error("Unable to read private polling state");
+        }
+        private_handle(state.value, false, owner());
+        LARGE_INTEGER size{};
+        if (!GetFileSizeEx(state.value, &size) || size.QuadPart < 0 || size.QuadPart > static_cast<long long>(polling_state_limit))
+            throw std::runtime_error("Polling state exceeds size limit or is unreadable");
+        std::string contents;
+        char buffer[4096];
+        for (;;) {
+            DWORD count = 0;
+            if (!ReadFile(state.value, buffer, sizeof(buffer), &count, nullptr)) throw std::runtime_error("Unable to read polling state");
+            if (count == 0) break;
+            if (contents.size() + count > polling_state_limit) throw std::runtime_error("Polling state exceeds size limit");
+            contents.append(buffer, count);
+        }
+        return contents;
+    }
+    void write(const std::string& contents) {
+        if (contents.size() > polling_state_limit) throw std::runtime_error("Polling state exceeds size limit");
+        (void)read();
+        if (!atomic_write_private(path / L"budget.json", contents)) throw std::runtime_error("Unable to persist private polling state");
+        // Verify effective ACLs rather than relying solely on requested ACLs.
+        if (read() != std::optional<std::string>(contents)) throw std::runtime_error("Polling state replacement could not be verified");
+    }
+};
+PollingStorage::PollingStorage(const std::filesystem::path& directory) : impl_(std::make_unique<Impl>(directory)) {}
+PollingStorage::~PollingStorage() = default;
+std::optional<std::string> PollingStorage::read() const { return impl_->read(); }
+void PollingStorage::write(const std::string& contents) { impl_->write(contents); }
 
 struct TimingGuard::Impl {
     bool attempted = false, priority_changed = false, timer_changed = false;

@@ -1,4 +1,5 @@
 #include "token.hpp"
+#include <include/nlohmann_json.hpp>
 
 #include <algorithm>
 #include <cctype>
@@ -6,6 +7,8 @@
 #include <map>
 #include <regex>
 #include <stdexcept>
+#include <cstdint>
+#include <utility>
 
 namespace {
 std::string lower(std::string value) {
@@ -68,8 +71,12 @@ std::string field(const std::string& html, const std::string& name) {
 }
 
 void require_success(const HttpResponse& response, const char* step) {
-    if (response.status < 200 || response.status >= 300)
-        throw std::runtime_error(std::string("Authentication ") + step + " failed (HTTP " + std::to_string(response.status) + ").");
+    if (response.status < 200 || response.status >= 300) {
+        const auto retry = response.headers.find("retry-after");
+        throw AuthError(response.status == 401 ? AuthError::Kind::unauthorized : AuthError::Kind::http_failure,
+            std::string("Authentication ") + step + " failed (HTTP " + std::to_string(response.status) + ").",
+            response.status, retry == response.headers.end() ? std::string{} : retry->second);
+    }
 }
 
 bool login_page(const std::string& html) {
@@ -78,18 +85,75 @@ bool login_page(const std::string& html) {
 }
 
 std::string jwt_value(std::string jwt) {
+    if (jwt.size() > 16384)
+        throw AuthError(AuthError::Kind::invalid_token, "Authentication failed: JWT token is too large.");
     auto nonspace = [](unsigned char c) { return !std::isspace(c); };
     jwt.erase(jwt.begin(), std::find_if(jwt.begin(), jwt.end(), nonspace));
     jwt.erase(std::find_if(jwt.rbegin(), jwt.rend(), nonspace).base(), jwt.end());
-    static const std::regex compact_jwt(R"([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)");
-    if (!std::regex_match(jwt, compact_jwt))
-        throw std::runtime_error("Authentication failed: JWT endpoint did not return a valid compact token.");
+    unsigned dots = 0;
+    std::size_t segment = 0;
+    for (const unsigned char c : jwt) {
+        if (c == '.') {
+            if (segment == 0 || ++dots > 2)
+                throw AuthError(AuthError::Kind::invalid_token, "Authentication failed: JWT endpoint did not return a valid compact token.");
+            segment = 0;
+        } else if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+                   (c >= '0' && c <= '9') || c == '_' || c == '-') ++segment;
+        else throw AuthError(AuthError::Kind::invalid_token, "Authentication failed: JWT endpoint did not return a valid compact token.");
+    }
+    if (dots != 2 || segment == 0)
+        throw AuthError(AuthError::Kind::invalid_token, "Authentication failed: JWT endpoint did not return a valid compact token.");
     return jwt;
 }
 }
 
 namespace token_detail {
-std::string fetch(HttpSession& session, const std::string& obs_base,
+std::optional<std::chrono::system_clock::time_point> expiry_hint(const std::string& compact_token) {
+    // Do not interpret an invalid, huge or ambiguous claim; missing expiry stays unknown.
+    try {
+        const auto token = jwt_value(compact_token);
+        const auto first = token.find('.') + 1;
+        const auto payload = token.substr(first, token.find('.', first) - first);
+        if (payload.size() % 4 == 1) return std::nullopt;
+        std::string decoded;
+        unsigned accumulator = 0, bits = 0;
+        for (const unsigned char c : payload) {
+            const unsigned value = c >= 'A' && c <= 'Z' ? c - 'A' :
+                c >= 'a' && c <= 'z' ? c - 'a' + 26 :
+                c >= '0' && c <= '9' ? c - '0' + 52 : c == '-' ? 62 : 63;
+            accumulator = (accumulator << 6) | value;
+            bits += 6;
+            if (bits >= 8) { bits -= 8; decoded += static_cast<char>((accumulator >> bits) & 255); }
+            accumulator &= (1u << bits) - 1;
+        }
+        if (accumulator != 0) return std::nullopt; // Noncanonical unused base64 bits.
+        unsigned exp_keys = 0;
+        const auto parsed = nlohmann::json::parse(decoded, [&](int depth, nlohmann::json::parse_event_t event, nlohmann::json& value) {
+            if (depth > 16) throw std::runtime_error("JWT claim nesting limit");
+            if (depth == 1 && event == nlohmann::json::parse_event_t::key && value == "exp") ++exp_keys;
+            return true;
+        });
+        if (!parsed.is_object() || exp_keys != 1 || !parsed.at("exp").is_number_unsigned()) return std::nullopt;
+        const auto seconds = parsed.at("exp").get<std::uint64_t>();
+        const auto maximum = std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::duration::max()).count();
+        if (seconds > static_cast<std::uint64_t>(maximum)) return std::nullopt;
+        return std::chrono::system_clock::time_point(std::chrono::duration_cast<std::chrono::system_clock::duration>(
+            std::chrono::seconds(seconds)));
+    } catch (...) { return std::nullopt; }
+}
+
+TokenResult refresh(HttpSession& session, const std::string& obs_base, bool debug) {
+    auto jwt = session.request({"GET", HttpSession::resolve_url(obs_base, "/ogrenci/auth/jwt"),
+        {"X-Requested-With: XMLHttpRequest", "Accept: application/json, text/plain, */*"}, {}});
+    require_success(jwt, "JWT request");
+    if (login_page(jwt.body)) throw AuthError(AuthError::Kind::login_required, "Authentication JWT request returned the login form.");
+    const auto token = jwt_value(jwt.body);
+    if (debug) std::cout << "[Debug] Authentication completed; token and session details omitted.\n";
+    return {"Bearer " + token, expiry_hint(token)};
+}
+
+TokenResult fetch_token(HttpSession& session, const std::string& obs_base,
                   const std::string& username, const std::string& password, bool debug) {
     if (username.empty() || password.empty()) throw std::runtime_error("Authentication requires a username and password.");
     std::cout << "[Auth] Step 1: Initializing handshake with obs.itu.edu.tr...\n";
@@ -116,7 +180,7 @@ std::string fetch(HttpSession& session, const std::string& obs_base,
     auto authenticated = session.request({"POST", action_url,
         {"Content-Type: application/x-www-form-urlencoded", "Referer: " + login.effective_url}, body});
     require_success(authenticated, "login");
-    if (login_page(authenticated.body)) throw std::runtime_error("Authentication failed: the service returned the login form.");
+    if (login_page(authenticated.body)) throw AuthError(AuthError::Kind::login_required, "Authentication failed: the service returned the login form.");
     if (authenticated.body.find("SelectIdentity") != std::string::npos) {
         std::cout << "[Auth] Step 3: Selecting Student Identity...\n";
         static const std::regex link(R"(<a\b[^>]*>)", std::regex::icase);
@@ -128,21 +192,37 @@ std::string fetch(HttpSession& session, const std::string& obs_base,
         if (identity.empty()) throw std::runtime_error("Authentication identity selection link is missing.");
         auto selected = session.request({"GET", HttpSession::resolve_url(authenticated.effective_url, identity), {}, {}});
         require_success(selected, "identity selection");
-        if (login_page(selected.body)) throw std::runtime_error("Authentication identity selection returned the login form.");
+        if (login_page(selected.body)) throw AuthError(AuthError::Kind::login_required, "Authentication identity selection returned the login form.");
     }
     std::cout << "[Auth] Step 3: Finalizing context and fetching JWT...\n";
     auto dashboard = session.request({"GET", HttpSession::resolve_url(obs_base, "/ogrenci/"), {}, {}});
     require_success(dashboard, "student context");
-    if (login_page(dashboard.body)) throw std::runtime_error("Authentication student context returned the login form.");
-    auto jwt = session.request({"GET", HttpSession::resolve_url(obs_base, "/ogrenci/auth/jwt"),
-        {"X-Requested-With: XMLHttpRequest", "Accept: application/json, text/plain, */*"}, {}});
-    require_success(jwt, "JWT request");
-    const auto token = jwt_value(jwt.body);
-    if (debug) std::cout << "[Debug] Authentication completed; token and session details omitted.\n";
-    return "Bearer " + token;
+    if (login_page(dashboard.body)) throw AuthError(AuthError::Kind::login_required, "Authentication student context returned the login form.");
+    return refresh(session, obs_base, debug);
 }
+#ifdef ITU_ENABLE_TEST_SEAMS
+std::string fetch(HttpSession& session, const std::string& obs_base,
+                  const std::string& username, const std::string& password, bool debug) {
+    return fetch_token(session, obs_base, username, password, debug).bearer;
+}
+#endif
 }
 
+AuthError::AuthError(Kind error_kind, const std::string& message, long http_status, std::string retry)
+    : std::runtime_error(message), kind(error_kind), status(http_status), retry_after(std::move(retry)) {}
+
+TokenResult TokenFetcher::get_token(const std::string& username, const std::string& password, bool debug) {
+    return token_detail::fetch_token(session_, obs_base_, username, password, debug);
+}
+TokenResult TokenFetcher::refresh_token(bool debug) { return token_detail::refresh(session_, obs_base_, debug); }
+void TokenFetcher::set_observer(HttpSession::BeforeTransfer before, HttpSession::AfterTransfer after) {
+    session_.set_observer(std::move(before), std::move(after));
+}
+void TokenFetcher::set_cancelled(std::function<bool()> cancelled) { session_.set_cancelled(std::move(cancelled)); }
+#ifdef ITU_ENABLE_TEST_SEAMS
+TokenFetcher::TokenFetcher(const HttpSession::TestOptions& options, std::string obs_base)
+    : session_(options), obs_base_(std::move(obs_base)) {}
+#endif
 std::string TokenFetcher::get_bearer_token(const std::string& username, const std::string& password, bool debug) {
-    return token_detail::fetch(session_, "https://obs.itu.edu.tr/", username, password, debug);
+    return get_token(username, password, debug).bearer;
 }

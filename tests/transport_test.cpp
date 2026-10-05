@@ -1,23 +1,31 @@
 #include "src/http.hpp"
 #include <iostream>
 #include <stdexcept>
+#include <chrono>
 
 void check(bool condition, const char* message) { if (!condition) throw std::runtime_error(message); }
 int main(int argc, char** argv) {
     try {
-        check(argc == 4, "fixture URL missing");
+        check(argc == 5, "fixture URL missing");
         const std::string base = argv[1];
         HttpSession production;
         bool refused = false;
         try { production.prepare({"GET", base}); } catch (...) { refused = true; }
         check(refused, "production accepted cleartext HTTP");
         HttpSession session(HttpSession::TestOptions{true, {}});
+        std::size_t reservations = 0;
+        HttpTransferInfo last_transfer;
+        session.set_observer([&](const HttpRequest& request) {
+            reservations += request.follow_redirects ? static_cast<std::size_t>(request.max_redirects + 1) : 1;
+        }, [&](const HttpTransferInfo& info) { last_transfer = info; });
         check(session.percent_encode("a&= +/ğ") == "a%26%3D%20%2B%2F%C4%9F", "encoding mismatch");
         check(HttpSession::resolve_url("https://example.org/a/b?x=1", "../login?q=2") == "https://example.org/login?q=2", "URL resolution");
         session.prepare({"GET", base + "/redirect"});
         auto result = session.perform();
         check(result.status == 200 && result.body == "GET|cookie=yes|", "redirect cookie/body failure");
         check(result.effective_url == base + "/echo", "effective URL failure");
+        check(result.redirect_count == 1 && last_transfer.request_count == 2 && reservations == 11,
+              "redirect accounting failure");
         check(result.headers.count("x-intermediate") == 0 && result.headers.at("x-final") == "yes", "final headers failure");
         const auto connection = result.headers.at("x-connection");
         result = session.request({"HEAD", base + "/echo"});
@@ -28,6 +36,15 @@ int main(int argc, char** argv) {
         check(result.body == "GET|cookie=yes|" && result.headers.at("x-auth") == "no", "GET transition/header isolation");
         result = session.request({"POST", base + "/redirect", {}, "discard"});
         check(result.body == "GET|cookie=yes|", "native POST redirect method");
+        result = session.request({"POST", base + "/redirect", {}, "discard", 1000, false});
+        check(result.status == 302 && result.redirect_count == 0 && last_transfer.request_count == 1,
+              "registration redirect was followed");
+        bool redirect_limited = false;
+        try { session.request({"GET", base + "/redirect", {}, {}, 1000, true, 0}); }
+        catch (const HttpTransportError& error) {
+            redirect_limited = error.curl_code == 47 && !error.proven_pre_dispatch && !last_transfer.request_count;
+        }
+        check(redirect_limited, "redirect cap did not retain uncertain reservation");
         result = session.request({"GET", base + "/status"});
         check(result.status == 418, "HTTP status incorrectly treated as transport error");
         result = session.request({"GET", base + "/chunked"});
@@ -52,8 +69,36 @@ int main(int argc, char** argv) {
         catch (const HttpTransportError& error) { hostname_rejected = error.curl_code == 60; }
         check(hostname_rejected, "TLS hostname mismatch accepted");
         bool timed_out = false;
-        try { session.request({"GET", base + "/slow", {}, {}, 40}); } catch (...) { timed_out = true; }
+        try { session.request({"GET", base + "/slow", {}, {}, 40}); }
+        catch (const HttpTransportError& error) { timed_out = error.curl_code == 28 && !error.proven_pre_dispatch; }
         check(timed_out, "timeout failure");
+        bool refused_connection = false;
+        try { session.request({"POST", argv[4], {}, "synthetic-payload", 1000, false}); }
+        catch (const HttpTransportError& error) {
+            refused_connection = error.curl_code == 7 && error.proven_pre_dispatch && !last_transfer.request_count;
+        }
+        check(refused_connection, "connection refusal was not identified conservatively");
+        bool redirected_failure = false;
+        try { session.request({"POST", base + "/redirect-unavailable", {}, "synthetic-payload", 1000}); }
+        catch (const HttpTransportError& error) {
+            redirected_failure = error.curl_code == 7 && !error.proven_pre_dispatch && error.redirect_count == 1;
+        }
+        check(redirected_failure, "failure after an applied redirect incorrectly marked safe to replay");
+        const auto previous_reservations = reservations;
+        bool cancelled_before = false;
+        try { session.request({"POST", base + "/must-not-dispatch", {}, {}, 1000, false, 10, [] { return true; }}); }
+        catch (const HttpTransportError& error) { cancelled_before = error.cancelled; }
+        check(cancelled_before && reservations == previous_reservations, "cancellation happened after admission");
+        const auto cancel_start = std::chrono::steady_clock::now();
+        session.set_cancelled([&] { return std::chrono::steady_clock::now() - cancel_start > std::chrono::milliseconds(40); });
+        bool cancelled_during = false;
+        try { session.request({"GET", base + "/cancel", {}, {}, 5000}); }
+        catch (const HttpTransportError& error) {
+            cancelled_during = error.cancelled && !error.proven_pre_dispatch && !last_transfer.request_count;
+        }
+        session.set_cancelled({});
+        check(cancelled_during, "in-flight cancellation was not reported conservatively");
+        check(std::chrono::steady_clock::now() - cancel_start < std::chrono::seconds(3), "cancellation was not timely");
         for (const bool partial : {false, true}) {
             bool diagnosed = false;
             try {
@@ -63,6 +108,7 @@ int main(int argc, char** argv) {
             } catch (const HttpTransportError& error) {
                 diagnosed = true;
                 check(error.curl_code == 28, "expected CURLE_OPERATION_TIMEDOUT");
+                check(!error.proven_pre_dispatch && !last_transfer.request_count, "unknown POST outcome marked replay safe");
                 check(error.elapsed_ms >= 50 && error.elapsed_ms < 2000, "timeout elapsed metadata");
                 check(error.http_status == (partial ? 200 : 0), "timeout response stage metadata");
                 check(error.received_body_bytes == (partial ? std::string("synthetic-secret-response").size() : 0),

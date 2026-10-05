@@ -5,8 +5,10 @@ import subprocess
 import sys
 import threading
 import urllib.parse
+import base64
 
 TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.signature'
+REFRESHED = 'e30.' + base64.urlsafe_b64encode(b'{"exp":1700000000}').decode().rstrip('=') + '.signature'
 
 class Fixture(http.server.BaseHTTPRequestHandler):
     protocol_version = 'HTTP/1.1'
@@ -42,12 +44,19 @@ class Fixture(http.server.BaseHTTPRequestHandler):
             self.server.check('loggedin=yes' in self.headers.get('Cookie', ''), 'dashboard cookie missing')
             return self.reply(body='dashboard')
         if self.path == '/ogrenci/auth/jwt':
+            self.server.check('loggedin=yes' in self.headers.get('Cookie', ''), 'JWT session cookie missing')
             self.server.check(self.headers.get('X-Requested-With') == 'XMLHttpRequest', 'JWT AJAX header')
             self.server.check(self.headers.get('Accept') == 'application/json, text/plain, */*', 'JWT Accept header')
             if scenario == 'jwt_http': return self.reply(403, 'private response')
             if scenario == 'jwt_html': return self.reply(body='<!DOCTYPE html>fixture-password')
             if scenario == 'jwt_empty': return self.reply()
             if scenario == 'jwt_invalid': return self.reply(body='not-a-jwt-at-all-private-response')
+            if scenario.startswith('refresh') and self.server.paths.count(('GET', self.path)) > 1:
+                if scenario == 'refresh_unauthorized': return self.reply(401, 'private response')
+                if scenario == 'refresh_forbidden': return self.reply(403, 'private response')
+                if scenario == 'refresh_limited': return self.reply(429, 'private response', [('Retry-After', '3600')])
+                if scenario == 'refresh_login': return self.reply(body='<input name="ctl00$ContentPlaceHolder1$tbPassword">')
+                return self.reply(body=REFRESHED)
             return self.reply(body='\n' + TOKEN + '\n')
         self.server.errors.append('Unexpected GET ' + self.path)
         self.reply(404)
@@ -70,7 +79,8 @@ class Fixture(http.server.BaseHTTPRequestHandler):
         self.reply(body=body, headers=[('Set-Cookie', 'loggedin=yes; Path=/')])
 
 def main():
-    scenarios = ('plain', 'identity', 'query_action', 'absolute_action', 'missing_field', 'rejected_login', 'missing_identity', 'login_http', 'jwt_http', 'jwt_html', 'jwt_empty', 'jwt_invalid', 'root_http', 'root_disconnect')
+    scenarios = ('plain', 'identity', 'query_action', 'absolute_action', 'missing_field', 'rejected_login', 'missing_identity', 'login_http', 'jwt_http', 'jwt_html', 'jwt_empty', 'jwt_invalid', 'root_http', 'root_disconnect',
+                 'refresh', 'refresh_unauthorized', 'refresh_forbidden', 'refresh_limited', 'refresh_login')
     for scenario in scenarios:
         server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Fixture)
         server.daemon_threads = True
@@ -80,17 +90,19 @@ def main():
         thread.start()
         try:
             success = scenario in ('plain', 'identity', 'query_action', 'absolute_action')
-            run = subprocess.run([sys.argv[1], f'http://127.0.0.1:{server.server_port}/', 'success' if success else 'failure'], text=True, encoding="utf-8", capture_output=True, timeout=10)
+            mode = scenario if scenario.startswith('refresh') else 'success' if success else 'failure'
+            run = subprocess.run([sys.argv[1], f'http://127.0.0.1:{server.server_port}/', mode], text=True, encoding="utf-8", capture_output=True, timeout=10)
             assert run.returncode == 0, (scenario, run.stdout, run.stderr)
             assert not server.errors, (scenario, server.errors)
             output = run.stdout + run.stderr
-            for secret in ('fixture-password', 'fixture-session', TOKEN, 'private response'):
+            for secret in ('fixture-password', 'fixture-session', TOKEN, REFRESHED, 'private response'):
                 assert secret not in output, (scenario, 'sensitive diagnostic')
             paths = [path for method, path in server.paths]
-            if success:
+            if success or scenario.startswith('refresh'):
                 expected = ['/', '/auth/Login.aspx?subSessionId=fixture-session', '/auth/Login.aspx?subSessionId=fixture-session&step=login']
                 if scenario == 'identity': expected += ['/Login.aspx?identityGuid=first&state=fixture-session']
                 expected += ['/ogrenci/', '/ogrenci/auth/jwt']
+                if scenario.startswith('refresh'): expected += ['/ogrenci/auth/jwt']
                 assert paths == expected, (scenario, paths)
             elif scenario in ('root_http', 'root_disconnect'): assert len(paths) == 1
             elif scenario == 'missing_field': assert len(paths) == 2

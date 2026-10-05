@@ -54,6 +54,10 @@ struct HttpSession::Impl {
     HttpResponse response;
     bool prepared = false;
     bool callback_failed = false;
+    bool interrupted = false;
+    HttpSession::BeforeTransfer before;
+    HttpSession::AfterTransfer after;
+    std::function<bool()> cancelled;
     bool loopback_only = false;
     std::string ca_file;
     Impl() {
@@ -64,6 +68,16 @@ struct HttpSession::Impl {
     ~Impl() { curl_slist_free_all(header_list); curl_easy_cleanup(easy); }
     template<class T> void option(CURLoption name, T value) {
         if (curl_easy_setopt(easy, name, value) != CURLE_OK) throw std::runtime_error("HTTP option setup failed");
+    }
+    bool is_cancelled() {
+        return (pending.cancelled && pending.cancelled()) || (cancelled && cancelled());
+    }
+    static int progress(void* context, curl_off_t, curl_off_t, curl_off_t, curl_off_t) noexcept {
+        auto& self = *static_cast<Impl*>(context);
+        try {
+            if (self.is_cancelled()) { self.interrupted = true; return 1; }
+            return 0;
+        } catch (...) { self.callback_failed = true; return 1; }
     }
     static size_t body(char* data, size_t size, size_t count, void* context) noexcept {
         auto& self = *static_cast<Impl*>(context);
@@ -102,6 +116,7 @@ void HttpSession::prepare(const HttpRequest& request) {
     s.prepared = false;
     if (request.method != "GET" && request.method != "HEAD" && request.method != "POST") throw std::runtime_error("Unsupported HTTP method");
     if (request.timeout_ms <= 0) throw std::runtime_error("Invalid HTTP timeout");
+    if (request.max_redirects < 0 || request.max_redirects > 10) throw std::runtime_error("Invalid HTTP redirect limit");
     Url url;
     if (curl_url_set(url.handle, CURLUPART_URL, request.url.c_str(), 0) != CURLUE_OK) throw std::runtime_error("Invalid HTTP URL");
     const auto scheme = url.get(CURLUPART_SCHEME);
@@ -122,8 +137,8 @@ void HttpSession::prepare(const HttpRequest& request) {
     s.option(CURLOPT_HTTPHEADER, s.header_list);
     s.option(CURLOPT_COOKIEFILE, "");
     s.option(CURLOPT_USERAGENT, itu::platform::user_agent());
-    s.option(CURLOPT_FOLLOWLOCATION, 1L);
-    s.option(CURLOPT_MAXREDIRS, 10L);
+    s.option(CURLOPT_FOLLOWLOCATION, s.pending.follow_redirects ? 1L : 0L);
+    s.option(CURLOPT_MAXREDIRS, s.pending.max_redirects);
     s.option(CURLOPT_PROTOCOLS_STR, s.loopback_only ? "http,https" : "https");
     s.option(CURLOPT_REDIR_PROTOCOLS_STR, s.loopback_only ? "http,https" : "https");
     s.option(CURLOPT_SSL_VERIFYPEER, 1L);
@@ -132,6 +147,9 @@ void HttpSession::prepare(const HttpRequest& request) {
     s.option(CURLOPT_CONNECTTIMEOUT_MS, 10000L);
     s.option(CURLOPT_TIMEOUT_MS, s.pending.timeout_ms);
     s.option(CURLOPT_NOSIGNAL, 1L);
+    s.option(CURLOPT_NOPROGRESS, 0L);
+    s.option(CURLOPT_XFERINFOFUNCTION, &Impl::progress);
+    s.option(CURLOPT_XFERINFODATA, &s);
     s.option(CURLOPT_WRITEFUNCTION, &Impl::body);
     s.option(CURLOPT_WRITEDATA, &s);
     s.option(CURLOPT_HEADERFUNCTION, &Impl::header);
@@ -160,26 +178,48 @@ void HttpSession::prepare(const HttpRequest& request) {
     } else s.option(CURLOPT_HTTPGET, 1L);
     s.prepared = true;
 }
-HttpTransportError::HttpTransportError(int code, long long elapsed, long status, std::size_t body_bytes)
+HttpTransportError::HttpTransportError(int code, long long elapsed, long status, std::size_t body_bytes,
+                                     bool pre_dispatch, bool interrupted, long redirects)
     : std::runtime_error(std::string("HTTP transport failed: ") + curl_easy_strerror(static_cast<CURLcode>(code)) +
           " [curl_code=" + std::to_string(code) + ", elapsed_ms=" + std::to_string(elapsed) +
           ", http_status=" + std::to_string(status) + ", received_body_bytes=" + std::to_string(body_bytes) + "]"),
-      curl_code(code), elapsed_ms(elapsed), http_status(status), received_body_bytes(body_bytes) {}
+      curl_code(code), elapsed_ms(elapsed), http_status(status), received_body_bytes(body_bytes),
+      proven_pre_dispatch(pre_dispatch), cancelled(interrupted), redirect_count(redirects) {}
 
 HttpResponse HttpSession::perform() {
     auto& s = *impl_;
     if (!s.prepared) throw std::runtime_error("No HTTP request prepared");
     s.prepared = false;
-    s.response = {}; s.callback_failed = false;
+    s.response = {}; s.callback_failed = false; s.interrupted = false;
+    if (s.is_cancelled()) throw HttpTransportError(CURLE_ABORTED_BY_CALLBACK, 0, 0, 0, false, true);
+    // Admission runs after preparation but before any network operation.
+    if (s.before) s.before(s.pending);
     const auto result = curl_easy_perform(s.easy);
     // Transfer information remains available after failures, including a partial response.
     const auto status_result = curl_easy_getinfo(s.easy, CURLINFO_RESPONSE_CODE, &s.response.status);
+    const auto redirects_result = curl_easy_getinfo(s.easy, CURLINFO_REDIRECT_COUNT, &s.response.redirect_count);
+    long request_bytes = 0;
+    const auto bytes_result = curl_easy_getinfo(s.easy, CURLINFO_REQUEST_SIZE, &request_bytes);
+    HttpTransferInfo info;
+    info.curl_code = static_cast<int>(result);
+    info.http_status = status_result == CURLE_OK ? s.response.status : 0;
+    info.redirect_count = redirects_result == CURLE_OK ? s.response.redirect_count : 0;
+    info.cancelled = s.interrupted;
+    // A timeout, empty response or zero upload alone never proves replay safety.
+    info.proven_pre_dispatch = (result == CURLE_COULDNT_RESOLVE_PROXY ||
+        result == CURLE_COULDNT_RESOLVE_HOST || result == CURLE_COULDNT_CONNECT) &&
+        bytes_result == CURLE_OK && request_bytes == 0 && redirects_result == CURLE_OK &&
+        s.response.redirect_count == 0 && status_result == CURLE_OK && s.response.status == 0;
+    if (result == CURLE_OK && redirects_result == CURLE_OK)
+        info.request_count = static_cast<std::size_t>(s.response.redirect_count) + 1;
+    if (s.after) s.after(info);
     if (result != CURLE_OK) {
         curl_off_t elapsed_us = 0;
         if (curl_easy_getinfo(s.easy, CURLINFO_TOTAL_TIME_T, &elapsed_us) != CURLE_OK) elapsed_us = 0;
         // Never include URLs, headers, response bodies, or curl's server-derived error buffer.
         throw HttpTransportError(static_cast<int>(result), static_cast<long long>(elapsed_us / 1000),
-                                 status_result == CURLE_OK ? s.response.status : 0, s.response.body.size());
+                                 info.http_status, s.response.body.size(), info.proven_pre_dispatch,
+                                 info.cancelled, info.redirect_count);
     }
     char* effective = nullptr;
     if (status_result != CURLE_OK ||
@@ -188,6 +228,10 @@ HttpResponse HttpSession::perform() {
     return std::move(s.response);
 }
 HttpResponse HttpSession::request(const HttpRequest& request) { prepare(request); return perform(); }
+void HttpSession::set_observer(BeforeTransfer before, AfterTransfer after) {
+    impl_->before = std::move(before); impl_->after = std::move(after);
+}
+void HttpSession::set_cancelled(std::function<bool()> cancelled) { impl_->cancelled = std::move(cancelled); }
 std::string HttpSession::percent_encode(const std::string& value) {
     if (value.size() > INT_MAX) throw std::runtime_error("Form value too large");
     char* encoded = curl_easy_escape(impl_->easy, value.data(), static_cast<int>(value.size()));

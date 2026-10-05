@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 import threading
 import time
+import socket
 
 
 class Fixture(http.server.BaseHTTPRequestHandler):
@@ -28,6 +29,7 @@ class Fixture(http.server.BaseHTTPRequestHandler):
     def handle_request(self):
         body = self.rfile.read(int(self.headers.get("Content-Length", "0")))
         path = self.path.split("?", 1)[0]
+        assert path != "/must-not-dispatch", "cancelled transfer reached the fixture"
         if path in ("/apply-no-headers", "/apply-partial", "/apply-mixed"):
             assert self.command == "POST" and body == b"synthetic-secret-payload"
             with self.applied_lock:
@@ -54,7 +56,13 @@ class Fixture(http.server.BaseHTTPRequestHandler):
             return
         if self.path == "/slow":
             time.sleep(0.15)
-        if self.path == "/crosshost":
+        if self.path == "/cancel":
+            time.sleep(3)
+        if self.path == "/redirect-unavailable":
+            self.send_response(307)
+            self.send_header("Location", f"http://127.0.0.1:{closed_socket.getsockname()[1]}/")
+            result = b""
+        elif self.path == "/crosshost":
             self.send_response(302)
             self.send_header("Location", f"http://localhost:{self.server.server_port}/echo")
             result = b""
@@ -99,9 +107,12 @@ context.load_cert_chain(cert, key)
 tls_server.socket = context.wrap_socket(tls_server.socket, server_side=True)
 threading.Thread(target=tls_server.serve_forever, daemon=True).start()
 server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Fixture)
+server.daemon_threads = True
+closed_socket = socket.socket()
+closed_socket.bind(("127.0.0.1", 0))  # Reserve a port without listening: deterministic connection refusal.
 threading.Thread(target=server.serve_forever, daemon=True).start()
 try:
-    result = subprocess.run([sys.argv[1], f"http://127.0.0.1:{server.server_port}", f"https://localhost:{tls_server.server_port}", str(ca)], timeout=30)
+    result = subprocess.run([sys.argv[1], f"http://127.0.0.1:{server.server_port}", f"https://localhost:{tls_server.server_port}", str(ca), f"http://127.0.0.1:{closed_socket.getsockname()[1]}/"], timeout=30)
     assert Fixture.applied_requests == {
         "/apply-no-headers": 1, "/apply-partial": 1, "/apply-mixed": 1
     }, "Synthetic requests were not applied exactly once (unexpected retry or missing request)"
@@ -110,4 +121,5 @@ finally:
     server.server_close()
     tls_server.shutdown()
     tls_server.server_close()
+    closed_socket.close()
 sys.exit(result.returncode)

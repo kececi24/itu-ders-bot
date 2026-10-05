@@ -1,28 +1,28 @@
 # Current Plan
 
-Last updated: 2026-10-05 09:46 Europe/Istanbul
-Primary ExecPlan: `.agents/exec_plans/active/cross-platform-port.md`
-Queued successor: `.agents/exec_plans/active/2026-10-04-registration-polling.md`
-State: BLOCKED — Windows verification and external acceptance evidence pending
+Last updated: 2026-10-05
+Primary ExecPlan: `.agents/exec_plans/active/2026-10-04-registration-polling.md`
+Secondary: `.agents/exec_plans/active/cross-platform-port.md` (teammate Windows acceptance pending)
+State: ACTIVE
 
 ## Current Objective
 
-Teammate executes existing Windows checks and updates plans only; primary agent owns any fixes exposed by verification. Polling remains queued until port completion and separate explicit authorization.
+Implement authorized registration polling in feature-sized checkpoints; persist each completed feature and actual validation promptly.
 
 ## Last Verified State
 
-- Bounded readiness audit found all nine Windows tests implemented for both presets; corrected native execution remains pending. Local evidence is in the primary plan.
+- HEAD2df7c3b contains prior port fixes. Mac tools/SDK/curl/Python/loopback and Ubuntu22 Docker compiler/local-tool preflight PASS; official guidance refreshed without live OBS calls.
 
 ## Next Actions
 
-1. Teammate: follow the primary plan's Windows runbook (preflight, suites, ZIP/seam/desktop checks); retain logs and update results. Return failures as highest-priority fixes for the primary agent.
-2. Reconcile the primary plan's external acceptance gates; close/move the port plan only when evidence/dispositions are recorded.
-3. Stop after port completion. Await explicit authorization for registration-polling.
+1. Integrate config/classification, private state/clock/cancellation and HTTP/auth worker features; implement scheduler/governor and deterministic tests.
+2. Integrate local-clock defaults/flags/logging, setup/docs; run affected/full native and archive checks.
+3. Record Windows feature verification separately from pending port acceptance.
 
 ## Blockers / Risks
 
-- Native MSVC scheduling is unverified here; no remote workflow, live OBS or Git mutation authorization.
+- Exact OBS volume/auth contracts remain unknown; explicit budgets and conservative unknown-outcome stops are mandatory. Native Windows unavailable here.
 
 ## Handoff Notes
 
-- Preserve e5108e8 plus all uncommitted CMake/test/plan changes and project-local dependencies; transfer the correction as a whole. Evidence/runbook: primary ExecPlan.
+- Primary owns CMake/main/scheduler/plans; workers own separate contracts/platform/HTTP-auth files. No personal data, live OBS, global installs, Git mutations or remote workflows.

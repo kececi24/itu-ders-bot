@@ -5,7 +5,7 @@ Created: 2026-09-30
 Last updated: 2026-10-05 09:46 Europe/Istanbul
 Owner: primary agent for implementation/fixes/integration; teammate for Windows verification and plan results only
 Primary scope: shared core, native adapters, CMake/bootstrap, offline tests and native release artifacts
-Queued successor: 2026-10-04-registration-polling.md; requires port completion AND separate explicit user authorization
+Related workstream: 2026-10-04-registration-polling.md explicitly activated by user on2026-10-05; pending port acceptance remains separate
 
 ## Purpose / Big Picture
 

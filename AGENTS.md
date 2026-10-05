@@ -114,7 +114,9 @@ Do not change OBS endpoints, request fields, request ordering, authentication se
 
 ## Scope Discipline
 
-This task is a platform port, not a redesign.
+The platform port remains under native acceptance. The user has explicitly activated `.agents/exec_plans/active/2026-10-04-registration-polling.md`; that scoped feature is now primary. Preserve port fixes and keep its pending Windows gates honest.
+
+For the authorized polling workstream only: add opt-in add-only polling with explicit client budgets and conservative stop/replay rules, use local clock by default, retain `--local`, expose legacy server sampling only via `--server-time`, and add read-only `--check-clock`. Single-attempt mode still submits once; ambiguous POST outcomes are never retried. All other security, platform and dependency rules below continue to apply.
 
 Do not perform unrelated:
 
@@ -171,8 +173,8 @@ Before considering the cross-platform port complete, verify on each available na
 
 If live OBS verification is unavailable, clearly distinguish static/code-level verification from behavior confirmed against the real service.
 
-Automated verification uses synthetic credentials and loopback endpoints only. Preserve the 30-second registration timeout, unknown-outcome advice, and exactly one submission attempt; never add automatic retries. Do not inspect personal `.env` or `data/config.json` during port validation. Live OBS calls and real registration need explicit account-owner authorization.
+Automated verification uses synthetic credentials and loopback endpoints only. Preserve the 30-second registration timeout and unknown-outcome advice. Single-attempt mode submits exactly once; the explicitly authorized polling mode may repeat only under its characterized response/replay policy, never after an ambiguous POST outcome or rate-limit/block response. Do not inspect personal `.env` or `data/config.json` during validation. Live OBS calls and real registration need explicit account-owner authorization.
 
 ## Planning and Git
 
-Follow `.agents/PLANS.md`. Continue `.agents/exec_plans/active/cross-platform-port.md` and keep `.agents/current_plan.md` synchronized after meaningful evidence. Mark source completion separately from executed build/test results; never record PASS for an unrun command. Keep macOS 14/15 runtime and desktop/live gates pending until evidence exists. Do not commit, push, tag, publish, or invoke remote workflows without explicit authorization.
+Follow `.agents/PLANS.md`. Continue the primary registration-polling ExecPlan, updating it after each implemented feature rather than only at final completion. Keep `.agents/current_plan.md` synchronized and the cross-platform-port Windows acceptance separate. Mark source completion separately from executed build/test results; never record PASS for an unrun command. Keep macOS 14/15 runtime and desktop/live gates pending until evidence exists. Do not commit, push, tag, publish, or invoke remote workflows without explicit authorization.

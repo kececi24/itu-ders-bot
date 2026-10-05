@@ -1,10 +1,10 @@
 # Add bounded registration polling and reliable local-clock timing
 
-Status: BLOCKED
-Execution state: QUEUED; implementation has not started
+Status: ACTIVE
+Execution state: User explicitly authorized implementation; feature checkpoints will be persisted as completed
 Created: 2026-10-04
 Last updated: 2026-10-05 09:27 Europe/Istanbul
-Owner: primary agent after completion of the cross-platform port
+Owner: primary agent for integration/planning; bounded workers for contracts, platform primitives and HTTP/authentication
 Primary scope: shared registration classification/scheduling/authentication, native clock diagnostics, configuration/setup, offline tests and usage documentation
 Predecessor: `cross-platform-port.md` in this directory; follow its recorded closed location after completion
 
@@ -12,9 +12,9 @@ Predecessor: `cross-platform-port.md` in this directory; follow its recorded clo
 
 Add optional, bounded, add-only course-registration polling and make reliable local wall-clock time the normal timing reference. Keep normal randomized polling separate from infrastructure backoff and request-budget enforcement. Preserve single-attempt registration and manual/drop workflows.
 
-**Execution dependency:** the user explicitly requires the cross-platform-port workstream to finish completely before this plan executes. Saving this plan does not authorize starting its implementation, changing timing defaults, or relaxing the current single-submission invariant. Activate only after the predecessor is marked COMPLETED with its acceptance/outcome record and moved out of active planning. Unresolved port failures must not be hidden by starting this feature.
+**Activation:** on 2026-10-05 the user explicitly requested starting this plan, superseding the earlier wait-for-port-completion sequence. Port source fixes are committed at 2df7c3b; native Windows/external acceptance remains pending in its own plan and is not represented as complete. This feature's opt-in exception does not permit replay of ambiguous outcomes or changes outside the approved contracts.
 
-**Current authorization boundary:** on 2026-10-05 the user required stopping after cross-platform-port and waiting for explicit authorization before executing this plan. Both predecessor completion and separate user authorization are required. This successor remains queued; do not start polling implementation as part of the port or automatically after it closes.
+**Current authorization boundary:** implementation and offline verification are authorized. Update this ExecPlan after each feature/checkpoint; no live OBS calls, Git mutations, global installations or remote workflow execution are authorized.
 
 ## Scope
 
@@ -46,7 +46,7 @@ Add optional, bounded, add-only course-registration polling and make reliable lo
 
 ## Invariants and Acceptance Criteria
 
-1. Complete the predecessor first. The first implementation step must perform a bounded preflight of the actual native tools/services needed; do not assume old tool/service evidence is current.
+1. Preserve committed predecessor fixes and separately pending acceptance. Perform a bounded preflight of the actual native tools/services needed; do not assume old evidence is current.
 2. Keep endpoints, bearer authentication, Origin/Referer, payload field names and CRN ordering compatible. Registration remains `POST https://obs.itu.edu.tr/api/ders-kayit/v21`, Origin `https://obs.itu.edu.tr`, Referer `https://obs.itu.edu.tr/ogrenci/DersKayitIslemleri/DersKayit`; JWT endpoint remains `/ogrenci/auth/jwt`.
 3. Polling is disabled by default. It must require valid explicit operating intervals and budgets, refuse SCRN, and never infer that 100 requests/hour is an OBS contract.
 4. Exactly one registration is in flight. Confirmed completed CRNs leave the pending set permanently for that run. Stop after all requested adds are satisfied.
@@ -92,7 +92,7 @@ Primary references: [Apple automatic network time](https://support.apple.com/gui
 
 ## Milestones
 
-1. **Dependency/authorization gate:** predecessor fully completed/closed and user explicitly authorizes polling; then refresh source/evidence and preflight. Exit: recorded authorization and activation checkpoint, with remaining OBS uncertainties still labeled.
+1. **Activation/preflight:** explicit start authorization recorded; refresh source/evidence and native preflight. Preserve pending predecessor acceptance separately and keep OBS uncertainties labeled.
 2. **Contracts/configuration:** implement typed classification, pending-set completion, validation and setup round trips. Exit: offline result/configuration cases pass without enabling polling by default.
 3. **Scheduling/admission:** implement bounded sampling, separate backoff, request budgets, locking, cancellation and stop rules. Exit: deterministic no-overlap/no-replay/no-out-of-window tests pass.
 4. **Timing/authentication:** introduce local-clock default/diagnostics and bounded token renewal. Exit: clock and authentication scenarios pass with no routine OBS Date sampling.
@@ -102,7 +102,10 @@ Primary references: [Apple automatic network time](https://support.apple.com/gui
 
 - [x] 2026-10-04 — Read-only characterization and user decisions captured — PASS for the stated research scope, not live OBS validation.
 - [x] 2026-10-04 — Accepted chat plan persisted as a separate queued ExecPlan; primary work remains the cross-platform port.
-- [ ] Implement any feature milestone — BLOCKED on complete predecessor closeout and separate explicit authorization; no implementation has started.
+- [x] 2026-10-05 — Activated on explicit user request at clean HEAD2df7c3b. Mac preflight PASS: Clang21/SDK26.5, local CMake4.4.3/Python3.12.3, system curl and Python SSL/loopback. Docker29.8 Linux daemon available. Re-read official cooldown/volume guidance; no new threshold evidence or live probe.
+- [ ] Contracts/configuration, platform primitives and HTTP/authentication implementation — IN PROGRESS; root integrates scheduler/governor and updates checkpoints.
+- [x] 2026-10-05 — Config/classifier headers implemented (strict offset/window/budget validation, ordered completion and conservative retry classification); setup/tests pending. HTTP/auth APIs implemented (bounded redirects, transfer accounting/cancellation, token result/expiry/refresh); fixture validation pending. POSIX clock/cancellation/private storage implemented; standalone warning-clean Clang compile PASS, behavioral and Windows work pending. Source checkpoints only, not feature acceptance.
+- [x] 2026-10-05 — Ubuntu22 network-disabled Docker preflight compile PASS with existing GCC/local CMake/Python; no dependency download/install.
 
 ## Surprises & Discoveries
 
@@ -187,7 +190,7 @@ Polling --logs emits JSON Lines on stderr; ordinary human console output stays o
 
 | ID | Type / component | Severity | Status | Evidence | Disposition |
 |---|---|---|---|---|---|
-| RP-01 | Predecessor and authorization | Execution gate | BLOCKED | User requires full port completion followed by explicit polling authorization; native Windows acceptance remains pending there. | Keep this plan queued after port closeout until separately authorized. |
+| RP-01 | Predecessor and authorization | Execution gate | CLEARED by explicit start request | 2026-10-05 user requested starting this plan; HEAD2df7c3b includes port correction. | Preserve port's native Windows/external acceptance separately; do not falsely close it. |
 | RP-02 | Server rate/auth contract | Evidence limitation | UNVERIFIED | Characterization table; no additional sanitized captures supplied. | Explicit client limits, conservative stops and bounded auth; no unsupported server claims. |
 | RP-03 | Current parser/redirect/clock behavior | Feature prerequisite | NOT IMPLEMENTED | Repository orientation and application evidence. | Address within milestones after activation; not a reason to expand current port work. |
 
