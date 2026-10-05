@@ -2,7 +2,7 @@
 
 Status: BLOCKED — Windows and external acceptance evidence pending
 Created: 2026-09-30
-Last updated: 2026-10-05 09:46 Europe/Istanbul
+Last updated: 2026-10-05 21:20 Europe/Istanbul
 Owner: primary agent for implementation/fixes/integration; teammate for Windows verification and plan results only
 Primary scope: shared core, native adapters, CMake/bootstrap, offline tests and native release artifacts
 Queued successor: 2026-10-04-registration-polling.md; requires port completion AND separate explicit user authorization
@@ -45,7 +45,7 @@ Polling, registration retries/redesign, global dependency/tool installation, per
 
 ## Baseline / Starting Evidence
 
-Current source is e5108e89a85639c70e0452b0bfbc5c3d20380ee4 plus uncommitted CP-32 CMake/test changes and planning updates. Preserve these together when transferring the corrected source.
+Current Desktop source is `2df7c3bdc246803240c57b94d60ef2de9833fff9` plus the uncommitted CP-38 fixture correction and planning updates. Preserve the newer committed CP-32 production helpers; this fix changes only tests/build_provenance_tests.py. No commit/push or remote workflow invocation was performed.
 
 The supplied Windows2022/MSVC run (revision/run URL absent) passed8/9 in29.45s. Only build_provenance failed: after replacing main's receipt input fingerprint with zeroes, the manifest build unexpectedly succeeded. The log did not prove whether linking occurred. The correction below supersedes the old instruction to investigate before choosing an implementation. Corrected-source Windows execution has not yet been supplied.
 
@@ -68,6 +68,9 @@ Planning-only audit on2026-10-05 used usable rg/git/Python3.12.3. It inspected s
 
 ## Progress
 
+- [x] 2026-10-05 21:20 Europe/Istanbul — CP-38 fixture correction SOURCE COMPLETE; focused provenance PASS109.78s, same-input real relink changes both binary hashes, full local MinGW9/9 PASS in106.01s. Production helpers and registration behavior unchanged.
+- [ ] Corrected native MSVC rerun — BLOCKED locally by missing cl; supplied2df7c3b job fails8/9 at old full-manifest equality. Remote execution is not authorized here.
+
 - [x] 2026-10-04 — CP-32 correction and regression coverage completed; independent review's negative-test control issue corrected.
 - [x] 2026-10-04 — Available native/emulated verification completed; detailed current receipts are in Validation. Verification container restored to stopped.
 - [x] 2026-10-05 — Windows readiness audit found all nine CTest cases and both compiler presets/CI paths present; added missing explicit seam-check handoff.
@@ -75,12 +78,19 @@ Planning-only audit on2026-10-05 used usable rg/git/Python3.12.3. It inspected s
 
 ## Surprises & Discoveries
 
+- 2026-10-05 — User supplied [MSVC CI job](https://github.com/kececi24/itu-ders-bot/actions/runs/37275634354/job/111651921885). Checkout was `2df7c3bdc246803240c57b94d60ef2de9833fff9`, Windows Server2022, CMake3.31.6, MSVC19.44.35229, Python3.12.10. Production build and eight suites PASS; build_provenance FAIL at line249, `assert first == validate()`, after an unchanged build. SDK selection is a normal configure message; logs do not report an SDK error or manifest field differences.
+- 2026-10-05 — Full-manifest equality incorrectly demands identical executable hashes even after a legitimate same-input relink. Current production PRE_LINK/POST_BUILD admission permits real relinks and requires refreshed receipts. Exact MSVC changed fields remain an inference because that log omits them; the corrected assertion reports any changed metadata/input groups on a native rerun.
+- 2026-10-05 — Local native MinGW regression recompiles/touches only synthetic fixture sources with unchanged contents and a retained compile-time token. Both main/setup hashes change while validated inputs/metadata and generated-header timestamp stay fixed. Direct/no-link receipt preservation, finalizer rejection, tamper/failed/partial/cache/dependency/staged-copy checks remain enforced; production provenance code is unchanged.
+- 2026-10-05 — Local MSVC preflight BLOCKED: missing `cl`; no compiler/SDK was installed or substituted. MinGW is an independent validation path, not MSVC acceptance. Work location remains `C:/Users/ASUS/Desktop/itu ders bot`.
+
 - POST_BUILD can be scheduled independently of a demonstrated link. Existing receipt overwrite was therefore insufficient evidence of successful rebuilding.
 - A genuine same-input relink can change executable bytes. Build-start admission plus PRE_LINK output removal supports that case while requiring POST_BUILD to preserve admitted bytes or consume rebuild admission.
 - The native artifact checker validates PE/imports and archive safety but does not inspect test-seam symbols. Windows must use the explicit source/build/symbol check below.
 - Windows Server CI, desktop-console checks, macOS runtime versions and AMD64 emulation establish different evidence.
 
 ## Decision Log
+
+- 2026-10-05 — Correct the test invariant, preserving all production checks: compare unchanged source/build/dependency metadata after validating each current executable; do not require identical binary bytes after a legitimate relink. Keep exact receipt byte/mtime preservation for explicit POST_BUILD-without-link controls. Add a real recompile/relink regression and field-level mismatch diagnostics. Do not add deterministic-linker flags or skip MSVC cases.
 
 - Preserve MinGW support, isolated compiler prefixes, static GNU runtimes/notices and MSVC as the Windows release compiler.
 - Invalid/missing receipts or replaced binaries are removed before target scheduling and recovered by actual linking. Direct finalizer rejection, no-link rejection, no-op stability and partial/failed-build cases remain tested.
@@ -92,8 +102,9 @@ Each finding appears once. Historical results retain their original scope; curre
 
 | ID | Component | Priority / status | Evidence and remaining disposition |
 |---|---|---|---|
-| **CP-32** | Build/package provenance | **P1; correction implemented, native MSVC acceptance pending** | Build-start admission removes invalid outputs; PRE_LINK supports legitimate relinks; POST_BUILD preserves valid receipts or consumes rebuild admission. Corrected Mac/Linux full provenance PASS. Teammate must verify actual MSVC scheduling/full suite, plus MinGW regression. |
-| **CP-35** | POSIX PTY timing | FIXED; macOS14 rerun pending | Complete keys, observed selection and output draining; current macOS26/Linux setup_terminal PASS. |
+| **CP-38** | Unchanged-build fixture manifest equality | **P2; test FIXED, local MinGW PASS, MSVC rerun pending** | Supplied2df7c3b MSVC job failed at249 after second build; whole-manifest equality includes binary hashes. Corrected test requires identical validated inputs/metadata, validates fresh hashes, and exercises a real same-input recompile/relink. No-link/tamper guards retained; native MSVC field-level confirmation remains pending. |
+| **CP-32** | Build/package provenance | **P1; production correction implemented; CP-38 fixture corrected, native MSVC acceptance pending** | Build-start admission removes invalid outputs; PRE_LINK supports legitimate relinks; POST_BUILD preserves valid receipts or consumes rebuild admission. Corrected Mac/Linux full provenance PASS. Latest MSVC2df7c3b production build and8/9 suites pass; old unchanged-build equality fails under CP-38. New local MinGW full9/9 passes; corrected MSVC rerun and artifact/seam acceptance remain required. |
+| **CP-35** | POSIX PTY timing | FIXED; macOS14 CI job success at2df7c3b | Complete keys, observed selection and output draining; current macOS26/Linux setup_terminal PASS; supplied run37275634354 macOS14 native job concluded success (before CP-38 fixture change). |
 | CP-36 | MinGW support/distribution | SOURCE COMPLETE; teammate native PASS | Separate preset/prefix/stamp, static GNU runtimes/notices; retain compiler isolation and one Windows asset. |
 | CP-37 | Windows TZ/Ctrl-C/TLS fixtures | FIXED; MinGW and supplied MSVC suite PASS | Early TZ, private-console Ctrl-C, guarded test CA and precise certificate errors. Recheck production seams with new artifacts. |
 | CP-18 | Windows setup integration | FIXED; MinGW and supplied MSVC setup_terminal PASS | Child credentials/config/Unicode/readiness/secrecy/cancellation coverage; desktop acceptance separate. |
@@ -139,10 +150,10 @@ Each finding appears once. Historical results retain their original scope; curre
 | macOS26.6.2 ARM64 | PASS | Configure/build; affected5/5 in80.72s; full10/10 in74.13s; native/extracted archive and production seams |
 | Ubuntu22 AMD64 emulation | PASS | Configure/build; affected5/5 in264.81s; full9/9 in257.46s; native/extracted archive and seams; tests as UID1000 |
 | Identical Ubuntu24 archive | PASS | Same Ubuntu22-built bytes, network-disabled AMD64 emulation, ABI/checksums/sanitized startup |
-| Corrected Windows MSVC | NOT RUN | Run the handoff below; expected full9/9, including CP-32 recovery and no-link cases |
-| Corrected Windows MinGW | NOT RUN | Same acceptance using isolated compiler/prefix; historical MinGW PASS predates current correction |
+| Corrected Windows MSVC | CI FAIL at2df7c3b; CP-38 rerun pending | Production build and8/9 suites PASS; old unchanged-build equality fails. Missing cl blocks local MSVC; run corrected fixture then full9/9/archive/seams on native MSVC. |
+| Corrected Windows MinGW | Local configure/build and full9/9 PASS | Desktop2df7c3b plus CP-38 fixture correction, GCC15.2/CMake4.2.3/native Python3.14.4. Focused provenance109.78s; full106.01s. `.deps/verify-msvc-noop-20261005/`; new ZIP/seam checks not rerun for this test-only change. |
 | Windows10/11 desktop | NOT RUN | Teammate synthetic setup/console checks; Server CI alone is insufficient |
-| Native Linux x64 / remote job chain | PENDING | Local AMD64 emulation is recorded; corrected-source native/MinGW/archive-smoke job results tied to a revision remain external |
+| Native Linux x64 / remote job chain | Linux/macOS14/MinGW jobs SUCCESS at2df7c3b; archive-smoke SKIPPED | GitHub run37275634354 job summaries read; MSVC failed, so archive-smoke/release skipped. These outcomes precede CP-38 test-only correction; no workflow was invoked here. |
 | Clean three-platform aggregate | NOT RUN | Three matching clean revision/version archives and release_checksums.py; local dirty verification archives are not publication candidates |
 | Live OBS | NOT RUN / not authorized | Historical user reports only; synthetic fixtures cover offline authentication. Real registration is unnecessary for automated acceptance |
 
@@ -176,7 +187,7 @@ Get-FileHash "dist/$preset/itu-ders-bot-1.0.0-windows-x64.zip" -Algorithm SHA256
 5. **Desktop acceptance:** on each available Windows10/11 desktop, run setup interactively with synthetic credentials and explicit --env-path/--config-path under an ignored .deps verification directory. Check Unicode display/input, hidden password, menu navigation, save/reopen, cancellation and usable terminal afterward. Do not read personal files or run an authenticated production main/dry-run; loopback application_flags covers that flow safely. Record OS/terminal and each observed result; unavailable desktop versions stay pending.
 6. **Record results:** keep command logs below ignored .deps/verify-windows-<date>/<preset>/; update this plan's gate/ledger with source identity, compiler, test counts, failure details, ZIP hash and desktop/seam results, then remove completed tasks from current_plan.md. CP-32 closes only after corrected MSVC and MinGW acceptance. On failure, stop dependent checks, record the concrete defect as the highest-priority open fix and hand it back to the primary agent. No test/source implementation is assigned to the teammate.
 
-CP-32 assertions intentionally prove invalidation plus real rebuild recovery rather than demanding every corrupted-receipt build fail. They also require direct finalizer rejection with a valid control, absent output after invalidation, failed POST_BUILD without linking, stable genuine no-op receipts, late-replacement rejection, preserved-mtime/configuration binding and partial/failed/staged-copy checks. Capture diagnostic MSBuild Link/PreLinkEvent/PostBuildEvent output if a native-only failure occurs; do not skip or weaken these cases.
+CP-32 assertions intentionally prove invalidation plus real rebuild recovery rather than demanding every corrupted-receipt build fail. They also require direct finalizer rejection with a valid control, absent output after invalidation, failed POST_BUILD without linking, stable validated inputs for unchanged builds, exact receipt preservation for explicit no-link events, legitimate same-input relinks, late-replacement rejection, preserved-mtime/configuration binding and partial/failed/staged-copy checks. Capture diagnostic MSBuild Link/PreLinkEvent/PostBuildEvent output if a native-only failure occurs; do not skip or weaken these cases.
 
 ### Current local receipts
 
@@ -198,6 +209,8 @@ Preflight used AppleClang21/SDK26.5/local CMake4.4.3/Python3.12.3 and system cur
 
 ## Handoff Snapshot
 
+- Latest work location: Desktop checkout on cross-platform. CP-38 is locally fixed and MinGW tested; native MSVC still requires an authorized runner with existing compiler/SDK. Latest CI failure and missing compiler are recorded above. Only the provenance test and these two plans changed; preserve the newer2df7c3b source and queued polling plan.
+
 - Current objective: teammate executes the Windows runbook and records results; primary fixes only demonstrated failures.
 - Last verified state: available-platform acceptance in Validation; no new application tests executed during this plan-only audit.
 - Next actions: Windows verification; external acceptance/dispositions; close port when eligible and stop.
@@ -211,6 +224,10 @@ Implementation is ready for the Windows verification assignment. Local suites an
 
 ## Revision Notes
 
+- 2026-10-05 21:20 Europe/Istanbul — Read exact user-supplied Windows CI failure and commit; corrected no-op fixture equality, demonstrated real same-input binary changes with retained integrity guards, completed Desktop MinGW focused/full suite, recorded missing MSVC and remote job outcomes. No runtime/production provenance changes or workflow invocation.
+
 - 2026-10-05 09:46 Europe/Istanbul — Audited Windows test readiness; consolidated duplicate status/history, removed superseded implementation/pause instructions and stale line references, added executable Windows handoff and seam checks; teammate role is verification/plan updates only.
 - 2026-10-04 — Implemented CP-32 admission fix and completed current Mac/Linux verification; retained historical evidence separately.
 - 2026-09-30 — Created unified port workstream, superseding macOS-only plans.
+
+Local CP-38 command evidence: `.deps/verify-msvc-noop-20261005/{configure,build,affected,full,msvc_preflight}.log`; CI assertion excerpt copied there as `ci-failure-excerpt.log`. Build/test outputs were generated in the Desktop checkout with existing project-local dependencies; no live service access or global installation.

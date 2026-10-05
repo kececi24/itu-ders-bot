@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from unittest import mock
 
 
@@ -94,6 +95,19 @@ def verify_hidden_untracked_release(repository, temporary, validate_release):
     print("Real Git status.showUntrackedFiles=no release regression passed.")
 
 
+
+def same_input_build(before, after, context):
+    """A legitimate relink may change bytes; validated inputs must stay fixed."""
+    # Callers validate each completed manifest against the current inputs and
+    # executable bytes first. Visual Studio can relink on an unchanged build,
+    # so PE timestamps/PDB identities need not produce identical binary hashes.
+    previous = {key: value for key, value in before.items() if key != "binaries"}
+    current = {key: value for key, value in after.items() if key != "binaries"}
+    changed = sorted(key for key in previous.keys() | current.keys()
+                     if previous.get(key) != current.get(key))
+    assert previous == current, f"{context}: build metadata/inputs changed: {changed}"
+
+
 def main():
     cmake, repository, target, _deps = sys.argv[1:5]
     preset = sys.argv[5] if len(sys.argv) > 5 else target
@@ -170,7 +184,9 @@ int external_value();
 int helper() {return DEPENDENCY_VALUE + ADDED_VALUE + external_value() + CONFIG_VALUE + CONFIG_LIST_VALUE + MODULE_VALUE;}
 ''')
         for name in ("main", "setup"):
-            (root / "src" / f"{name}.cpp").write_text("int helper(); int main() {return helper();}\n")
+            (root / "src" / f"{name}.cpp").write_text(
+                'int helper(); static const char* volatile compiled_at = __TIME__; '
+                'int main() {(void)compiled_at; return helper();}\n')
         (root / "CMakeLists.txt").write_text('''cmake_minimum_required(VERSION 3.25)
 project(ProvenanceFixture VERSION 1.0.0 LANGUAGES CXX)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<0:>")
@@ -246,10 +262,27 @@ include(cmake/BuildProvenance.cmake)
         first = validate()
         header_time = (build / "provenance-inputs.h").stat().st_mtime_ns
         run()  # A legitimate no-op build is eligible.
-        assert first == validate()
+        same_input_build(first, validate(), "unchanged build")
         assert (build / "provenance-inputs.h").stat().st_mtime_ns == header_time
         receipt_path, = build.glob("main-*.sha256")
         build_config = receipt_path.stem.removeprefix("main-")
+
+        # A real recompile/relink with identical source contents must remain
+        # eligible even when compile/link timestamps change executable bytes.
+        # __TIME__ in the tiny fixture makes that transition visible locally.
+        # Content hashes stay fixed; no invalidation or receipt check is skipped.
+        before_relink = validate()
+        time.sleep(1.1)
+        for name in ("main", "setup"):
+            (root / "src" / f"{name}.cpp").touch()
+        run()
+        after_relink = validate()
+        same_input_build(before_relink, after_relink, "same-input real relink")
+        assert (build / "provenance-inputs.h").stat().st_mtime_ns == header_time
+        result(0)
+        changed_binaries = [name for name in ("main", "setup")
+                            if before_relink["binaries"][name] != after_relink["binaries"][name]]
+        print(f"Same-input real relink validated; refreshed binary hashes: {changed_binaries}")
 
         def script(name, arguments, success=True):
             completed = subprocess.run(
@@ -385,7 +418,7 @@ include(cmake/BuildProvenance.cmake)
             (location / "__pycache__").mkdir()
             (location / "__pycache__/ignored").write_bytes(b"cache")
         run()
-        assert before_metadata == validate()
+        same_input_build(before_metadata, validate(), "unchanged dependency metadata build")
         assert (build / "provenance-inputs.h").stat().st_mtime_ns == header_time
         for hidden in (root / "include/.hidden.hpp", external / "include/.hidden.hpp"):
             hidden.write_text("// legitimate hidden input\n")
@@ -573,7 +606,7 @@ include(cmake/BuildProvenance.cmake)
                 subprocess.CompletedProcess([], 0, "")]):
             validate_release(release, root)
         verify_hidden_untracked_release(repository, temporary, validate_release)
-        print("Completed, no-op, preserved-mtime source/header/archive, generated cache/flags and imported-library binding before first build and after reconfigure, recursive configure inventories, dependency additions/removals, hidden-file parity, partial, failed, replaced, untracked release and staged-copy provenance checks passed.")
+        print("Completed, unchanged-input builds and real relinks, no-link receipt preservation, preserved-mtime source/header/archive, generated cache/flags and imported-library binding before first build and after reconfigure, recursive configure inventories, dependency additions/removals, hidden-file parity, partial, failed, replaced, untracked release and staged-copy provenance checks passed.")
 
 
 if __name__ == "__main__":
