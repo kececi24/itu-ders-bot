@@ -581,16 +581,22 @@ include(cmake/BuildProvenance.cmake)
         for missing_snapshot in ("provenance-configure.json", "provenance-configured-cache.txt"):
             (build / missing_snapshot).unlink()
             rejected(validate)
-            # The start script must fail closed, while a normal CMake build is
-            # allowed to regenerate a missing file(GENERATE) output first.
+            # The start script must fail closed. Recovery explicitly reruns
+            # configure: generators differ in whether a build regenerates a
+            # deleted file(GENERATE) output before provenance_start executes.
             probe = subprocess.run([cmake, f"-DSOURCE_DIR={root}", f"-DBINARY_DIR={build}",
                                     "-DSTART_BUILD=ON", "-P", str(root / "cmake/ProvenanceInputs.cmake")],
                                    capture_output=True, text=True)
             assert probe.returncode != 0, probe.stdout + probe.stderr
+            assert "Missing configure provenance; re-run CMake before building" in probe.stdout + probe.stderr
+            assert not manifest_path.exists()
+            subprocess.run(configure, check=True)
+            assert (build / missing_snapshot).is_file(), missing_snapshot
             assert not manifest_path.exists()
             run()
             validate()
             result(5)
+            print(f"Recovered missing configure snapshot: {missing_snapshot}")
 
         # Both unavailable Git and Git reporting an error must fail closed.
         release = dict(manifest, revision="a" * 40, dirty=False)

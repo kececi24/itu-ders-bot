@@ -2,7 +2,7 @@
 
 Status: BLOCKED — Windows and external acceptance evidence pending
 Created: 2026-09-30
-Last updated: 2026-10-05 21:40 Europe/Istanbul
+Last updated: 2026-10-05 21:54 Europe/Istanbul
 Owner: primary agent for implementation/fixes/integration; teammate for Windows verification and plan results only
 Primary scope: shared core, native adapters, CMake/bootstrap, offline tests and native release artifacts
 Queued successor: 2026-10-04-registration-polling.md; requires port completion AND separate explicit user authorization
@@ -45,7 +45,7 @@ Polling, registration retries/redesign, global dependency/tool installation, per
 
 ## Baseline / Starting Evidence
 
-Current Desktop source is `ff6ee7b42f91a5020f94bdd7485695e466606edc` (user committed CP-38) plus the uncommitted workflow-trigger/documentation and planning update. Preserve the newer committed CP-32 production helpers; CP-38 changed only tests/build_provenance_tests.py; workflow-trigger changes remain uncommitted. The latest request authorized retrying only the existing MSVC Windows job; the connector rejected the attempt with API403 and no new run started. No commit/push/publication was performed.
+Current Desktop source is `14c1ec4` (user committed the workflow-trigger/README/planning update) plus the uncommitted CP-39 test-only correction and these plan updates. Production provenance helpers are unchanged. User authorized fixing the demonstrated snapshot recovery failure; only the affected provenance test was executed locally. No commit/push/publication or remote workflow was invoked during this fix.
 
 The supplied Windows2022/MSVC run (revision/run URL absent) passed8/9 in29.45s. Only build_provenance failed: after replacing main's receipt input fingerprint with zeroes, the manifest build unexpectedly succeeded. The log did not prove whether linking occurred. The correction below supersedes the old instruction to investigate before choosing an implementation. Corrected-source Windows execution has not yet been supplied.
 
@@ -68,13 +68,15 @@ Planning-only audit on2026-10-05 used usable rg/git/Python3.12.3. It inspected s
 
 ## Progress
 
+- [x] 2026-10-05 21:54 Europe/Istanbul — CP-39 fixture recovery SOURCE COMPLETE; focused native MinGW build_provenance1/1 PASS in107.86s. Both missing snapshots reject before checked reconfigure/rebuild recovery; paths with spaces and all integrity guards retained. No full suite/archive run for this test-only request; native MSVC NOT RUN.
+
 - [x] 2026-10-05 21:40 Europe/Istanbul — Read latest ff6ee7b CI run37355657214/job111917284395: CP-38 relink case succeeds, production build and8/9 suites PASS; missing-snapshot fixture recovery FAILS at591 (CP-39). Linux/macOS14/MinGW jobs SUCCESS; archive-smoke/release SKIPPED.
 - [ ] 2026-10-05 21:40 Europe/Istanbul — User-authorized existing MSVC job retry BLOCKED: connector returned API403 `Resource not accessible by integration`. No run started and no new local tests/source/workflow changes made.
 
 - [x] 2026-10-05 21:29 Europe/Istanbul — User requested stopping CI on every push. Restricted push event to `v*` tags, retained pull_request, added workflow_dispatch; README/manual run instructions updated. YAML parses and all non-trigger workflow fields/jobs/permissions compare identical. SOURCE COMPLETE/static PASS; no remote run or publication.
 
 - [x] 2026-10-05 21:20 Europe/Istanbul — CP-38 fixture correction SOURCE COMPLETE; focused provenance PASS109.78s, same-input real relink changes both binary hashes, full local MinGW9/9 PASS in106.01s. Production helpers and registration behavior unchanged.
-- [ ] Native MSVC full provenance acceptance — latest ff6ee7b job passes CP-38 but fails CP-39; local cl unavailable and authorized remote job retry denied by integration permissions.
+- [ ] Native MSVC full provenance acceptance — latest observed ff6ee7b retry passes CP-38 but fails old CP-39; CP-39 corrected locally with focused MinGW PASS. Native MSVC correction verification NOT RUN; local cl unavailable and connector retry permission denied.
 
 - [x] 2026-10-04 — CP-32 correction and regression coverage completed; independent review's negative-test control issue corrected.
 - [x] 2026-10-04 — Available native/emulated verification completed; detailed current receipts are in Validation. Verification container restored to stopped.
@@ -82,6 +84,8 @@ Planning-only audit on2026-10-05 used usable rg/git/Python3.12.3. It inspected s
 - [ ] Corrected-source Windows and external acceptance — BLOCKED on execution/evidence, not known unimplemented test work.
 
 ## Surprises & Discoveries
+
+- 2026-10-05 — [Observed repeat MSVC failure](https://github.com/kececi24/itu-ders-bot/actions/runs/37355657214/job/111925462017) uses the same ff6ee7b source and reaches the same missing-snapshot recovery step (old line591),8/9 PASS in139.90s. The initial test configuration already uses checked subprocess calls. The missing file is deliberately deleted late in the fixture; production rejection is correct. Explicit reconfigure recovery avoids assuming generator-specific automatic recreation.
 
 - 2026-10-05 — [Latest MSVC job](https://github.com/kececi24/itu-ders-bot/actions/runs/37355657214/job/111917284395) builds successfully in paths with spaces and prints the successful same-input real-relink check. It fails at tests/build_provenance_tests.py:591 after deliberately deleting a configure snapshot. MSBuild runs provenance_start, which correctly rejects the absent snapshot. The fixture assumes automatic regeneration by a normal build; a generator-specific recovery mismatch is supported by the location of the failure. Changing runtime linkage or shortening paths does not address that demonstrated test step.
 - 2026-10-05 — User chose retrying the existing Windows job after being told it repeats all Windows tests. The GitHub integration returned403 `Resource not accessible by integration`; no retry was dispatched. Other jobs were not rerun by this attempt.
@@ -97,6 +101,8 @@ Planning-only audit on2026-10-05 used usable rg/git/Python3.12.3. It inspected s
 - Windows Server CI, desktop-console checks, macOS runtime versions and AMD64 emulation establish different evidence.
 
 ## Decision Log
+
+- 2026-10-05 — Under user fix authorization, explicitly reconfigure after the test's deliberate snapshot deletion. Require exact missing-file rejection, recreated snapshot, absent manifest until build, validated manifests and executable behavior. Keep spaced paths and production checks. Run only affected provenance locally as requested; retain native MSVC and full-suite/archive gates pending.
 
 - 2026-10-05 — Limit this request to the authorized Windows job retry and evidence recording. Do not apply Copilot's path/runtime suggestions or add a test-only workflow. Record the denied invocation and leave CP-39 as the next demonstrated fix; preserve spaces coverage and fail-closed checks.
 
@@ -114,9 +120,9 @@ Each finding appears once. Historical results retain their original scope; curre
 
 | ID | Component | Priority / status | Evidence and remaining disposition |
 |---|---|---|---|
-| **CP-38** | Unchanged-build fixture manifest equality | **P2; FIXED, local MinGW and native MSVC case PASS** | ff6ee7b MSVC job passes the same-input real-relink check and advances beyond the corrected comparisons; both binary hashes refresh. Full provenance acceptance remains blocked by separate CP-39. |
-| **CP-39** | Missing configure-snapshot fixture recovery | **P2; OPEN, native MSVC FAIL** | ff6ee7b job fails at591 after deliberate snapshot deletion; normal MSBuild build does not recreate it before provenance_start rejects it. Explicit configure recovery is a candidate fix; no correction applied or rerun executed in this request. Preserve fail-closed probes and paths with spaces. |
-| **CP-32** | Build/package provenance | **P1; production correction implemented; CP-38 fixture corrected, native MSVC acceptance pending** | Build-start admission removes invalid outputs; PRE_LINK supports legitimate relinks; POST_BUILD preserves valid receipts or consumes rebuild admission. Corrected Mac/Linux full provenance PASS. Latest MSVCff6ee7b production build and8/9 suites pass; CP-38 case passes, missing-snapshot recovery fails under CP-39. New local MinGW full9/9 passes; corrected MSVC rerun and artifact/seam acceptance remain required. |
+| **CP-38** | Unchanged-build fixture manifest equality | **P2; FIXED, local MinGW and native MSVC case PASS** | ff6ee7b MSVC job passes the same-input real-relink check and advances beyond the corrected comparisons; both binary hashes refresh. Full native MSVC acceptance remains pending confirmation of the CP-39 correction. |
+| **CP-39** | Missing configure-snapshot fixture recovery | **P2; SOURCE FIXED, focused MinGW PASS; native MSVC pending** | Explicit checked configure before recovery build, exact rejection diagnostic, restored snapshot and no premature manifest checks. Both cases passed in focused1/1,107.86s; native MSVC correction not executed locally. Old ff6ee7b retry failed at591. |
+| **CP-32** | Build/package provenance | **P1; production correction implemented; CP-38 fixture corrected, native MSVC acceptance pending** | Build-start admission removes invalid outputs; PRE_LINK supports legitimate relinks; POST_BUILD preserves valid receipts or consumes rebuild admission. Corrected Mac/Linux full provenance PASS. Latest MSVCff6ee7b production build and8/9 suites pass; CP-38 case passes, old missing-snapshot recovery fails under CP-39, now corrected locally with focused MinGW PASS. New local MinGW full9/9 passes; corrected MSVC rerun and artifact/seam acceptance remain required. |
 | **CP-35** | POSIX PTY timing | FIXED; macOS14 CI job success at2df7c3b | Complete keys, observed selection and output draining; current macOS26/Linux setup_terminal PASS; supplied run37275634354 macOS14 native job concluded success (before CP-38 fixture change). |
 | CP-36 | MinGW support/distribution | SOURCE COMPLETE; teammate native PASS | Separate preset/prefix/stamp, static GNU runtimes/notices; retain compiler isolation and one Windows asset. |
 | CP-37 | Windows TZ/Ctrl-C/TLS fixtures | FIXED; MinGW and supplied MSVC suite PASS | Early TZ, private-console Ctrl-C, guarded test CA and precise certificate errors. Recheck production seams with new artifacts. |
@@ -163,8 +169,8 @@ Each finding appears once. Historical results retain their original scope; curre
 | macOS26.6.2 ARM64 | PASS | Configure/build; affected5/5 in80.72s; full10/10 in74.13s; native/extracted archive and production seams |
 | Ubuntu22 AMD64 emulation | PASS | Configure/build; affected5/5 in264.81s; full9/9 in257.46s; native/extracted archive and seams; tests as UID1000 |
 | Identical Ubuntu24 archive | PASS | Same Ubuntu22-built bytes, network-disabled AMD64 emulation, ABI/checksums/sanitized startup |
-| Corrected Windows MSVC | CI FAIL at ff6ee7b; CP-38 case PASS, CP-39 OPEN | Run37355657214 production build and8/9 suites PASS; missing-snapshot recovery fails at591. cl unavailable locally. Authorized existing-job retry rejected with API403; no new run started. Full9/9/archive/seams remain pending. |
-| Corrected Windows MinGW | Local configure/build and full9/9 PASS | Desktop2df7c3b plus CP-38 fixture correction, GCC15.2/CMake4.2.3/native Python3.14.4. Focused provenance109.78s; full106.01s. `.deps/verify-msvc-noop-20261005/`; new ZIP/seam checks not rerun for this test-only change. |
+| Corrected Windows MSVC | Old ff6ee7b retry FAIL; CP-39 source fixed, native confirmation NOT RUN | Job111925462017 repeats snapshot-recovery failure,8/9 in139.90s. Existing cl unavailable; connector denied retry403. Corrected-source affected test, full9/9/archive/seams remain pending. |
+| Corrected Windows MinGW | CP-39 focused1/1 PASS; earlier full9/9 retained | Existing GCC15.2/CMake4.2.3/native Python3.14.4; focused107.86s, both snapshot recoveries and all provenance guards. `.deps/verify-snapshot-recovery-20261005/focused.log`. Earlier CP-38 full9/9 in106.01s; full suite/archive not rerun for CP-39. |
 | Windows10/11 desktop | NOT RUN | Teammate synthetic setup/console checks; Server CI alone is insufficient |
 | Native Linux x64 / remote job chain | Linux/macOS14/MinGW jobs SUCCESS at ff6ee7b; archive-smoke/release SKIPPED | GitHub run37355657214 job summaries read; MSVC failed, so dependent jobs skipped. Windows retry attempt denied; no new execution. |
 | Clean three-platform aggregate | NOT RUN | Three matching clean revision/version archives and release_checksums.py; local dirty verification archives are not publication candidates |
@@ -216,17 +222,17 @@ Preflight used AppleClang21/SDK26.5/local CMake4.4.3/Python3.12.3 and system cur
 ## Files / Artifacts Changed
 
 - cmake/BuildProvenance.cmake, ProvenanceInputs.cmake, BinaryReceipt.cmake: build admission, output invalidation and guarded receipt generation.
-- tests/build_provenance_tests.py: corruption/no-link/recovery and finalizer-control regression coverage.
+- tests/build_provenance_tests.py: corruption/no-link/recovery and finalizer controls; CP-39 explicitly checks configure-snapshot regeneration before recovery builds.
 - This plan and current_plan.md: verification-only Windows handoff and consolidated status. The queued polling plan retains its separate authorization gate.
 - Preserve all uncommitted changes, teammate implementation, ignored tools/logs/archives and deleted source example.
 
 ## Handoff Snapshot
 
-- Work location: Desktop cross-platform checkout at ff6ee7b. Preserve pending workflow-trigger/README/plans and queued polling plan.
-- Last verified state: latest MSVC CP-38 case PASS but full provenance FAIL at missing-snapshot recovery (CP-39); Linux/macOS14/MinGW CI jobs SUCCESS. No local tests executed for this retry request.
-- Next actions: fix the demonstrated CP-39 fixture recovery under appropriate authorization, run affected provenance, then complete remaining Windows/archives/external acceptance.
-- Blockers: local MSVC unavailable; explicit Windows retry denied by GitHub integration permissions (API403). Account with Actions write permission can retry the job; an unchanged retry may reproduce CP-39.
-- No commit/push/publication or live account access. User authorized the existing-job retry only; no test-only workflow added.
+- Work location: Desktop cross-platform checkout at14c1ec4 plus uncommitted CP-39 test and these two plans. Workflow/README/previous plans are user-committed; queued polling plan preserved.
+- Last verified state: CP-39 source complete; focused MinGW provenance1/1 PASS in107.86s; both deleted snapshots recover after explicit configure. Old ff6ee7b MSVC retry repeats failure; updated native MSVC acceptance NOT RUN.
+- Next actions: separately authorized Git availability of corrected source, native MSVC affected test, then remaining full-suite/archive/seam/desktop/external acceptance.
+- Blockers: local MSVC compiler absent; connector Actions retry denied403. Do not rerun old SHA expecting this new fix.
+- No commit/push/publication or remote invocation during this fix. Automated verification remained synthetic; no live account/config reads or global installs.
 
 ## Outcomes & Retrospective
 
@@ -245,3 +251,5 @@ Local CP-38 command evidence: `.deps/verify-msvc-noop-20261005/{configure,build,
 - 2026-10-05 21:29 Europe/Istanbul — Restricted ordinary branch-push triggers under user authorization; kept PR/tag gates, added manual dispatch, statically validated unchanged jobs/permissions and synchronized docs/plans. No workflow invocation or Git mutation.
 
 - 2026-10-05 21:40 Europe/Istanbul — Recorded latest ff6ee7b MSVC snapshot-recovery failure, successful CP-38 case and other CI jobs; attempted user-authorized existing Windows job retry, rejected403 by GitHub integration. No new run/tests/source changes.
+
+- 2026-10-05 21:54 Europe/Istanbul — Fixed CP-39 with explicit checked configure recovery after deliberate snapshot deletion; focused MinGW1/1 PASS in107.86s. Read observed repeat MSVC failure on old source, retained native MSVC/full-suite/archive gates pending and synchronized current plan. No Git mutation or remote invocation.
