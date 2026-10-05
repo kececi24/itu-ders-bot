@@ -39,6 +39,11 @@ add_custom_target(provenance_start
         "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
         "-DBINARY_DIR=${CMAKE_BINARY_DIR}"
         "-DSTART_BUILD=ON"
+        # CMP0112 NEW: these components do not introduce a dependency on the
+        # executables, which themselves depend on provenance_start.
+        "-DMAIN_FILE=$<TARGET_FILE_DIR:main>/$<TARGET_FILE_NAME:main>"
+        "-DSETUP_FILE=$<TARGET_FILE_DIR:setup>/$<TARGET_FILE_NAME:setup>"
+        "-DBUILD_CONFIG=$<CONFIG>"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ProvenanceInputs.cmake"
     BYPRODUCTS "${_provenance_header}"
     VERBATIM)
@@ -54,13 +59,28 @@ foreach(_target itu_platform itu_core main setup)
     endif()
 endforeach()
 foreach(_target main setup)
-    # Only a successful link may attest executable bytes. A later no-op build
-    # must not bless an executable replaced outside the build system.
+    # A legitimate relink can change bytes without changing input contents
+    # (for example a touched source or removed object). Remove the old output
+    # immediately before linking rather than allowing POST_BUILD to bless any
+    # changed output under a preserve admission.
+    add_custom_command(TARGET ${_target} PRE_LINK
+        COMMAND "${CMAKE_COMMAND}"
+            "-DBINARY_FILE=$<TARGET_FILE:${_target}>"
+            "-DRECEIPT_FILE=${CMAKE_BINARY_DIR}/${_target}-$<CONFIG>.sha256"
+            "-DINPUT_FILE=${CMAKE_BINARY_DIR}/provenance-start.json"
+            "-DADMISSION_FILE=${CMAKE_BINARY_DIR}/${_target}-$<CONFIG>.admission.json"
+            "-DPREPARE_LINK=ON"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/BinaryReceipt.cmake"
+        VERBATIM)
+    # Generators may execute POST_BUILD without linking. The start admission
+    # either preserves an existing receipt or first removes an untrusted output
+    # so that a new executable must be produced before it can be attested.
     add_custom_command(TARGET ${_target} POST_BUILD
         COMMAND "${CMAKE_COMMAND}"
             "-DBINARY_FILE=$<TARGET_FILE:${_target}>"
             "-DRECEIPT_FILE=${CMAKE_BINARY_DIR}/${_target}-$<CONFIG>.sha256"
             "-DINPUT_FILE=${CMAKE_BINARY_DIR}/provenance-start.json"
+            "-DADMISSION_FILE=${CMAKE_BINARY_DIR}/${_target}-$<CONFIG>.admission.json"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/BinaryReceipt.cmake"
         VERBATIM)
 endforeach()

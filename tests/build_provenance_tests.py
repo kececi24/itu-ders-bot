@@ -18,18 +18,30 @@ def verify_receipt_line_endings(cmake, repository, temporary):
     binary.write_bytes(b"synthetic binary\x00\r\n\xff")
     inputs = directory / "inputs.json"
     receipt = directory / "receipt.json"
+    admission = directory / "admission.json"
     command = [cmake, f"-DBINARY_FILE={binary}", f"-DINPUT_FILE={inputs}",
-               f"-DRECEIPT_FILE={receipt}", "-P", str(repository / "cmake/BinaryReceipt.cmake")]
+               f"-DRECEIPT_FILE={receipt}", f"-DADMISSION_FILE={admission}",
+               "-P", str(repository / "cmake/BinaryReceipt.cmake")]
+
+    def admit_rebuild(fingerprint):
+        receipt.unlink(missing_ok=True)
+        admission.write_text(json.dumps({
+            "mode": "rebuild", "inputs": fingerprint, "binary": "", "receipt": "",
+            "binary_path": hashlib.sha256(str(binary).encode()).hexdigest(),
+            "receipt_path": hashlib.sha256(str(receipt).encode()).hexdigest(),
+        }))
     original = json.dumps({"source": {"synthetic.cpp": "original input"}}, indent=2).encode()
     expected = hashlib.sha256(original).hexdigest()
     for newline in (b"\n", b"\r\n"):
         inputs.write_bytes(original.replace(b"\n", newline))
+        admit_rebuild(expected)
         subprocess.run(command, check=True)
         actual = json.loads(receipt.read_text())
         assert actual["inputs"] == expected, (newline, actual)
         assert actual["binary"] == hashlib.sha256(binary.read_bytes()).hexdigest()
     changed = original.replace(b"original input", b"modified input")
     inputs.write_bytes(changed.replace(b"\n", b"\r\n"))
+    admit_rebuild(hashlib.sha256(changed).hexdigest())
     subprocess.run(command, check=True)
     changed_hash = json.loads(receipt.read_text())["inputs"]
     assert changed_hash == hashlib.sha256(changed).hexdigest() and changed_hash != expected
@@ -237,15 +249,89 @@ include(cmake/BuildProvenance.cmake)
         assert first == validate()
         assert (build / "provenance-inputs.h").stat().st_mtime_ns == header_time
         receipt_path, = build.glob("main-*.sha256")
+        build_config = receipt_path.stem.removeprefix("main-")
+
+        def script(name, arguments, success=True):
+            completed = subprocess.run(
+                [cmake] + [f"-D{key}={value}" for key, value in arguments.items()]
+                + ["-P", str(root / "cmake" / name)], capture_output=True, text=True)
+            assert (completed.returncode == 0) == success, completed.stdout + completed.stderr
+            return completed
+
+        def start():
+            script("ProvenanceInputs.cmake", {
+                "SOURCE_DIR": root.as_posix(), "BINARY_DIR": build.as_posix(),
+                "START_BUILD": "ON", "BUILD_CONFIG": build_config,
+                "MAIN_FILE": (build / "bin" / ("main" + suffix)).as_posix(),
+                "SETUP_FILE": (build / "bin" / ("setup" + suffix)).as_posix(),
+            })
+
+        def post_build(name="main", success=True, prepare=False):
+            script("BinaryReceipt.cmake", {
+                "BINARY_FILE": (build / "bin" / (name + suffix)).as_posix(),
+                "RECEIPT_FILE": (build / f"{name}-{build_config}.sha256").as_posix(),
+                "ADMISSION_FILE": (build / f"{name}-{build_config}.admission.json").as_posix(),
+                "INPUT_FILE": (build / "provenance-start.json").as_posix(),
+                "PREPARE_LINK": "ON" if prepare else "OFF",
+            }, success)
+
+        def invalidated(name="main", expected=0):
+            start()
+            assert not manifest_path.exists()
+            assert not (build / "bin" / (name + suffix)).exists()
+            assert not (build / f"{name}-{build_config}.sha256").exists()
+            post_build(name, success=False)  # An event without a link cannot attest anything.
+            run()  # Missing output forces a real link and legitimate recovery.
+            validate()
+            result(expected)
+
+        # Simulate generators scheduling POST_BUILD independently of linking.
+        receipt_bytes = receipt_path.read_bytes()
+        receipt_time = receipt_path.stat().st_mtime_ns
+        start()
+        post_build()
+        post_build()
+        assert receipt_path.read_bytes() == receipt_bytes
+        assert receipt_path.stat().st_mtime_ns == receipt_time
+        run()
+        # PRE_LINK alone cannot attest an output either. A real link must
+        # recreate it, including for unchanged-input rebuilds.
+        start()
+        post_build(prepare=True)
+        assert not (build / "bin" / ("main" + suffix)).exists()
+        post_build(success=False)
+        run()
+        validate()
+        result(0)
         receipt = receipt_path.read_text()
+        finalizer = {
+            "SOURCE_DIR": root.as_posix(), "BINARY_DIR": build.as_posix(),
+            "MAIN_FILE": (build / "bin" / ("main" + suffix)).as_posix(),
+            "SETUP_FILE": (build / "bin" / ("setup" + suffix)).as_posix(),
+            "BUILD_CONFIG": build_config,
+            "OUTPUT_FILE": (build / "direct-manifest.json").as_posix(),
+            "PROJECT_VERSION": "1.0.0", "ITU_TARGET": target,
+            "COMPILER_ID": "fixture", "COMPILER_VERSION": "fixture",
+            "DEPENDENCY_MANIFEST_FILE": (build / "dependency-manifest.json").as_posix(),
+        }
+        script("GenerateManifest.cmake", finalizer)
         mismatched = json.loads(receipt)
         mismatched["inputs"] = "0" * 64
         receipt_path.write_text(json.dumps(mismatched))
-        run(success=False)  # The executable hash alone cannot attest its inputs.
-        assert not manifest_path.exists()
-        receipt_path.write_text(receipt)
-        run()
-        validate()
+        # The finalizer must reject corruption before start can repair it.
+        failure = script("GenerateManifest.cmake", finalizer, success=False)
+        assert "main was linked against different inputs" in failure.stderr, failure.stderr
+        invalidated()
+        receipt_path.write_text("malformed JSON")
+        invalidated()
+        receipt_path.unlink()
+        invalidated()
+        # A replacement after admission must not be blessed by POST_BUILD.
+        start()
+        main_binary = build / "bin" / ("main" + suffix)
+        main_binary.write_bytes(main_binary.read_bytes() + b"late replacement")
+        post_build(success=False)
+        invalidated()
         # Source and dependency contents, not timestamp ordering, determine
         # whether compiled objects and their successful-link receipts are fresh.
         result(0)
@@ -255,6 +341,8 @@ include(cmake/BuildProvenance.cmake)
         source.write_text(saved.replace("return DEPENDENCY_VALUE", "return 7 + DEPENDENCY_VALUE"))
         os.utime(source, ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
         rejected(validate)
+        start()
+        post_build(success=False)
         run()
         validate()
         result(7)
@@ -315,7 +403,7 @@ include(cmake/BuildProvenance.cmake)
             run()
             validate()
         # Already dirty before compilation fails: a boolean dirty flag cannot
-        # distinguish these input states. Old executables remain on disk.
+        # distinguish these input states. Start must invalidate old outputs.
         source = root / "src/main.cpp"
         good_source = source.read_text()
         source.write_text(good_source + "\n#error intentional failed build\n")
@@ -339,11 +427,8 @@ include(cmake/BuildProvenance.cmake)
         original = binary.read_bytes()
         binary.write_bytes(original + b"replaced")
         rejected(validate)
-        run(success=False)  # No-op builds cannot re-attest replaced bytes.
-        assert not manifest_path.exists()
-        binary.write_bytes(original)
-        run()
-        validate()
+        invalidated("setup", expected=5)
+        manifest = validate()
         # Simulate replacement during packaging: source binary still valid,
         # copied binary no longer matches the manifest.
         stage = Path(temporary) / "stage"
