@@ -1,0 +1,8 @@
+2026-10-05T07:03:48.3010000Z Requested labels: ubuntu-22.04
+2026-10-05T07:03:48.3010000Z Job defined at: kececi24/itu-ders-bot/.github/workflows/release.yml@refs/heads/cross-platform
+2026-10-05T07:03:48.3010000Z Waiting for a runner to pick up this job...
+2026-10-05T07:03:48.2970000Z Evaluating native.if
+2026-10-05T07:03:48.2970000Z Evaluating: success()
+2026-10-05T07:03:48.2970000Z Result: true
+2026-10-05T07:03:49.0540000Z Job is about to start running on the hosted runner: GitHub Actions 1000000148
+2026-10-05T07:03:49.0540000Z Job is waiting for a hosted runner to come online.

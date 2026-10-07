@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cctype>
 #include <climits>
+#include <ctime>
 #include <stdexcept>
 #include <utility>
 
@@ -34,6 +35,21 @@ std::string trim(std::string value) {
     if (start == std::string::npos) return {};
     return value.substr(start, value.find_last_not_of(" \t\r\n") - start + 1);
 }
+std::string bounded_retry_after(const std::map<std::string, std::string>& headers) {
+    const auto found = headers.find("retry-after");
+    if (found == headers.end() || found->second.size() > 128) return {};
+    for (const unsigned char c : found->second) {
+        if (c < 0x20 || c > 0x7e) return {};
+    }
+    return found->second;
+}
+bool active_retry_after(const std::string& value) {
+    if (value.empty()) return false;
+    if (std::all_of(value.begin(), value.end(), [](unsigned char c) { return c >= '0' && c <= '9'; }))
+        return value.find_first_not_of('0') != std::string::npos;
+    const auto deadline = curl_getdate(value.c_str(), nullptr);
+    return deadline != static_cast<std::time_t>(-1) && deadline > std::time(nullptr);
+}
 struct Url {
     CURLU* handle = curl_url();
     Url() { if (!handle) throw std::runtime_error("URL allocation failed"); }
@@ -55,6 +71,8 @@ struct HttpSession::Impl {
     bool prepared = false;
     bool callback_failed = false;
     bool interrupted = false;
+    bool stop_on_redirect_cooldown = false;
+    long header_status = 0;
     HttpSession::BeforeTransfer before;
     HttpSession::AfterTransfer after;
     std::function<bool()> cancelled;
@@ -90,6 +108,21 @@ struct HttpSession::Impl {
             std::string line(data, size * count);
             if (line.compare(0, 5, "HTTP/") == 0) {
                 self.response.headers.clear(); self.response.body.clear();
+                self.header_status = 0;
+                const auto space = line.find(' ');
+                if (space != std::string::npos && line.size() > space + 3 &&
+                    line[space + 1] >= '0' && line[space + 1] <= '9' &&
+                    line[space + 2] >= '0' && line[space + 2] <= '9' &&
+                    line[space + 3] >= '0' && line[space + 3] <= '9')
+                    self.header_status = (line[space + 1] - '0') * 100 +
+                        (line[space + 2] - '0') * 10 + line[space + 3] - '0';
+            } else if (line == "\r\n" || line == "\n") {
+                // Returning zero here aborts before libcurl starts the next
+                // request. Keep this header block for the observer and typed
+                // failure; the governor persists its cooldown after perform.
+                if (self.stop_on_redirect_cooldown && self.pending.follow_redirects &&
+                    self.header_status >= 300 && self.header_status < 400 &&
+                    active_retry_after(bounded_retry_after(self.response.headers))) return 0;
             } else {
                 const auto colon = line.find(':');
                 if (colon != std::string::npos) {
@@ -179,18 +212,19 @@ void HttpSession::prepare(const HttpRequest& request) {
     s.prepared = true;
 }
 HttpTransportError::HttpTransportError(int code, long long elapsed, long status, std::size_t body_bytes,
-                                     bool pre_dispatch, bool interrupted, long redirects)
+                                     bool pre_dispatch, bool interrupted, long redirects, std::string retry)
     : std::runtime_error(std::string("HTTP transport failed: ") + curl_easy_strerror(static_cast<CURLcode>(code)) +
           " [curl_code=" + std::to_string(code) + ", elapsed_ms=" + std::to_string(elapsed) +
           ", http_status=" + std::to_string(status) + ", received_body_bytes=" + std::to_string(body_bytes) + "]"),
       curl_code(code), elapsed_ms(elapsed), http_status(status), received_body_bytes(body_bytes),
-      proven_pre_dispatch(pre_dispatch), cancelled(interrupted), redirect_count(redirects) {}
+      proven_pre_dispatch(pre_dispatch), cancelled(interrupted), redirect_count(redirects),
+      retry_after(std::move(retry)) {}
 
 HttpResponse HttpSession::perform() {
     auto& s = *impl_;
     if (!s.prepared) throw std::runtime_error("No HTTP request prepared");
     s.prepared = false;
-    s.response = {}; s.callback_failed = false; s.interrupted = false;
+    s.response = {}; s.callback_failed = false; s.interrupted = false; s.header_status = 0;
     if (s.is_cancelled()) throw HttpTransportError(CURLE_ABORTED_BY_CALLBACK, 0, 0, 0, false, true);
     // Admission runs after preparation but before any network operation.
     if (s.before) s.before(s.pending);
@@ -205,6 +239,7 @@ HttpResponse HttpSession::perform() {
     info.http_status = status_result == CURLE_OK ? s.response.status : 0;
     info.redirect_count = redirects_result == CURLE_OK ? s.response.redirect_count : 0;
     info.cancelled = s.interrupted;
+    info.retry_after = bounded_retry_after(s.response.headers);
     // A timeout, empty response or zero upload alone never proves replay safety.
     info.proven_pre_dispatch = (result == CURLE_COULDNT_RESOLVE_PROXY ||
         result == CURLE_COULDNT_RESOLVE_HOST || result == CURLE_COULDNT_CONNECT) &&
@@ -219,7 +254,7 @@ HttpResponse HttpSession::perform() {
         // Never include URLs, headers, response bodies, or curl's server-derived error buffer.
         throw HttpTransportError(static_cast<int>(result), static_cast<long long>(elapsed_us / 1000),
                                  info.http_status, s.response.body.size(), info.proven_pre_dispatch,
-                                 info.cancelled, info.redirect_count);
+                                 info.cancelled, info.redirect_count, info.retry_after);
     }
     char* effective = nullptr;
     if (status_result != CURLE_OK ||
@@ -228,8 +263,9 @@ HttpResponse HttpSession::perform() {
     return std::move(s.response);
 }
 HttpResponse HttpSession::request(const HttpRequest& request) { prepare(request); return perform(); }
-void HttpSession::set_observer(BeforeTransfer before, AfterTransfer after) {
+void HttpSession::set_observer(BeforeTransfer before, AfterTransfer after, bool stop_on_redirect_cooldown) {
     impl_->before = std::move(before); impl_->after = std::move(after);
+    impl_->stop_on_redirect_cooldown = stop_on_redirect_cooldown;
 }
 void HttpSession::set_cancelled(std::function<bool()> cancelled) { impl_->cancelled = std::move(cancelled); }
 std::string HttpSession::percent_encode(const std::string& value) {

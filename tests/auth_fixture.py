@@ -30,7 +30,10 @@ class Fixture(http.server.BaseHTTPRequestHandler):
             if scenario == 'root_disconnect':
                 self.close_connection = True
                 return
-            return self.reply(302, headers=[('Location', '/auth/Login.aspx?subSessionId=fixture-session'), ('Set-Cookie', 'handshake=ok; Path=/')])
+            headers = [('Location', '/auth/Login.aspx?subSessionId=fixture-session'), ('Set-Cookie', 'handshake=ok; Path=/')]
+            if scenario.startswith('redirect_limited'):
+                headers.append(('Retry-After', '3600'))
+            return self.reply(302, headers=headers)
         if self.path.startswith('/auth/Login.aspx?subSessionId='):
             action = {'query_action': '?subSessionId=fixture-session&step=login', 'absolute_action': '/auth/Login.aspx?subSessionId=fixture-session&step=login'}.get(scenario, './Login.aspx?subSessionId=fixture-session&step=login')
             if scenario == 'absolute_action': action = f'http://127.0.0.1:{self.server.server_port}' + action
@@ -80,7 +83,8 @@ class Fixture(http.server.BaseHTTPRequestHandler):
 
 def main():
     scenarios = ('plain', 'identity', 'query_action', 'absolute_action', 'missing_field', 'rejected_login', 'missing_identity', 'login_http', 'jwt_http', 'jwt_html', 'jwt_empty', 'jwt_invalid', 'root_http', 'root_disconnect',
-                 'refresh', 'refresh_unauthorized', 'refresh_forbidden', 'refresh_limited', 'refresh_login')
+                 'refresh', 'refresh_unauthorized', 'refresh_forbidden', 'refresh_limited', 'refresh_login',
+                 'redirect_limited', 'redirect_limited_reset')
     for scenario in scenarios:
         server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Fixture)
         server.daemon_threads = True
@@ -90,7 +94,7 @@ def main():
         thread.start()
         try:
             success = scenario in ('plain', 'identity', 'query_action', 'absolute_action')
-            mode = scenario if scenario.startswith('refresh') else 'success' if success else 'failure'
+            mode = scenario if scenario.startswith(('refresh', 'redirect_limited')) else 'success' if success else 'failure'
             run = subprocess.run([sys.argv[1], f'http://127.0.0.1:{server.server_port}/', mode], text=True, encoding="utf-8", capture_output=True, timeout=10)
             assert run.returncode == 0, (scenario, run.stdout, run.stderr)
             assert not server.errors, (scenario, server.errors)
@@ -98,13 +102,13 @@ def main():
             for secret in ('fixture-password', 'fixture-session', TOKEN, REFRESHED, 'private response'):
                 assert secret not in output, (scenario, 'sensitive diagnostic')
             paths = [path for method, path in server.paths]
-            if success or scenario.startswith('refresh'):
+            if success or scenario.startswith('refresh') or scenario == 'redirect_limited_reset':
                 expected = ['/', '/auth/Login.aspx?subSessionId=fixture-session', '/auth/Login.aspx?subSessionId=fixture-session&step=login']
                 if scenario == 'identity': expected += ['/Login.aspx?identityGuid=first&state=fixture-session']
                 expected += ['/ogrenci/', '/ogrenci/auth/jwt']
                 if scenario.startswith('refresh'): expected += ['/ogrenci/auth/jwt']
                 assert paths == expected, (scenario, paths)
-            elif scenario in ('root_http', 'root_disconnect'): assert len(paths) == 1
+            elif scenario in ('root_http', 'root_disconnect', 'redirect_limited'): assert len(paths) == 1
             elif scenario == 'missing_field': assert len(paths) == 2
             elif scenario in ('rejected_login', 'missing_identity', 'login_http'): assert len(paths) == 3
         finally:

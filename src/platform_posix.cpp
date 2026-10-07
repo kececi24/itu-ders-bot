@@ -359,6 +359,10 @@ Cancellation::Cancellation() : impl_(std::make_unique<Impl>()) {}
 Cancellation::~Cancellation() = default;
 bool Cancellation::cancelled() const { return cancellation_signal != 0; }
 
+#ifdef write
+#undef write
+#endif
+
 struct PollingStorage::Impl {
     std::filesystem::path path;
     Descriptor directory, lock;

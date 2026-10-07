@@ -10,7 +10,7 @@ Target environment:
 
 ```text
 Windows 10/11 x64: Visual Studio 2022 MSVC + Windows SDK, or MinGW-w64 GCC 11+ + mingw32-make
-macOS 14+ ARM64: Apple Clang + macOS SDK
+macOS ARM64: Apple Clang + macOS SDK (14/15 experimental; local verification on 26)
 Ubuntu 22.04/24.04 x64: GCC 11+, make, Perl
 Build system: CMake 3.25+, C++17
 Bootstrap/tests/packaging: Python 3.12+
@@ -114,7 +114,7 @@ Do not change OBS endpoints, request fields, request ordering, authentication se
 
 ## Scope Discipline
 
-The platform port remains under native acceptance. The user has explicitly activated `.agents/exec_plans/active/2026-10-04-registration-polling.md`; that scoped feature is now primary. Preserve port fixes and keep its pending Windows gates honest.
+The platform port was accepted and released as v1.0.1; its record is `.agents/exec_plans/closed/cross-platform-port.md`. The user has explicitly activated `.agents/exec_plans/active/2026-10-04-registration-polling.md`; that scoped feature is primary. Preserve port fixes and keep Windows acceptance of the newer polling tree separate from released-port evidence.
 
 For the authorized polling workstream only: add opt-in add-only polling with explicit client budgets and conservative stop/replay rules, use local clock by default, retain `--local`, expose legacy server sampling only via `--server-time`, and add read-only `--check-clock`. Single-attempt mode still submits once; ambiguous POST outcomes are never retried. All other security, platform and dependency rules below continue to apply.
 
@@ -169,7 +169,7 @@ Before considering the cross-platform port complete, verify on each available na
 11. Real registration requests are not sent during automated verification unless explicitly authorized.
 12. README describes each supported target's build, setup, usage, and archive process.
 13. Affected tests pass before the complete offline CTest suite and archive verification.
-14. Linux archives satisfy the Ubuntu 22.04 glibc baseline; identical archives smoke on Ubuntu 24.04 and macOS 15 as defined in CI. Windows Server CI is distinct from Windows 10/11 desktop acceptance.
+14. Linux archives satisfy the Ubuntu 22.04 glibc baseline; identical archives smoke on Ubuntu 24.04. Existing macOS 14/15 CI coverage is experimental and is not an active-plan acceptance gate. Windows Server CI is distinct from Windows 10/11 desktop acceptance.
 
 If live OBS verification is unavailable, clearly distinguish static/code-level verification from behavior confirmed against the real service.
 
@@ -177,4 +177,4 @@ Automated verification uses synthetic credentials and loopback endpoints only. P
 
 ## Planning and Git
 
-Follow `.agents/PLANS.md`. Continue the primary registration-polling ExecPlan, updating it after each implemented feature rather than only at final completion. Keep `.agents/current_plan.md` synchronized and the cross-platform-port Windows acceptance separate. Mark source completion separately from executed build/test results; never record PASS for an unrun command. Keep macOS 14/15 runtime and desktop/live gates pending until evidence exists. Do not commit, push, tag, publish, or invoke remote workflows without explicit authorization.
+Follow `.agents/PLANS.md`. Continue the primary registration-polling ExecPlan, updating it after each implemented feature rather than only at final completion. Keep `.agents/current_plan.md` synchronized; the released port is closed, while new polling Windows acceptance remains separate. Mark source completion separately from executed build/test results; never record PASS for an unrun command. macOS 14/15 is experimental and excluded from active acceptance gates. Live OBS rate-limit/JWT testing is deferred to a separately authorized workstream after offline completion. Do not commit, push, tag, publish, or invoke remote workflows without explicit authorization.

@@ -1,0 +1,363 @@
+﻿2026-10-05T07:03:56.7142650Z Current runner version: '2.337.0'
+2026-10-05T07:03:56.7157740Z ##[group]Runner Image Provisioner
+2026-10-05T07:03:56.7158290Z Hosted Compute Agent
+2026-10-05T07:03:56.7158660Z Version: 20260828.587
+2026-10-05T07:03:56.7159090Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-10-05T07:03:56.7159670Z Build Date: 2026-08-28T16:44:25Z
+2026-10-05T07:03:56.7160110Z Worker ID: {ea32184c-8e9d-4361-9b26-345100fa5fab}
+2026-10-05T07:03:56.7160580Z Azure Region: westus
+2026-10-05T07:03:56.7160950Z ##[endgroup]
+2026-10-05T07:03:56.7161790Z ##[group]Operating System
+2026-10-05T07:03:56.7162180Z macOS
+2026-10-05T07:03:56.7162500Z 14.8.9
+2026-10-05T07:03:56.7162850Z 23J631
+2026-10-05T07:03:56.7163190Z ##[endgroup]
+2026-10-05T07:03:56.7163600Z ##[group]Runner Image
+2026-10-05T07:03:56.7164000Z Image: macos-14-arm64
+2026-10-05T07:03:56.7164370Z Version: 20260831.0302.1
+2026-10-05T07:03:56.7165200Z Included Software: https://github.com/actions/runner-images/blob/macos-14-arm64/20260831.0302/images/macos/macos-14-arm64-Readme.md
+2026-10-05T07:03:56.7166230Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-14-arm64%2F20260831.0302
+2026-10-05T07:03:56.7166890Z ##[endgroup]
+2026-10-05T07:03:56.7167630Z ##[group]GITHUB_TOKEN Permissions
+2026-10-05T07:03:56.7168730Z Contents: read
+2026-10-05T07:03:56.7169100Z Metadata: read
+2026-10-05T07:03:56.7169460Z ##[endgroup]
+2026-10-05T07:03:56.7170930Z Secret source: Actions
+2026-10-05T07:03:56.7171520Z Cache mode: write
+2026-10-05T07:03:56.7171960Z Prepare workflow directory
+2026-10-05T07:03:56.7543250Z Prepare all required actions
+2026-10-05T07:03:56.7587010Z Getting action download info
+2026-10-05T07:03:57.0873380Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-05T07:03:57.3751090Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-10-05T07:03:57.4678800Z Download action repository 'ilammy/msvc-dev-cmd@v1' (SHA:0b201ec74fa43914dc39ae48a89fd1d8cb592756)
+2026-10-05T07:03:58.1112030Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-10-05T07:03:58.4293520Z Complete job name: native (macos-14, macos-arm64)
+2026-10-05T07:03:58.4940570Z ##[group]Run actions/checkout@v4
+2026-10-05T07:03:58.4941130Z with:
+2026-10-05T07:03:58.4941480Z   repository: kececi24/itu-ders-bot
+2026-10-05T07:03:58.4944260Z   token: ***
+2026-10-05T07:03:58.4944580Z   ssh-strict: true
+2026-10-05T07:03:58.4944900Z   ssh-user: git
+2026-10-05T07:03:58.4945240Z   persist-credentials: true
+2026-10-05T07:03:58.4945600Z   clean: true
+2026-10-05T07:03:58.4945940Z   sparse-checkout-cone-mode: true
+2026-10-05T07:03:58.4946310Z   fetch-depth: 1
+2026-10-05T07:03:58.4946640Z   fetch-tags: false
+2026-10-05T07:03:58.4946980Z   show-progress: true
+2026-10-05T07:03:58.4947310Z   lfs: false
+2026-10-05T07:03:58.4947620Z   submodules: false
+2026-10-05T07:03:58.4947950Z   set-safe-directory: true
+2026-10-05T07:03:58.4948320Z   allow-unsafe-pr-checkout: false
+2026-10-05T07:03:58.4948880Z env:
+2026-10-05T07:03:58.4949190Z   ITU_TARGET: macos-arm64
+2026-10-05T07:03:58.4949540Z   RELEASE_TAG: 
+2026-10-05T07:03:58.4949860Z ##[endgroup]
+2026-10-05T07:03:58.7515980Z Syncing repository: kececi24/itu-ders-bot
+2026-10-05T07:03:58.7517490Z ##[group]Getting Git version info
+2026-10-05T07:03:58.7518200Z Working directory is '/Users/runner/work/itu-ders-bot/itu-ders-bot'
+2026-10-05T07:03:58.7519150Z [command]/opt/homebrew/bin/git version
+2026-10-05T07:03:58.7845080Z git version 2.55.0
+2026-10-05T07:03:58.7861860Z ##[endgroup]
+2026-10-05T07:03:58.7868780Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/b9805aa4-27fe-4260-8d7b-d8caa3ef1501/.gitconfig'
+2026-10-05T07:03:58.7874930Z Temporarily overriding HOME='/Users/runner/work/_temp/b9805aa4-27fe-4260-8d7b-d8caa3ef1501' before making global git config changes
+2026-10-05T07:03:58.7876080Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-05T07:03:58.7878750Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/itu-ders-bot/itu-ders-bot
+2026-10-05T07:03:58.8005690Z Deleting the contents of '/Users/runner/work/itu-ders-bot/itu-ders-bot'
+2026-10-05T07:03:58.8006930Z ##[group]Initializing the repository
+2026-10-05T07:03:58.8007890Z [command]/opt/homebrew/bin/git init /Users/runner/work/itu-ders-bot/itu-ders-bot
+2026-10-05T07:03:58.8146330Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-05T07:03:58.8147220Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-05T07:03:58.8148950Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-05T07:03:58.8149570Z hint: call:
+2026-10-05T07:03:58.8149940Z hint:
+2026-10-05T07:03:58.8150380Z hint: 	git config --global init.defaultBranch <name>
+2026-10-05T07:03:58.8150840Z hint:
+2026-10-05T07:03:58.8151300Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-05T07:03:58.8152030Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-05T07:03:58.8152610Z hint:
+2026-10-05T07:03:58.8152970Z hint: 	git branch -m <name>
+2026-10-05T07:03:58.8153340Z hint:
+2026-10-05T07:03:58.8153850Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-05T07:03:58.8159940Z Initialized empty Git repository in /Users/runner/work/itu-ders-bot/itu-ders-bot/.git/
+2026-10-05T07:03:58.8163110Z [command]/opt/homebrew/bin/git remote add origin https://github.com/kececi24/itu-ders-bot
+2026-10-05T07:03:58.8219530Z ##[endgroup]
+2026-10-05T07:03:58.8220320Z ##[group]Disabling automatic garbage collection
+2026-10-05T07:03:58.8222110Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+2026-10-05T07:03:58.8264370Z ##[endgroup]
+2026-10-05T07:03:58.8265300Z ##[group]Setting up auth
+2026-10-05T07:03:58.8268690Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-05T07:03:58.8315340Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-05T07:03:58.8971880Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-05T07:03:58.9014740Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-05T07:03:58.9535590Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-05T07:03:58.9573730Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-05T07:03:59.0106940Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-05T07:03:59.0166650Z ##[endgroup]
+2026-10-05T07:03:59.0167720Z ##[group]Fetching the repository
+2026-10-05T07:03:59.0173980Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +2df7c3bdc246803240c57b94d60ef2de9833fff9:refs/remotes/origin/cross-platform
+2026-10-05T07:03:59.5957170Z From https://github.com/kececi24/itu-ders-bot
+2026-10-05T07:03:59.6065410Z  * [new ref]         2df7c3bdc246803240c57b94d60ef2de9833fff9 -> origin/cross-platform
+2026-10-05T07:03:59.6405430Z ##[endgroup]
+2026-10-05T07:03:59.6469250Z ##[group]Determining the checkout info
+2026-10-05T07:03:59.6470690Z ##[endgroup]
+2026-10-05T07:03:59.6471680Z [command]/opt/homebrew/bin/git sparse-checkout disable
+2026-10-05T07:03:59.6473720Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-05T07:03:59.6508490Z ##[group]Checking out the ref
+2026-10-05T07:03:59.6512090Z [command]/opt/homebrew/bin/git checkout --progress --force -B cross-platform refs/remotes/origin/cross-platform
+2026-10-05T07:03:59.6627050Z Switched to a new branch 'cross-platform'
+2026-10-05T07:03:59.6630610Z branch 'cross-platform' set up to track 'origin/cross-platform'.
+2026-10-05T07:03:59.6636280Z ##[endgroup]
+2026-10-05T07:03:59.6731970Z [command]/opt/homebrew/bin/git log -1 --format=%H
+2026-10-05T07:03:59.6806130Z 2df7c3bdc246803240c57b94d60ef2de9833fff9
+2026-10-05T07:03:59.7176100Z ##[group]Run actions/setup-python@v5
+2026-10-05T07:03:59.7177710Z with:
+2026-10-05T07:03:59.7178700Z   python-version: 3.12
+2026-10-05T07:03:59.7179640Z   check-latest: false
+2026-10-05T07:03:59.7190380Z   token: ***
+2026-10-05T07:03:59.7191140Z   update-environment: true
+2026-10-05T07:03:59.7191900Z   allow-prereleases: false
+2026-10-05T07:03:59.7192910Z   freethreaded: false
+2026-10-05T07:03:59.7193610Z env:
+2026-10-05T07:03:59.7194600Z   ITU_TARGET: macos-arm64
+2026-10-05T07:03:59.7195400Z   RELEASE_TAG: 
+2026-10-05T07:03:59.7196270Z ##[endgroup]
+2026-10-05T07:03:59.9074800Z ##[group]Installed versions
+2026-10-05T07:03:59.9156190Z (node:9216) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-05T07:03:59.9161000Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-05T07:03:59.9163950Z Successfully set up CPython (3.12.10)
+2026-10-05T07:03:59.9167080Z ##[endgroup]
+2026-10-05T07:03:59.9324060Z ##[group]Run cmake --version
+2026-10-05T07:03:59.9326700Z [36;1mcmake --version[0m
+2026-10-05T07:03:59.9328500Z [36;1mpython --version[0m
+2026-10-05T07:03:59.9330440Z [36;1mif [[ "$ITU_TARGET" == macos-arm64 ]]; then[0m
+2026-10-05T07:03:59.9332560Z [36;1m  test "$(uname -m)" = arm64[0m
+2026-10-05T07:03:59.9334690Z [36;1m  clang++ --version | grep 'Apple clang'[0m
+2026-10-05T07:03:59.9335840Z [36;1mfi[0m
+2026-10-05T07:03:59.9337050Z [36;1mpython scripts/bootstrap.py --target "$ITU_TARGET" --preflight-only[0m
+2026-10-05T07:03:59.9466900Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-05T07:03:59.9467990Z env:
+2026-10-05T07:03:59.9468620Z   ITU_TARGET: macos-arm64
+2026-10-05T07:03:59.9469300Z   RELEASE_TAG: 
+2026-10-05T07:03:59.9470280Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:03:59.9471800Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.12.10/arm64/lib/pkgconfig
+2026-10-05T07:03:59.9473350Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:03:59.9474790Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:03:59.9476210Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:03:59.9477330Z ##[endgroup]
+2026-10-05T07:04:00.0609710Z cmake version 4.4.3
+2026-10-05T07:04:00.0610850Z 
+2026-10-05T07:04:00.0611840Z CMake suite maintained and supported by Kitware (kitware.com/cmake).
+2026-10-05T07:04:00.1919260Z Python 3.12.10
+2026-10-05T07:04:01.7078760Z Apple clang version 15.0.0 (clang-1500.3.9.4)
+2026-10-05T07:04:02.0348600Z + /usr/bin/xcrun --sdk macosx --show-sdk-path
+2026-10-05T07:04:03.0369720Z /Applications/Xcode_15.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk
+2026-10-05T07:04:03.0371330Z macOS uses SDK/system libcurl; no dependencies downloaded or installed.
+2026-10-05T07:04:03.0463980Z ##[group]Run cmake --preset "$ITU_TARGET"
+2026-10-05T07:04:03.0465220Z [36;1mcmake --preset "$ITU_TARGET"[0m
+2026-10-05T07:04:03.0466160Z [36;1mcmake --build --preset "$ITU_TARGET"[0m
+2026-10-05T07:04:03.0595950Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-05T07:04:03.0596380Z env:
+2026-10-05T07:04:03.0597120Z   ITU_TARGET: macos-arm64
+2026-10-05T07:04:03.0597430Z   RELEASE_TAG: 
+2026-10-05T07:04:03.0597800Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:04:03.0598450Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.12.10/arm64/lib/pkgconfig
+2026-10-05T07:04:03.0598960Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:04:03.0601550Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:04:03.0602670Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:04:03.0603070Z ##[endgroup]
+2026-10-05T07:04:03.6763140Z -- The CXX compiler identification is AppleClang 15.0.0.15000309
+2026-10-05T07:04:04.1814740Z -- Detecting CXX compiler ABI info
+2026-10-05T07:04:04.9852530Z -- Detecting CXX compiler ABI info - done
+2026-10-05T07:04:04.9993820Z -- Check for working CXX compiler: /usr/bin/c++ - skipped
+2026-10-05T07:04:05.0002280Z -- Detecting CXX compile features
+2026-10-05T07:04:05.0015370Z -- Detecting CXX compile features - done
+2026-10-05T07:04:05.4330660Z -- Found Python3: /Users/runner/hostedtoolcache/Python/3.12.10/arm64/bin/python3.12 (found suitable version "3.12.10", minimum required is "3.12") found components: Interpreter
+2026-10-05T07:04:05.4366660Z -- Configuring done (2.3s)
+2026-10-05T07:04:05.4956540Z -- Generating done (0.1s)
+2026-10-05T07:04:05.4960880Z -- Build files have been written to: /Users/runner/work/itu-ders-bot/itu-ders-bot/build/macos-arm64
+2026-10-05T07:04:05.5364860Z [  3%] Building CXX object CMakeFiles/setup_acl_error_tests.dir/tests/setup_acl_error_tests.cpp.o
+2026-10-05T07:04:06.6612970Z [  3%] Built target provenance_start
+2026-10-05T07:04:06.6880770Z [  7%] Building CXX object CMakeFiles/itu_platform.dir/src/platform_posix.cpp.o
+2026-10-05T07:04:07.0720240Z [ 10%] Linking CXX executable bin/setup_acl_error_tests
+2026-10-05T07:04:07.1558240Z [ 10%] Built target setup_acl_error_tests
+2026-10-05T07:04:07.4363940Z [ 14%] Linking CXX static library libitu_platform.a
+2026-10-05T07:04:08.3901120Z [ 14%] Built target itu_platform
+2026-10-05T07:04:08.4207120Z [ 17%] Building CXX object CMakeFiles/setup.dir/setup/main.cpp.o
+2026-10-05T07:04:08.4310430Z [ 21%] Building CXX object CMakeFiles/itu_core.dir/src/http.cpp.o
+2026-10-05T07:04:08.4414280Z [ 25%] Building CXX object CMakeFiles/itu_core_test.dir/src/http.cpp.o
+2026-10-05T07:04:09.4765940Z [ 28%] Building CXX object CMakeFiles/itu_core.dir/src/token.cpp.o
+2026-10-05T07:04:09.4898020Z [ 32%] Building CXX object CMakeFiles/itu_core_test.dir/src/token.cpp.o
+2026-10-05T07:04:10.4782900Z [ 35%] Linking CXX executable bin/setup
+2026-10-05T07:04:10.5752550Z [ 35%] Built target setup
+2026-10-05T07:04:10.6090730Z [ 39%] Building CXX object CMakeFiles/setup_file_tests.dir/tests/setup_file_tests.cpp.o
+2026-10-05T07:04:11.2249350Z [ 46%] Building CXX object CMakeFiles/itu_core.dir/src/clock.cpp.o
+2026-10-05T07:04:11.2360500Z [ 46%] Building CXX object CMakeFiles/itu_core_test.dir/src/clock.cpp.o
+2026-10-05T07:04:12.1218600Z [ 53%] Building CXX object CMakeFiles/itu_core_test.dir/src/http_socket_posix.cpp.o
+2026-10-05T07:04:12.1334360Z [ 53%] Linking CXX static library libitu_core.a
+2026-10-05T07:04:12.1894380Z [ 53%] Built target itu_core
+2026-10-05T07:04:12.1982330Z [ 57%] Linking CXX static library libitu_core_test.a
+2026-10-05T07:04:12.2196680Z [ 60%] Building CXX object CMakeFiles/main.dir/src/main.cpp.o
+2026-10-05T07:04:12.2456970Z [ 60%] Built target itu_core_test
+2026-10-05T07:04:12.2785770Z [ 64%] Building CXX object CMakeFiles/core_tests.dir/tests/core_tests.cpp.o
+2026-10-05T07:04:12.4547620Z [ 67%] Linking CXX executable bin/setup_file_tests
+2026-10-05T07:04:12.5083100Z [ 67%] Built target setup_file_tests
+2026-10-05T07:04:12.5391400Z [ 71%] Building CXX object CMakeFiles/application_driver.dir/tests/application_driver.cpp.o
+2026-10-05T07:04:15.8412940Z [ 75%] Linking CXX executable bin/main
+2026-10-05T07:04:15.9379460Z [ 75%] Built target main
+2026-10-05T07:04:15.9739110Z [ 78%] Generating build manifest with current build provenance
+2026-10-05T07:04:16.0698420Z [ 78%] Built target build_manifest
+2026-10-05T07:04:16.1000570Z [ 82%] Building CXX object CMakeFiles/transport_test.dir/tests/transport_test.cpp.o
+2026-10-05T07:04:16.4148310Z /Users/runner/work/itu-ders-bot/itu-ders-bot/tests/transport_test.cpp:12:46: warning: missing field 'headers' initializer [-Wmissing-field-initializers]
+2026-10-05T07:04:16.4249910Z         try { production.prepare({"GET", base}); } catch (...) { refused = true; }
+2026-10-05T07:04:16.4352080Z                                              ^
+2026-10-05T07:04:16.4466120Z /Users/runner/work/itu-ders-bot/itu-ders-bot/tests/transport_test.cpp:17:51: warning: missing field 'headers' initializer [-Wmissing-field-initializers]
+2026-10-05T07:04:16.4567950Z         session.prepare({"GET", base + "/redirect"});
+2026-10-05T07:04:16.4583690Z [ 85%] Linking CXX executable bin/application_driver
+2026-10-05T07:04:16.4669220Z                                                   ^
+2026-10-05T07:04:16.4770720Z /Users/runner/work/itu-ders-bot/itu-ders-bot/tests/transport_test.cpp:23:57: warning: missing field 'headers' initializer [-Wmissing-field-initializers]
+2026-10-05T07:04:16.4888700Z         result = session.request({"HEAD", base + "/echo"});
+2026-10-05T07:04:16.5015220Z                                                         ^
+2026-10-05T07:04:16.5121780Z /Users/runner/work/itu-ders-bot/itu-ders-bot/tests/transport_test.cpp:27:56: warning: missing field 'headers' initializer [-Wmissing-field-initializers]
+2026-10-05T07:04:16.5228960Z         result = session.request({"GET", base + "/echo"});
+2026-10-05T07:04:16.5229470Z [ 85%] Built target application_driver
+2026-10-05T07:04:16.5333060Z                                                        ^
+2026-10-05T07:04:16.5446190Z /Users/runner/work/itu-ders-bot/itu-ders-bot/tests/transport_test.cpp:31:58: warning: missing field 'headers' initializer [-Wmissing-field-initializers]
+2026-10-05T07:04:16.5547450Z         result = session.request({"GET", base + "/status"});
+2026-10-05T07:04:16.5548070Z [ 89%] Building CXX object CMakeFiles/auth_driver.dir/tests/auth_driver.cpp.o
+2026-10-05T07:04:16.5647820Z                                                          ^
+2026-10-05T07:04:16.5749730Z /Users/runner/work/itu-ders-bot/itu-ders-bot/tests/transport_test.cpp:33:59: warning: missing field 'headers' initializer [-Wmissing-field-initializers]
+2026-10-05T07:04:16.5851300Z         result = session.request({"GET", base + "/chunked"});
+2026-10-05T07:04:16.5952510Z                                                           ^
+2026-10-05T07:04:16.6054120Z /Users/runner/work/itu-ders-bot/itu-ders-bot/tests/transport_test.cpp:36:57: warning: missing field 'headers' initializer [-Wmissing-field-initializers]
+2026-10-05T07:04:16.6158260Z         result = isolated.request({"GET", base + "/echo"});
+2026-10-05T07:04:16.6259610Z                                                         ^
+2026-10-05T07:04:16.6370870Z /Users/runner/work/itu-ders-bot/itu-ders-bot/tests/transport_test.cpp:38:98: warning: missing field 'body' initializer [-Wmissing-field-initializers]
+2026-10-05T07:04:16.6473140Z         result = session.request({"GET", base + "/crosshost", {"Authorization: ***"}});
+2026-10-05T07:04:16.6572840Z                                                                                                  ^
+2026-10-05T07:04:16.6674750Z /Users/runner/work/itu-ders-bot/itu-ders-bot/tests/transport_test.cpp:42:58: warning: missing field 'headers' initializer [-Wmissing-field-initializers]
+2026-10-05T07:04:16.6776650Z         try { isolated.request({"GET", tls_base + "/echo"}); }
+2026-10-05T07:04:16.6878310Z                                                          ^
+2026-10-05T07:04:16.6982570Z /Users/runner/work/itu-ders-bot/itu-ders-bot/tests/transport_test.cpp:46:60: warning: missing field 'headers' initializer [-Wmissing-field-initializers]
+2026-10-05T07:04:16.6987090Z [ 92%] Linking CXX executable bin/transport_test
+2026-10-05T07:04:16.7087980Z         result = trusted.request({"GET", tls_base + "/echo"});
+2026-10-05T07:04:16.7189500Z                                                            ^
+2026-10-05T07:04:16.7322460Z /Users/runner/work/itu-ders-bot/itu-ders-bot/tests/transport_test.cpp:51:57: warning: missing field 'headers' initializer [-Wmissing-field-initializers]
+2026-10-05T07:04:16.7424410Z         try { trusted.request({"GET", mismatch + "/echo"}); }
+2026-10-05T07:04:16.7525710Z                                                         ^
+2026-10-05T07:04:16.7627650Z 11 warnings generated.
+2026-10-05T07:04:16.7627940Z [ 92%] Built target transport_test
+2026-10-05T07:04:17.0343560Z [ 96%] Linking CXX executable bin/auth_driver
+2026-10-05T07:04:17.0811980Z [ 96%] Built target auth_driver
+2026-10-05T07:04:17.1072530Z [100%] Linking CXX executable bin/core_tests
+2026-10-05T07:04:17.1537010Z [100%] Built target core_tests
+2026-10-05T07:04:17.1634240Z ##[group]Run ctest --preset "$ITU_TARGET" --parallel 3
+2026-10-05T07:04:17.1634640Z [36;1mctest --preset "$ITU_TARGET" --parallel 3[0m
+2026-10-05T07:04:17.1635020Z [36;1mpython tests/native_artifacts.py "build/$ITU_TARGET/bin" --target "$ITU_TARGET"[0m
+2026-10-05T07:04:17.1715140Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-05T07:04:17.1715480Z env:
+2026-10-05T07:04:17.1715640Z   ITU_TARGET: macos-arm64
+2026-10-05T07:04:17.1715800Z   RELEASE_TAG: 
+2026-10-05T07:04:17.1716180Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:04:17.1716640Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.12.10/arm64/lib/pkgconfig
+2026-10-05T07:04:17.1717110Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:04:17.1717470Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:04:17.1717860Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:04:17.1718180Z ##[endgroup]
+2026-10-05T07:04:17.2450690Z Test project /Users/runner/work/itu-ders-bot/itu-ders-bot/build/macos-arm64
+2026-10-05T07:04:17.2468850Z       Start  1: transport
+2026-10-05T07:04:17.2480550Z       Start  2: authentication
+2026-10-05T07:04:17.2485800Z       Start  3: core_and_clock
+2026-10-05T07:04:17.2562210Z  1/10 Test  #3: core_and_clock ...................   Passed    0.01 sec
+2026-10-05T07:04:17.2563460Z       Start  4: application_flags
+2026-10-05T07:04:18.9489270Z  2/10 Test  #1: transport ........................   Passed    1.70 sec
+2026-10-05T07:04:18.9492230Z       Start  5: setup_terminal
+2026-10-05T07:04:20.4397030Z  3/10 Test  #5: setup_terminal ...................   Passed    1.49 sec
+2026-10-05T07:04:20.4397820Z       Start  6: setup_files
+2026-10-05T07:04:20.4510770Z  4/10 Test  #6: setup_files ......................   Passed    0.01 sec
+2026-10-05T07:04:20.4513060Z       Start  7: setup_acl_errors
+2026-10-05T07:04:20.4703670Z  5/10 Test  #7: setup_acl_errors .................   Passed    0.02 sec
+2026-10-05T07:04:20.4704580Z       Start  8: artifact_integrity
+2026-10-05T07:04:20.7886650Z  6/10 Test  #8: artifact_integrity ...............   Passed    0.32 sec
+2026-10-05T07:04:20.7937280Z       Start  9: manifest_paths
+2026-10-05T07:04:24.5594470Z  7/10 Test  #2: authentication ...................   Passed    7.31 sec
+2026-10-05T07:04:24.5596510Z       Start 10: build_provenance
+2026-10-05T07:04:32.3107890Z  8/10 Test  #9: manifest_paths ...................   Passed   11.52 sec
+2026-10-05T07:04:50.1632210Z  9/10 Test  #4: application_flags ................   Passed   32.91 sec
+2026-10-05T07:05:15.3304060Z 10/10 Test #10: build_provenance .................   Passed   50.77 sec
+2026-10-05T07:05:15.3312160Z 
+2026-10-05T07:05:15.3312390Z 100% tests passed out of 10
+2026-10-05T07:05:15.3326550Z 
+2026-10-05T07:05:15.3326880Z Total Test time (real) =  58.09 sec
+2026-10-05T07:05:16.5931980Z Native architecture, runtime dependencies, archive contents/checksums and safe startup passed.
+2026-10-05T07:05:16.6074360Z ##[group]Run args=("build/$ITU_TARGET/bin" --target "$ITU_TARGET")
+2026-10-05T07:05:16.6075020Z [36;1margs=("build/$ITU_TARGET/bin" --target "$ITU_TARGET")[0m
+2026-10-05T07:05:16.6075480Z [36;1mif [[ -n "$RELEASE_TAG" ]]; then args+=(--tag "$RELEASE_TAG"); fi[0m
+2026-10-05T07:05:16.6075850Z [36;1mpython scripts/package.py "${args[@]}"[0m
+2026-10-05T07:05:16.6076220Z [36;1mextension=tar.gz[0m
+2026-10-05T07:05:16.6076530Z [36;1mif [[ "$ITU_TARGET" == windows-x64 ]]; then extension=zip; fi[0m
+2026-10-05T07:05:16.6076960Z [36;1marchives=(dist/*-"$ITU_TARGET"."$extension")[0m
+2026-10-05T07:05:16.6077880Z [36;1mtest "${#archives[@]}" = 1[0m
+2026-10-05T07:05:16.6078330Z [36;1mpython tests/native_artifacts.py "${archives[0]}" --target "$ITU_TARGET"[0m
+2026-10-05T07:05:16.6169450Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-05T07:05:16.6169860Z env:
+2026-10-05T07:05:16.6170080Z   ITU_TARGET: macos-arm64
+2026-10-05T07:05:16.6170400Z   RELEASE_TAG: 
+2026-10-05T07:05:16.6170900Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:05:16.6171380Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.12.10/arm64/lib/pkgconfig
+2026-10-05T07:05:16.6171910Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:05:16.6172340Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:05:16.6172830Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:05:16.6173160Z ##[endgroup]
+2026-10-05T07:05:16.7697680Z /Users/runner/work/itu-ders-bot/itu-ders-bot/dist/itu-ders-bot-1.0.0-macos-arm64.tar.gz
+2026-10-05T07:05:17.1002770Z Native architecture, runtime dependencies, archive contents/checksums and safe startup passed.
+2026-10-05T07:05:17.1220610Z ##[group]Run actions/upload-artifact@v4
+2026-10-05T07:05:17.1221150Z with:
+2026-10-05T07:05:17.1221390Z   name: macos-arm64-release
+2026-10-05T07:05:17.1221640Z   path: dist/*
+2026-10-05T07:05:17.1221790Z   if-no-files-found: error
+2026-10-05T07:05:17.1222140Z   compression-level: 6
+2026-10-05T07:05:17.1222390Z   overwrite: false
+2026-10-05T07:05:17.1222690Z   include-hidden-files: false
+2026-10-05T07:05:17.1223330Z env:
+2026-10-05T07:05:17.1223550Z   ITU_TARGET: macos-arm64
+2026-10-05T07:05:17.1223810Z   RELEASE_TAG: 
+2026-10-05T07:05:17.1224210Z   pythonLocation: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:05:17.1224810Z   PKG_CONFIG_PATH: /Users/runner/hostedtoolcache/Python/3.12.10/arm64/lib/pkgconfig
+2026-10-05T07:05:17.1225320Z   Python_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:05:17.1225850Z   Python2_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:05:17.1226390Z   Python3_ROOT_DIR: /Users/runner/hostedtoolcache/Python/3.12.10/arm64
+2026-10-05T07:05:17.1226670Z ##[endgroup]
+2026-10-05T07:05:17.3981590Z (node:17213) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-05T07:05:17.3982550Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-05T07:05:17.4017270Z With the provided path, there will be 2 files uploaded
+2026-10-05T07:05:17.4020190Z Artifact name is valid!
+2026-10-05T07:05:17.4020580Z Root directory input is valid!
+2026-10-05T07:05:17.7133490Z Beginning upload of artifact content to blob storage
+2026-10-05T07:05:17.7390780Z (node:17213) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-05T07:05:18.0106920Z Uploaded bytes 198571
+2026-10-05T07:05:18.0510090Z Finished uploading artifact content to blob storage!
+2026-10-05T07:05:18.0612870Z SHA256 digest of uploaded artifact zip is 33c6afbfb28a0304d19624f5845d9f4738b3b5ef5b877619fc97e4dd49098f65
+2026-10-05T07:05:18.0676310Z Finalizing artifact upload
+2026-10-05T07:05:18.3631780Z Artifact macos-arm64-release.zip successfully finalized. Artifact ID 11330495941
+2026-10-05T07:05:18.3687370Z Artifact macos-arm64-release has been successfully uploaded! Final size is 198571 bytes. Artifact ID is 11330495941
+2026-10-05T07:05:18.3707420Z Artifact download URL: https://github.com/kececi24/itu-ders-bot/actions/runs/37275634354/artifacts/11330495941
+2026-10-05T07:05:18.3812210Z Post job cleanup.
+2026-10-05T07:05:18.4905700Z (node:17218) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-05T07:05:18.4906520Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-05T07:05:18.5002890Z Post job cleanup.
+2026-10-05T07:05:18.6050340Z [command]/opt/homebrew/bin/git version
+2026-10-05T07:05:18.6134240Z git version 2.55.0
+2026-10-05T07:05:18.6156560Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/296aae7a-35b0-4ce0-b1bd-38ccdc806d28/.gitconfig'
+2026-10-05T07:05:18.6168480Z Temporarily overriding HOME='/Users/runner/work/_temp/296aae7a-35b0-4ce0-b1bd-38ccdc806d28' before making global git config changes
+2026-10-05T07:05:18.6169310Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-05T07:05:18.6174000Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/itu-ders-bot/itu-ders-bot
+2026-10-05T07:05:18.6260670Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-05T07:05:18.6329660Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-05T07:05:18.7177320Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-05T07:05:18.7229500Z http.https://github.com/.extraheader
+2026-10-05T07:05:18.7246770Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-05T07:05:18.7380720Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-05T07:05:18.8279100Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-05T07:05:18.8334550Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-05T07:05:18.9949610Z Cleaning up orphan processes
+2026-10-05T07:05:19.7317510Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

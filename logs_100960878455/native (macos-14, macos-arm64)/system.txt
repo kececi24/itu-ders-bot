@@ -1,0 +1,8 @@
+2026-10-05T07:03:48.2950000Z Evaluating native.if
+2026-10-05T07:03:48.2950000Z Evaluating: success()
+2026-10-05T07:03:48.2950000Z Result: true
+2026-10-05T07:03:48.2970000Z Requested labels: macos-14
+2026-10-05T07:03:48.2970000Z Job defined at: kececi24/itu-ders-bot/.github/workflows/release.yml@refs/heads/cross-platform
+2026-10-05T07:03:48.2970000Z Waiting for a runner to pick up this job...
+2026-10-05T07:03:49.0480000Z Job is about to start running on the hosted runner: GitHub Actions 1000000147
+2026-10-05T07:03:49.0480000Z Job is waiting for a hosted runner to come online.

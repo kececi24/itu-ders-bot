@@ -1,0 +1,869 @@
+﻿2026-10-05T07:03:51.7064735Z Current runner version: '2.337.0'
+2026-10-05T07:03:51.7089632Z ##[group]Runner Image Provisioner
+2026-10-05T07:03:51.7090453Z Hosted Compute Agent
+2026-10-05T07:03:51.7090958Z Version: 20260901.588
+2026-10-05T07:03:51.7091531Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+2026-10-05T07:03:51.7092224Z Build Date: 2026-09-01T19:56:44Z
+2026-10-05T07:03:51.7092844Z Worker ID: {73b7401d-e0e8-420b-aac0-9d8b75d41454}
+2026-10-05T07:03:51.7093473Z Azure Region: westcentralus
+2026-10-05T07:03:51.7094004Z ##[endgroup]
+2026-10-05T07:03:51.7095237Z ##[group]Operating System
+2026-10-05T07:03:51.7095785Z Microsoft Windows Server 2022
+2026-10-05T07:03:51.7096329Z 10.0.20348
+2026-10-05T07:03:51.7096745Z Datacenter
+2026-10-05T07:03:51.7097200Z ##[endgroup]
+2026-10-05T07:03:51.7097657Z ##[group]Runner Image
+2026-10-05T07:03:51.7098196Z Image: windows-2022
+2026-10-05T07:03:51.7098677Z Version: 20260927.320.1
+2026-10-05T07:03:51.7100031Z Included Software: https://github.com/actions/runner-images/blob/win22/20260927.320/images/windows/Windows2022-Readme.md
+2026-10-05T07:03:51.7101416Z Image Release: https://github.com/actions/runner-images/releases/tag/win22%2F20260927.320
+2026-10-05T07:03:51.7102249Z ##[endgroup]
+2026-10-05T07:03:51.7103201Z ##[group]GITHUB_TOKEN Permissions
+2026-10-05T07:03:51.7105157Z Contents: read
+2026-10-05T07:03:51.7105663Z Metadata: read
+2026-10-05T07:03:51.7106115Z ##[endgroup]
+2026-10-05T07:03:51.7108090Z Secret source: Actions
+2026-10-05T07:03:51.7108839Z Cache mode: write
+2026-10-05T07:03:51.7109480Z Prepare workflow directory
+2026-10-05T07:03:51.7492737Z Prepare all required actions
+2026-10-05T07:03:51.7540084Z Getting action download info
+2026-10-05T07:03:52.0952977Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-05T07:03:52.2168230Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-10-05T07:03:52.5006315Z Complete job name: mingw
+2026-10-05T07:03:52.6736296Z ##[group]Run actions/checkout@v4
+2026-10-05T07:03:52.6738173Z with:
+2026-10-05T07:03:52.6738751Z   repository: kececi24/itu-ders-bot
+2026-10-05T07:03:52.6743308Z   token: ***
+2026-10-05T07:03:52.6743799Z   ssh-strict: true
+2026-10-05T07:03:52.6744340Z   ssh-user: git
+2026-10-05T07:03:52.6744860Z   persist-credentials: true
+2026-10-05T07:03:52.6745429Z   clean: true
+2026-10-05T07:03:52.6745947Z   sparse-checkout-cone-mode: true
+2026-10-05T07:03:52.6746543Z   fetch-depth: 1
+2026-10-05T07:03:52.6747112Z   fetch-tags: false
+2026-10-05T07:03:52.6747631Z   show-progress: true
+2026-10-05T07:03:52.6748191Z   lfs: false
+2026-10-05T07:03:52.6748738Z   submodules: false
+2026-10-05T07:03:52.6749239Z   set-safe-directory: true
+2026-10-05T07:03:52.6749831Z   allow-unsafe-pr-checkout: false
+2026-10-05T07:03:52.6752314Z ##[endgroup]
+2026-10-05T07:03:52.8280105Z Syncing repository: kececi24/itu-ders-bot
+2026-10-05T07:03:52.8282167Z ##[group]Getting Git version info
+2026-10-05T07:03:52.8283105Z Working directory is 'D:\a\itu-ders-bot\itu-ders-bot'
+2026-10-05T07:03:52.9340631Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-05T07:03:53.4036592Z git version 2.55.0.windows.5
+2026-10-05T07:03:53.4075210Z ##[endgroup]
+2026-10-05T07:03:53.4098864Z Temporarily overriding HOME='D:\a\_temp\4a134580-b06a-4407-9cbe-81c05ec7f244' before making global git config changes
+2026-10-05T07:03:53.4101184Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-05T07:03:53.4112430Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\itu-ders-bot\itu-ders-bot
+2026-10-05T07:03:53.4673973Z Deleting the contents of 'D:\a\itu-ders-bot\itu-ders-bot'
+2026-10-05T07:03:53.4679470Z ##[group]Initializing the repository
+2026-10-05T07:03:53.4689121Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\itu-ders-bot\itu-ders-bot
+2026-10-05T07:03:53.5469917Z Initialized empty Git repository in D:/a/itu-ders-bot/itu-ders-bot/.git/
+2026-10-05T07:03:53.5512672Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/kececi24/itu-ders-bot
+2026-10-05T07:03:53.6036709Z ##[endgroup]
+2026-10-05T07:03:53.6037803Z ##[group]Disabling automatic garbage collection
+2026-10-05T07:03:53.6047087Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-05T07:03:53.6286243Z ##[endgroup]
+2026-10-05T07:03:53.6287546Z ##[group]Setting up auth
+2026-10-05T07:03:53.6301322Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-05T07:03:53.6604347Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-05T07:03:55.0166053Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-05T07:03:55.0408850Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-05T07:03:55.4656367Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-05T07:03:55.4908278Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-05T07:03:55.9526193Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-05T07:03:55.9778338Z ##[endgroup]
+2026-10-05T07:03:55.9780496Z ##[group]Fetching the repository
+2026-10-05T07:03:55.9795172Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +2df7c3bdc246803240c57b94d60ef2de9833fff9:refs/remotes/origin/cross-platform
+2026-10-05T07:03:57.2416384Z From https://github.com/kececi24/itu-ders-bot
+2026-10-05T07:03:57.2417685Z  * [new ref]         2df7c3bdc246803240c57b94d60ef2de9833fff9 -> origin/cross-platform
+2026-10-05T07:03:57.2453552Z ##[endgroup]
+2026-10-05T07:03:57.2454121Z ##[group]Determining the checkout info
+2026-10-05T07:03:57.2456567Z ##[endgroup]
+2026-10-05T07:03:57.2469993Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-05T07:03:57.2876688Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-05T07:03:57.3155298Z ##[group]Checking out the ref
+2026-10-05T07:03:57.3156472Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B cross-platform refs/remotes/origin/cross-platform
+2026-10-05T07:03:57.3851509Z Switched to a new branch 'cross-platform'
+2026-10-05T07:03:57.3909461Z branch 'cross-platform' set up to track 'origin/cross-platform'.
+2026-10-05T07:03:57.3952107Z ##[endgroup]
+2026-10-05T07:03:57.4265776Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-05T07:03:57.4479291Z 2df7c3bdc246803240c57b94d60ef2de9833fff9
+2026-10-05T07:03:57.4911630Z ##[group]Run actions/setup-python@v5
+2026-10-05T07:03:57.4912123Z with:
+2026-10-05T07:03:57.4912408Z   python-version: 3.12
+2026-10-05T07:03:57.4912732Z   check-latest: false
+2026-10-05T07:03:57.4915140Z   token: ***
+2026-10-05T07:03:57.4915445Z   update-environment: true
+2026-10-05T07:03:57.4915748Z   allow-prereleases: false
+2026-10-05T07:03:57.4916080Z   freethreaded: false
+2026-10-05T07:03:57.4916392Z ##[endgroup]
+2026-10-05T07:03:57.6525911Z ##[group]Installed versions
+2026-10-05T07:03:57.6692963Z (node:7024) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-05T07:03:57.6693956Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-05T07:03:57.6694905Z Successfully set up CPython (3.12.10)
+2026-10-05T07:03:57.6695975Z ##[endgroup]
+2026-10-05T07:03:57.6962287Z ##[group]Run python scripts/bootstrap.py --target windows-x64 --toolchain mingw --preflight-only
+2026-10-05T07:03:57.6963252Z [36;1mpython scripts/bootstrap.py --target windows-x64 --toolchain mingw --preflight-only[0m
+2026-10-05T07:03:57.7070474Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-05T07:03:57.7070928Z env:
+2026-10-05T07:03:57.7071358Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:03:57.7071878Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-05T07:03:57.7072394Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:03:57.7072849Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:03:57.7073281Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:03:57.7073692Z ##[endgroup]
+2026-10-05T07:04:00.6638230Z + C:\Program Files\CMake\bin\cmake.EXE -S D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\preflight -B D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\preflight\build -G MinGW Makefiles -DCMAKE_C_COMPILER=C:/mingw64/bin/gcc.EXE -DCMAKE_CXX_COMPILER=C:/mingw64/bin/g++.EXE -DCMAKE_MAKE_PROGRAM=C:/mingw64/bin/mingw32-make.EXE
+2026-10-05T07:04:03.5132922Z -- The C compiler identification is GNU 14.2.0
+2026-10-05T07:04:04.1180014Z -- Detecting C compiler ABI info
+2026-10-05T07:04:04.8022927Z -- Detecting C compiler ABI info - done
+2026-10-05T07:04:04.8228714Z -- Check for working C compiler: C:/mingw64/bin/gcc.EXE - skipped
+2026-10-05T07:04:04.8245509Z -- Detecting C compile features
+2026-10-05T07:04:04.8297210Z -- Detecting C compile features - done
+2026-10-05T07:04:04.8395220Z -- Configuring done (4.2s)
+2026-10-05T07:04:04.8487211Z CMake Warning:
+2026-10-05T07:04:04.8487683Z -- Generating done (0.0s)
+2026-10-05T07:04:04.8488226Z   Manually-specified variables were not used by the project:
+2026-10-05T07:04:04.8488568Z 
+2026-10-05T07:04:04.8488806Z     CMAKE_CXX_COMPILER
+2026-10-05T07:04:04.8489067Z 
+2026-10-05T07:04:04.8489073Z 
+2026-10-05T07:04:04.8495189Z -- Build files have been written to: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/preflight/build
+2026-10-05T07:04:04.8557041Z + C:\Program Files\CMake\bin\cmake.EXE --build D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\preflight\build --config Release
+2026-10-05T07:04:04.9613015Z [ 50%] Building C object CMakeFiles/preflight.dir/main.c.obj
+2026-10-05T07:04:05.0138325Z [100%] Linking C executable preflight.exe
+2026-10-05T07:04:05.2060561Z [100%] Built target preflight
+2026-10-05T07:04:05.2291863Z Native build prerequisites passed; no downloads attempted.
+2026-10-05T07:04:05.3740656Z ##[group]Run python scripts/bootstrap.py --target windows-x64 --toolchain mingw
+2026-10-05T07:04:05.3741322Z [36;1mpython scripts/bootstrap.py --target windows-x64 --toolchain mingw[0m
+2026-10-05T07:04:05.3775628Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-05T07:04:05.3776066Z env:
+2026-10-05T07:04:05.3776504Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:04:05.3777072Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-05T07:04:05.3777605Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:04:05.3778078Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:04:05.3778557Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:04:05.3778948Z ##[endgroup]
+2026-10-05T07:04:05.7743572Z + C:\Program Files\CMake\bin\cmake.EXE -S D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\preflight -B D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\preflight\build -G MinGW Makefiles -DCMAKE_C_COMPILER=C:/mingw64/bin/gcc.EXE -DCMAKE_CXX_COMPILER=C:/mingw64/bin/g++.EXE -DCMAKE_MAKE_PROGRAM=C:/mingw64/bin/mingw32-make.EXE
+2026-10-05T07:04:05.9143071Z -- Configuring done (0.1s)
+2026-10-05T07:04:05.9242986Z -- Generating done (0.0s)
+2026-10-05T07:04:05.9250153Z -- Build files have been written to: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/preflight/build
+2026-10-05T07:04:05.9293157Z + C:\Program Files\CMake\bin\cmake.EXE --build D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\preflight\build --config Release
+2026-10-05T07:04:06.0432181Z [ 50%] Building C object CMakeFiles/preflight.dir/main.c.obj
+2026-10-05T07:04:06.0978022Z [100%] Linking C executable preflight.exe
+2026-10-05T07:04:06.1995560Z [100%] Built target preflight
+2026-10-05T07:04:06.2218949Z Downloading pinned zlib 1.3.2...
+2026-10-05T07:04:06.8892763Z Verified zlib 1.3.2; extracting project-local sources...
+2026-10-05T07:04:07.0530789Z Downloading pinned nghttp2 1.70.0...
+2026-10-05T07:04:07.4369506Z Verified nghttp2 1.70.0; extracting project-local sources...
+2026-10-05T07:04:08.3716950Z Downloading pinned curl 8.22.0...
+2026-10-05T07:04:08.8128465Z Verified curl 8.22.0; extracting project-local sources...
+2026-10-05T07:04:10.8802008Z + C:\Program Files\CMake\bin\cmake.EXE -S D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\sources\zlib-1.3.2 -B D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\build\zlib -G MinGW Makefiles -DCMAKE_C_COMPILER=C:/mingw64/bin/gcc.EXE -DCMAKE_CXX_COMPILER=C:/mingw64/bin/g++.EXE -DCMAKE_MAKE_PROGRAM=C:/mingw64/bin/mingw32-make.EXE -DCMAKE_INSTALL_PREFIX=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DCMAKE_EXE_LINKER_FLAGS=-static -static-libgcc -static-libstdc++ -DZLIB_BUILD_SHARED=OFF -DZLIB_BUILD_STATIC=ON -DZLIB_BUILD_TESTING=OFF
+2026-10-05T07:04:10.9931498Z -- The C compiler identification is GNU 14.2.0
+2026-10-05T07:04:11.1829198Z -- Detecting C compiler ABI info
+2026-10-05T07:04:11.4206018Z -- Detecting C compiler ABI info - done
+2026-10-05T07:04:11.4399913Z -- Check for working C compiler: C:/mingw64/bin/gcc.EXE - skipped
+2026-10-05T07:04:11.4404716Z -- Detecting C compile features
+2026-10-05T07:04:11.4410659Z -- Detecting C compile features - done
+2026-10-05T07:04:11.5166054Z -- Looking for sys/types.h
+2026-10-05T07:04:11.8580441Z -- Looking for sys/types.h - found
+2026-10-05T07:04:11.8581785Z -- Looking for stdint.h
+2026-10-05T07:04:12.1106092Z -- Looking for stdint.h - found
+2026-10-05T07:04:12.1107477Z -- Looking for stddef.h
+2026-10-05T07:04:12.3493569Z -- Looking for stddef.h - found
+2026-10-05T07:04:12.3494374Z -- Check size of off64_t
+2026-10-05T07:04:12.5827238Z -- Check size of off64_t - done
+2026-10-05T07:04:12.5829676Z -- Looking for fseeko
+2026-10-05T07:04:12.8871904Z -- Looking for fseeko - found
+2026-10-05T07:04:12.8873325Z -- Looking for stdarg.h
+2026-10-05T07:04:13.1204836Z -- Looking for stdarg.h - found
+2026-10-05T07:04:13.1205503Z -- Looking for unistd.h
+2026-10-05T07:04:13.4564203Z -- Looking for unistd.h - found
+2026-10-05T07:04:13.4565669Z -- Performing Test HAVE___ATTR__VIS_HIDDEN
+2026-10-05T07:04:13.6325226Z -- Performing Test HAVE___ATTR__VIS_HIDDEN - Failed
+2026-10-05T07:04:13.6443402Z -- Configuring done (2.7s)
+2026-10-05T07:04:13.6655770Z -- Generating done (0.0s)
+2026-10-05T07:04:13.6656361Z CMake Warning:
+2026-10-05T07:04:13.6658016Z   Manually-specified variables were not used by the project:
+2026-10-05T07:04:13.6658453Z 
+2026-10-05T07:04:13.6658652Z     BUILD_TESTING
+2026-10-05T07:04:13.6659106Z     CMAKE_CXX_COMPILER
+2026-10-05T07:04:13.6659342Z 
+2026-10-05T07:04:13.6659349Z 
+2026-10-05T07:04:13.6665005Z -- Build files have been written to: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/build/zlib
+2026-10-05T07:04:13.6732598Z + C:\Program Files\CMake\bin\cmake.EXE --build D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\build\zlib --config Release --parallel 3
+2026-10-05T07:04:13.7873262Z [  6%] Building C object CMakeFiles/zlibstatic.dir/adler32.c.obj
+2026-10-05T07:04:13.7893185Z [ 12%] Building C object CMakeFiles/zlibstatic.dir/compress.c.obj
+2026-10-05T07:04:13.7917275Z [ 18%] Building C object CMakeFiles/zlibstatic.dir/crc32.c.obj
+2026-10-05T07:04:14.3677703Z [ 25%] Building C object CMakeFiles/zlibstatic.dir/deflate.c.obj
+2026-10-05T07:04:14.3760048Z [ 31%] Building C object CMakeFiles/zlibstatic.dir/gzclose.c.obj
+2026-10-05T07:04:14.5004666Z [ 37%] Building C object CMakeFiles/zlibstatic.dir/gzlib.c.obj
+2026-10-05T07:04:14.5288637Z [ 43%] Building C object CMakeFiles/zlibstatic.dir/gzread.c.obj
+2026-10-05T07:04:14.7329389Z [ 50%] Building C object CMakeFiles/zlibstatic.dir/gzwrite.c.obj
+2026-10-05T07:04:14.8245638Z [ 56%] Building C object CMakeFiles/zlibstatic.dir/inflate.c.obj
+2026-10-05T07:04:14.9954820Z [ 62%] Building C object CMakeFiles/zlibstatic.dir/infback.c.obj
+2026-10-05T07:04:15.3742968Z [ 68%] Building C object CMakeFiles/zlibstatic.dir/inftrees.c.obj
+2026-10-05T07:04:15.4473900Z [ 75%] Building C object CMakeFiles/zlibstatic.dir/inffast.c.obj
+2026-10-05T07:04:15.5962437Z [ 81%] Building C object CMakeFiles/zlibstatic.dir/trees.c.obj
+2026-10-05T07:04:15.6556680Z [ 87%] Building C object CMakeFiles/zlibstatic.dir/uncompr.c.obj
+2026-10-05T07:04:15.7562946Z [ 93%] Building C object CMakeFiles/zlibstatic.dir/zutil.c.obj
+2026-10-05T07:04:16.0753446Z [100%] Linking C static library libzs.a
+2026-10-05T07:04:16.2249058Z [100%] Built target zlibstatic
+2026-10-05T07:04:16.2484096Z + C:\Program Files\CMake\bin\cmake.EXE --install D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\build\zlib --config Release
+2026-10-05T07:04:16.2620158Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/libzs.a
+2026-10-05T07:04:16.2631630Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/zlib/ZLIB-static.cmake
+2026-10-05T07:04:16.2635930Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/zlib/ZLIB-static-release.cmake
+2026-10-05T07:04:16.2640010Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/zlib/ZLIBConfig.cmake
+2026-10-05T07:04:16.2643042Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/zlib/ZLIBConfigVersion.cmake
+2026-10-05T07:04:16.2647368Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/zconf.h
+2026-10-05T07:04:16.2650901Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/zlib.h
+2026-10-05T07:04:16.2659778Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/share/man/man3/zlib.3
+2026-10-05T07:04:16.2662911Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/share/doc/zlib/zlib/LICENSE
+2026-10-05T07:04:16.2666738Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/share/doc/zlib/zlib/algorithm.txt
+2026-10-05T07:04:16.2669766Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/share/doc/zlib/zlib/crc-doc.1.0.pdf
+2026-10-05T07:04:16.2683045Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/share/doc/zlib/zlib/rfc1950.txt
+2026-10-05T07:04:16.2687093Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/share/doc/zlib/zlib/rfc1951.txt
+2026-10-05T07:04:16.2690610Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/share/doc/zlib/zlib/rfc1952.txt
+2026-10-05T07:04:16.2693867Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/share/doc/zlib/zlib/txtvsbin.txt
+2026-10-05T07:04:16.2704726Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/pkgconfig/zlib.pc
+2026-10-05T07:04:16.2745285Z + C:\Program Files\CMake\bin\cmake.EXE -S D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\sources\nghttp2-1.70.0 -B D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\build\nghttp2 -G MinGW Makefiles -DCMAKE_C_COMPILER=C:/mingw64/bin/gcc.EXE -DCMAKE_CXX_COMPILER=C:/mingw64/bin/g++.EXE -DCMAKE_MAKE_PROGRAM=C:/mingw64/bin/mingw32-make.EXE -DCMAKE_INSTALL_PREFIX=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DCMAKE_EXE_LINKER_FLAGS=-static -static-libgcc -static-libstdc++ -DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_CRT=ON -DENABLE_DOC=OFF -DENABLE_FAILMALLOC=OFF -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=ON -DCMAKE_DISABLE_FIND_PACKAGE_Libngtcp2=ON -DCMAKE_DISABLE_FIND_PACKAGE_Libnghttp3=ON -DCMAKE_DISABLE_FIND_PACKAGE_Systemd=ON -DCMAKE_DISABLE_FIND_PACKAGE_Jansson=ON -DCMAKE_DISABLE_FIND_PACKAGE_Libevent=ON
+2026-10-05T07:04:16.3913357Z -- The C compiler identification is GNU 14.2.0
+2026-10-05T07:04:16.6111594Z -- Detecting C compiler ABI info
+2026-10-05T07:04:16.8523450Z -- Detecting C compiler ABI info - done
+2026-10-05T07:04:16.8729652Z -- Check for working C compiler: C:/mingw64/bin/gcc.EXE - skipped
+2026-10-05T07:04:16.8733992Z -- Detecting C compile features
+2026-10-05T07:04:16.8740474Z -- Detecting C compile features - done
+2026-10-05T07:04:18.1002478Z -- Found Python3: C:/hostedtoolcache/windows/Python/3.14.7/x64/python3.exe (found version "3.14.7") found components: Interpreter
+2026-10-05T07:04:19.6161001Z -- Could NOT find LibXml2 (missing: LIBXML2_LIBRARY LIBXML2_INCLUDE_DIR) (Required is at least version "2.6.26")
+2026-10-05T07:04:19.7939051Z -- Could NOT find Jemalloc (missing: JEMALLOC_LIBRARY JEMALLOC_INCLUDE_DIR) 
+2026-10-05T07:04:19.8055122Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+2026-10-05T07:04:20.1344091Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+2026-10-05T07:04:20.1358312Z -- Found Threads: TRUE
+2026-10-05T07:04:20.1378187Z -- Looking for arpa/inet.h
+2026-10-05T07:04:20.2525205Z -- Looking for arpa/inet.h - not found
+2026-10-05T07:04:20.2526673Z -- Looking for fcntl.h
+2026-10-05T07:04:20.4729673Z -- Looking for fcntl.h - found
+2026-10-05T07:04:20.4731126Z -- Looking for inttypes.h
+2026-10-05T07:04:20.7017526Z -- Looking for inttypes.h - found
+2026-10-05T07:04:20.7018851Z -- Looking for limits.h
+2026-10-05T07:04:20.9402431Z -- Looking for limits.h - found
+2026-10-05T07:04:20.9403981Z -- Looking for netdb.h
+2026-10-05T07:04:21.0548180Z -- Looking for netdb.h - not found
+2026-10-05T07:04:21.0549720Z -- Looking for netinet/in.h
+2026-10-05T07:04:21.1659083Z -- Looking for netinet/in.h - not found
+2026-10-05T07:04:21.1660411Z -- Looking for netinet/ip.h
+2026-10-05T07:04:21.2752477Z -- Looking for netinet/ip.h - not found
+2026-10-05T07:04:21.2753858Z -- Looking for pwd.h
+2026-10-05T07:04:21.3835786Z -- Looking for pwd.h - not found
+2026-10-05T07:04:21.3837092Z -- Looking for sys/socket.h
+2026-10-05T07:04:21.4902857Z -- Looking for sys/socket.h - not found
+2026-10-05T07:04:21.4904395Z -- Looking for sys/time.h
+2026-10-05T07:04:21.7169104Z -- Looking for sys/time.h - found
+2026-10-05T07:04:21.7169863Z -- Looking for syslog.h
+2026-10-05T07:04:21.8220683Z -- Looking for syslog.h - not found
+2026-10-05T07:04:21.8222269Z -- Looking for unistd.h
+2026-10-05T07:04:22.0497203Z -- Looking for unistd.h - found
+2026-10-05T07:04:22.0498223Z -- Looking for windows.h
+2026-10-05T07:04:23.8414322Z -- Looking for windows.h - found
+2026-10-05T07:04:23.8426385Z -- Looking for sys/types.h
+2026-10-05T07:04:24.0725041Z -- Looking for sys/types.h - found
+2026-10-05T07:04:24.0726606Z -- Looking for stdint.h
+2026-10-05T07:04:24.3044817Z -- Looking for stdint.h - found
+2026-10-05T07:04:24.3046043Z -- Looking for stddef.h
+2026-10-05T07:04:24.5294273Z -- Looking for stddef.h - found
+2026-10-05T07:04:24.5294845Z -- Check size of ssize_t
+2026-10-05T07:04:24.7584564Z -- Check size of ssize_t - done
+2026-10-05T07:04:24.7616792Z -- Performing Test HAVE_STRUCT_TM_TM_GMTOFF
+2026-10-05T07:04:24.8845729Z -- Performing Test HAVE_STRUCT_TM_TM_GMTOFF - Failed
+2026-10-05T07:04:24.8854081Z -- Looking for _Exit
+2026-10-05T07:04:25.1910483Z -- Looking for _Exit - found
+2026-10-05T07:04:25.1911031Z -- Looking for accept4
+2026-10-05T07:04:25.4098865Z -- Looking for accept4 - not found
+2026-10-05T07:04:25.4099434Z -- Looking for clock_gettime
+2026-10-05T07:04:25.6392730Z -- Looking for clock_gettime - found
+2026-10-05T07:04:25.6393588Z -- Looking for mkostemp
+2026-10-05T07:04:25.8583879Z -- Looking for mkostemp - not found
+2026-10-05T07:04:25.8584487Z -- Looking for pipe2
+2026-10-05T07:04:26.0813988Z -- Looking for pipe2 - not found
+2026-10-05T07:04:26.0815992Z -- Looking for GetTickCount64
+2026-10-05T07:04:27.0303174Z -- Looking for GetTickCount64 - found
+2026-10-05T07:04:27.0308524Z -- Looking for initgroups
+2026-10-05T07:04:27.1397799Z -- Looking for initgroups - not found
+2026-10-05T07:04:27.1400177Z -- Looking for initgroups
+2026-10-05T07:04:27.2559237Z -- Looking for initgroups - not found
+2026-10-05T07:04:27.2561544Z -- Looking for CLOCK_MONOTONIC
+2026-10-05T07:04:27.4808637Z -- Looking for CLOCK_MONOTONIC - found
+2026-10-05T07:04:27.4896614Z -- Performing Test OPT_Wpragmas
+2026-10-05T07:04:27.7143467Z -- Performing Test OPT_Wpragmas - Success
+2026-10-05T07:04:27.7377384Z -- summary of build options:
+2026-10-05T07:04:27.7377819Z 
+2026-10-05T07:04:27.7378784Z     Package version: 1.70.0
+2026-10-05T07:04:27.7379693Z     Library version: 43:5:29
+2026-10-05T07:04:27.7381505Z     Install prefix:  D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install
+2026-10-05T07:04:27.7382322Z     Target system:   Windows
+2026-10-05T07:04:27.7382807Z     Compiler:
+2026-10-05T07:04:27.7383203Z       Build type:     Release
+2026-10-05T07:04:27.7383707Z       C compiler:     C:/mingw64/bin/gcc.EXE
+2026-10-05T07:04:27.7384231Z       CFLAGS:         -O3  
+2026-10-05T07:04:27.7384738Z       C++ compiler:   C:/mingw64/bin/g++.EXE
+2026-10-05T07:04:27.7385235Z       CXXFLAGS:        
+2026-10-05T07:04:27.7388258Z       WARNCFLAGS:       -W -Wall -Wconversion -Winline -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wpointer-arith -Wshadow -Wundef -Wwrite-strings -Waddress -Wattributes -Wcast-align -Wdeclaration-after-statement -Wdiv-by-zero -Wempty-body -Wendif-labels -Wfloat-equal -Wformat-nonliteral -Wformat-security -Wmissing-field-initializers -Wmissing-noreturn -Wno-format-nonliteral -Wredundant-decls -Wsign-conversion -Wstrict-prototypes -Wunreachable-code -Wunused-parameter -Wvla -Wclobbered -Wpragmas
+2026-10-05T07:04:27.7390991Z       CXX1XCXXFLAGS:  
+2026-10-05T07:04:27.7391369Z       WARNCXXFLAGS:     -Wall
+2026-10-05T07:04:27.7391781Z     Python:
+2026-10-05T07:04:27.7392310Z       Python:          C:/hostedtoolcache/windows/Python/3.14.7/x64/python3.exe
+2026-10-05T07:04:27.7392918Z       Python3_VERSION: 3.14.7
+2026-10-05T07:04:27.7393397Z     Test:
+2026-10-05T07:04:27.7393767Z       Failmalloc:     OFF
+2026-10-05T07:04:27.7394156Z       Build Test:     OFF
+2026-10-05T07:04:27.7394589Z     Libs:
+2026-10-05T07:04:27.7395178Z       OpenSSL:         (LIBS='')
+2026-10-05T07:04:27.7395746Z       wolfSSL:         (LIBS='')
+2026-10-05T07:04:27.7396209Z       Libxml2:        FALSE (LIBS='')
+2026-10-05T07:04:27.7396663Z       Libev:           (LIBS='')
+2026-10-05T07:04:27.7397112Z       Libc-ares:       (LIBS='')
+2026-10-05T07:04:27.7397595Z       Libngtcp2:       (LIBS='')
+2026-10-05T07:04:27.7398082Z       Libngtcp2_crypto_quictls:  (LIBS='')
+2026-10-05T07:04:27.7398628Z       Libngtcp2_crypto_libressl:  (LIBS='')
+2026-10-05T07:04:27.7399140Z       Libngtcp2_crypto_wolfssl:  (LIBS='')
+2026-10-05T07:04:27.7399666Z       Libnghttp3:      (LIBS='')
+2026-10-05T07:04:27.7400134Z       Libbpf:          (LIBS='')
+2026-10-05T07:04:27.7400671Z       Libevent(SSL):   (LIBS='')
+2026-10-05T07:04:27.7401138Z       Jansson:         (LIBS='')
+2026-10-05T07:04:27.7401563Z       Jemalloc:       FALSE (LIBS='')
+2026-10-05T07:04:27.7402059Z       Zlib:            (LIBS='')
+2026-10-05T07:04:27.7402367Z       Systemd:         (LIBS='')
+2026-10-05T07:04:27.7402687Z       Libbrotlienc:    (LIBS='')
+2026-10-05T07:04:27.7402983Z       Libbrotlidec:    (LIBS='')
+2026-10-05T07:04:27.7403291Z     Third-party:
+2026-10-05T07:04:27.7403592Z       http-parser:    
+2026-10-05T07:04:27.7403899Z       MRuby:          0
+2026-10-05T07:04:27.7404178Z       Neverbleed:     0
+2026-10-05T07:04:27.7404721Z     Features:
+2026-10-05T07:04:27.7405015Z       Applications:   OFF
+2026-10-05T07:04:27.7405338Z       HPACK tools:    OFF
+2026-10-05T07:04:27.7405638Z       Examples:       OFF
+2026-10-05T07:04:27.7405935Z       Threading:      ON
+2026-10-05T07:04:27.7406257Z       HTTP/3(EXPERIMENTAL): OFF
+2026-10-05T07:04:27.7406484Z 
+2026-10-05T07:04:27.7406613Z -- Configuring done (11.4s)
+2026-10-05T07:04:27.7771528Z -- Generating done (0.0s)
+2026-10-05T07:04:27.7779481Z -- Build files have been written to: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/build/nghttp2
+2026-10-05T07:04:27.7879466Z + C:\Program Files\CMake\bin\cmake.EXE --build D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\build\nghttp2 --config Release --parallel 3
+2026-10-05T07:04:27.8984410Z [  3%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_pq.c.obj
+2026-10-05T07:04:27.8991157Z [  7%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_map.c.obj
+2026-10-05T07:04:27.9008414Z [ 11%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_queue.c.obj
+2026-10-05T07:04:28.0507111Z [ 14%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_frame.c.obj
+2026-10-05T07:04:28.0851313Z [ 18%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_buf.c.obj
+2026-10-05T07:04:28.1096458Z [ 22%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_stream.c.obj
+2026-10-05T07:04:28.2558182Z [ 25%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_outbound_item.c.obj
+2026-10-05T07:04:28.3780415Z [ 29%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_session.c.obj
+2026-10-05T07:04:28.4138622Z [ 33%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_submit.c.obj
+2026-10-05T07:04:28.5101387Z [ 37%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_helper.c.obj
+2026-10-05T07:04:28.6814694Z [ 40%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_alpn.c.obj
+2026-10-05T07:04:28.7355379Z [ 44%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_hd.c.obj
+2026-10-05T07:04:28.8157156Z [ 48%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_hd_huffman.c.obj
+2026-10-05T07:04:29.0458203Z [ 51%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_hd_huffman_data.c.obj
+2026-10-05T07:04:29.2051694Z [ 55%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_version.c.obj
+2026-10-05T07:04:29.3490470Z [ 59%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_priority_spec.c.obj
+2026-10-05T07:04:29.5128044Z [ 62%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_option.c.obj
+2026-10-05T07:04:29.5550165Z [ 66%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_callbacks.c.obj
+2026-10-05T07:04:29.7113523Z [ 70%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_mem.c.obj
+2026-10-05T07:04:29.7556656Z [ 74%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_http.c.obj
+2026-10-05T07:04:29.8918507Z [ 77%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_rcbuf.c.obj
+2026-10-05T07:04:30.0891999Z [ 81%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_extpri.c.obj
+2026-10-05T07:04:30.0996635Z [ 85%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_ratelim.c.obj
+2026-10-05T07:04:30.2194964Z [ 88%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_time.c.obj
+2026-10-05T07:04:30.2329614Z [ 92%] Building C object lib/CMakeFiles/nghttp2_static.dir/nghttp2_debug.c.obj
+2026-10-05T07:04:30.3574683Z [ 96%] Building C object lib/CMakeFiles/nghttp2_static.dir/sfparse.c.obj
+2026-10-05T07:04:31.2891523Z [100%] Linking C static library libnghttp2.a
+2026-10-05T07:04:31.3889229Z [100%] Built target nghttp2_static
+2026-10-05T07:04:31.4125698Z + C:\Program Files\CMake\bin\cmake.EXE --install D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\build\nghttp2 --config Release
+2026-10-05T07:04:31.4255642Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/share/doc/nghttp2/README.rst
+2026-10-05T07:04:31.4266867Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/nghttp2/nghttp2.h
+2026-10-05T07:04:31.4273798Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/nghttp2/nghttp2ver.h
+2026-10-05T07:04:31.4279406Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/nghttp2/nghttp2Config.cmake
+2026-10-05T07:04:31.4282291Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/nghttp2/nghttp2ConfigVersion.cmake
+2026-10-05T07:04:31.4286241Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/nghttp2/nghttp2Targets.cmake
+2026-10-05T07:04:31.4290990Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/nghttp2/nghttp2Targets-release.cmake
+2026-10-05T07:04:31.4294278Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/libnghttp2.a
+2026-10-05T07:04:31.4301463Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/pkgconfig/libnghttp2.pc
+2026-10-05T07:04:31.4349545Z + C:\Program Files\CMake\bin\cmake.EXE -S D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\sources\curl-8.22.0 -B D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\build\curl -G MinGW Makefiles -DCMAKE_C_COMPILER=C:/mingw64/bin/gcc.EXE -DCMAKE_CXX_COMPILER=C:/mingw64/bin/g++.EXE -DCMAKE_MAKE_PROGRAM=C:/mingw64/bin/mingw32-make.EXE -DCMAKE_INSTALL_PREFIX=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DCMAKE_EXE_LINKER_FLAGS=-static -static-libgcc -static-libstdc++ -DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON -DBUILD_CURL_EXE=OFF -DBUILD_LIBCURL_DOCS=OFF -DBUILD_MISC_DOCS=OFF -DENABLE_CURL_MANUAL=OFF -DHTTP_ONLY=ON -DCURL_USE_LIBPSL=OFF -DCURL_USE_LIBSSH2=OFF -DCURL_USE_GSSAPI=OFF -DUSE_LIBIDN2=OFF -DCURL_BROTLI=OFF -DCURL_ZSTD=OFF -DCURL_ZLIB=ON -DUSE_NGHTTP2=ON -DUSE_NGTCP2=OFF -DCURL_USE_PKGCONFIG=OFF -DCURL_USE_CMAKECONFIG=OFF -DENABLE_THREADED_RESOLVER=ON -DZLIB_INCLUDE_DIR=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include -DZLIB_LIBRARY=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/libzs.a -DNGHTTP2_INCLUDE_DIR=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include -DNGHTTP2_LIBRARY=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/libnghttp2.a -DNGHTTP2_USE_STATIC_LIBS=ON -DCURL_USE_SCHANNEL=ON -DCURL_USE_OPENSSL=OFF -DENABLE_UNICODE=ON -DCURL_STATIC_CRT=ON
+2026-10-05T07:04:31.4515329Z -- Using CMake version 3.31.6
+2026-10-05T07:04:31.4553789Z -- curl version=[8.22.0]
+2026-10-05T07:04:31.5534319Z -- The C compiler identification is GNU 14.2.0
+2026-10-05T07:04:31.7551658Z -- Detecting C compiler ABI info
+2026-10-05T07:04:31.9977600Z -- Detecting C compiler ABI info - done
+2026-10-05T07:04:32.0178462Z -- Check for working C compiler: C:/mingw64/bin/gcc.EXE - skipped
+2026-10-05T07:04:32.0183193Z -- Detecting C compile features
+2026-10-05T07:04:32.0189357Z -- Detecting C compile features - done
+2026-10-05T07:04:32.0286544Z -- CMake platform flags: WIN32 GCC MINGW
+2026-10-05T07:04:32.0287827Z -- Performing Test HAVE_WIN32_WINNT
+2026-10-05T07:04:32.7002124Z -- Performing Test HAVE_WIN32_WINNT - Success
+2026-10-05T07:04:32.7002675Z -- Found _WIN32_WINNT=0x0a00
+2026-10-05T07:04:32.7003008Z -- Performing Test MINGW64_VERSION
+2026-10-05T07:04:32.9232916Z -- Performing Test MINGW64_VERSION - Success
+2026-10-05T07:04:32.9233402Z -- Found MINGW64_VERSION=12.0
+2026-10-05T07:04:32.9264259Z -- Picky compiler options: -Werror-implicit-function-declaration -W -Wall -Wpedantic -Wbad-function-cast -Wconversion -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wno-long-long -Wno-multichar -Wpointer-arith -Wshadow -Wsign-compare -Wundef -Wunused -Wwrite-strings -Waddress -Wattributes -Wcast-align -Wcast-qual -Wdeclaration-after-statement -Wdiv-by-zero -Wempty-body -Wendif-labels -Wfloat-equal -Wformat-security -Wignored-qualifiers -Wmissing-field-initializers -Wmissing-noreturn -Wno-padded -Wno-sign-conversion -Wno-switch-default -Wno-switch-enum -Wno-system-headers -Wold-style-definition -Wredundant-decls -Wstrict-prototypes -Wtype-limits -Wunreachable-code -Wunused-parameter -Wvla -Wclobbered -Wmissing-parameter-type -Wold-style-declaration -Wpragmas -Wstrict-aliasing=3 -ftree-vrp -Wjump-misses-init -Wno-pedantic-ms-format -Wdouble-promotion -Wformat=2 -Wlogical-op -Wtrampolines -Warray-bounds=2 -Wformat-signedness -Wduplicated-cond -Wnull-dereference -fdelete-null-pointer-checks -Wshift-negative-value -Wshift-overflow=2 -Wunused-const-variable -Walloc-zero -Wduplicated-branches -Wformat-truncation=2 -Wimplicit-fallthrough -Wrestrict -Warith-conversion -Wenum-conversion -Warray-compare -Wenum-int-mismatch -Wxor-used-as-pow
+2026-10-05T07:04:33.0118052Z -- Found Perl: C:/Strawberry/perl/bin/perl.exe (found version "5.32.1")
+2026-10-05T07:04:33.0281941Z -- Found ZLIB: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/libzs.a (found version "1.3.2")
+2026-10-05T07:04:33.0301722Z -- Found NGHTTP2: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include (found version "1.70.0")
+2026-10-05T07:04:33.0331889Z -- Check size of time_t
+2026-10-05T07:04:33.2681894Z -- Check size of time_t - done
+2026-10-05T07:04:33.3270044Z -- Protocols: http https
+2026-10-05T07:04:33.3274048Z -- Features: alt-svc AsynchDNS HSTS HTTP2 HTTPS-proxy IPv6 Kerberos Largefile libz SPNEGO SSL SSPI threadsafe Unicode UnixSockets
+2026-10-05T07:04:33.3275067Z -- Enabled SSL backends: Schannel
+2026-10-05T07:04:33.3468265Z -- 
+2026-10-05T07:04:33.3468814Z buildinfo.configure.tool: cmake
+2026-10-05T07:04:33.3472866Z buildinfo.configure.command: C:/Program Files/CMake/bin/cmake.exe
+2026-10-05T07:04:33.3473619Z buildinfo.configure.version: 3.31.6
+2026-10-05T07:04:33.3480425Z buildinfo.configure.args: -DBUILD_CURL_EXE="OFF" -DBUILD_LIBCURL_DOCS="OFF" -DBUILD_MISC_DOCS="OFF" -DBUILD_SHARED_LIBS="OFF" -DBUILD_STATIC_LIBS="ON" -DBUILD_TESTING="OFF" -DCMAKE_BUILD_TYPE="Release" -DCMAKE_CXX_COMPILER="C:/mingw64/bin/g++.EXE" -DCMAKE_C_COMPILER="C:/mingw64/bin/gcc.EXE" -DCMAKE_EXE_LINKER_FLAGS="-static -static-libgcc -static-libstdc++" -DCMAKE_INSTALL_LIBDIR="lib" -DCMAKE_INSTALL_PREFIX="D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install" -DCMAKE_MAKE_PROGRAM="C:/mingw64/bin/mingw32-make.EXE" -DCURL_BROTLI="OFF" -DCURL_STATIC_CRT="ON" -DCURL_USE_CMAKECONFIG="OFF" -DCURL_USE_GSSAPI="OFF" -DCURL_USE_LIBPSL="OFF" -DCURL_USE_LIBSSH2="OFF" -DCURL_USE_OPENSSL="OFF" -DCURL_USE_PKGCONFIG="OFF" -DCURL_USE_SCHANNEL="ON" -DCURL_ZLIB="ON" -DCURL_ZSTD="OFF" -DENABLE_CURL_MANUAL="OFF" -DENABLE_THREADED_RESOLVER="ON" -DENABLE_UNICODE="ON" -DHTTP_ONLY="ON" -DNGHTTP2_INCLUDE_DIR="D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include" -DNGHTTP2_LIBRARY="D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/libnghttp2.a" -DNGHTTP2_USE_STATIC_LIBS="ON" -DUSE_LIBIDN2="OFF" -DUSE_NGHTTP2="ON" -DUSE_NGTCP2="OFF" -DZLIB_INCLUDE_DIR="D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include" -DZLIB_LIBRARY="D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/libzs.a"
+2026-10-05T07:04:33.3487340Z buildinfo.configure.generator: MinGW Makefiles
+2026-10-05T07:04:33.3488019Z buildinfo.configure.make: C:/mingw64/bin/mingw32-make.EXE
+2026-10-05T07:04:33.3488682Z buildinfo.host.cpu: AMD64
+2026-10-05T07:04:33.3489129Z buildinfo.host.os: Windows
+2026-10-05T07:04:33.3489676Z buildinfo.target.cpu: AMD64
+2026-10-05T07:04:33.3490191Z buildinfo.target.os: Windows
+2026-10-05T07:04:33.3490662Z buildinfo.target.flags: WIN32 GCC MINGW
+2026-10-05T07:04:33.3491167Z buildinfo.compiler: GNU
+2026-10-05T07:04:33.3491653Z buildinfo.compiler.version: 14.2.0
+2026-10-05T07:04:33.3492128Z buildinfo.sysroot: 
+2026-10-05T07:04:33.3492394Z 
+2026-10-05T07:04:33.3492646Z -- Configuring done (1.9s)
+2026-10-05T07:04:34.0722736Z CMake Warning:
+2026-10-05T07:04:34.0723148Z -- Generating done (0.7s)
+2026-10-05T07:04:34.0724142Z   Manually-specified variables were not used by the project:
+2026-10-05T07:04:34.0724544Z 
+2026-10-05T07:04:34.0724669Z     CMAKE_CXX_COMPILER
+2026-10-05T07:04:34.0724899Z 
+2026-10-05T07:04:34.0724905Z 
+2026-10-05T07:04:34.0733676Z -- Build files have been written to: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/build/curl
+2026-10-05T07:04:34.0897302Z + C:\Program Files\CMake\bin\cmake.EXE --build D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\build\curl --config Release --parallel 3
+2026-10-05T07:04:34.2179377Z [  2%] Building C object lib/CMakeFiles/libcurl_object.dir/altsvc.c.obj
+2026-10-05T07:04:34.2187466Z [  2%] Building C object lib/CMakeFiles/libcurl_object.dir/amigaos.c.obj
+2026-10-05T07:04:34.2209079Z [  2%] Building C object lib/CMakeFiles/libcurl_object.dir/api.c.obj
+2026-10-05T07:04:35.0438758Z [  2%] Building C object lib/CMakeFiles/libcurl_object.dir/bufq.c.obj
+2026-10-05T07:04:35.2182339Z [  2%] Building C object lib/CMakeFiles/libcurl_object.dir/bufref.c.obj
+2026-10-05T07:04:35.2910088Z [  5%] Building C object lib/CMakeFiles/libcurl_object.dir/cf-h1-proxy.c.obj
+2026-10-05T07:04:36.0650070Z [  5%] Building C object lib/CMakeFiles/libcurl_object.dir/cf-h2-proxy.c.obj
+2026-10-05T07:04:36.0952617Z [  5%] Building C object lib/CMakeFiles/libcurl_object.dir/cf-haproxy.c.obj
+2026-10-05T07:04:36.5617574Z [  5%] Building C object lib/CMakeFiles/libcurl_object.dir/cf-https-connect.c.obj
+2026-10-05T07:04:36.9956020Z [  5%] Building C object lib/CMakeFiles/libcurl_object.dir/cf-ip-happy.c.obj
+2026-10-05T07:04:37.4768922Z [  5%] Building C object lib/CMakeFiles/libcurl_object.dir/cf-recvbuf.c.obj
+2026-10-05T07:04:37.6277780Z [  8%] Building C object lib/CMakeFiles/libcurl_object.dir/cf-setup.c.obj
+2026-10-05T07:04:38.1568639Z [  8%] Building C object lib/CMakeFiles/libcurl_object.dir/cf-socket.c.obj
+2026-10-05T07:04:38.3241726Z [  8%] Building C object lib/CMakeFiles/libcurl_object.dir/cfilters.c.obj
+2026-10-05T07:04:38.6695285Z [  8%] Building C object lib/CMakeFiles/libcurl_object.dir/conncache.c.obj
+2026-10-05T07:04:39.5175614Z [  8%] Building C object lib/CMakeFiles/libcurl_object.dir/connect.c.obj
+2026-10-05T07:04:39.6154922Z [ 10%] Building C object lib/CMakeFiles/libcurl_object.dir/content_encoding.c.obj
+2026-10-05T07:04:39.8456560Z [ 10%] Building C object lib/CMakeFiles/libcurl_object.dir/cookie.c.obj
+2026-10-05T07:04:40.5250988Z [ 10%] Building C object lib/CMakeFiles/libcurl_object.dir/creds.c.obj
+2026-10-05T07:04:40.6525302Z [ 10%] Building C object lib/CMakeFiles/libcurl_object.dir/cshutdn.c.obj
+2026-10-05T07:04:41.1997910Z [ 10%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_addrinfo.c.obj
+2026-10-05T07:04:41.4819090Z [ 10%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_endian.c.obj
+2026-10-05T07:04:41.7471777Z [ 13%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_fnmatch.c.obj
+2026-10-05T07:04:42.0752557Z [ 13%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_fopen.c.obj
+2026-10-05T07:04:42.3461343Z [ 13%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_get_line.c.obj
+2026-10-05T07:04:42.6109346Z [ 13%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_gethostname.c.obj
+2026-10-05T07:04:42.9250980Z [ 13%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_gssapi.c.obj
+2026-10-05T07:04:43.1833874Z [ 16%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_memrchr.c.obj
+2026-10-05T07:04:43.5016848Z [ 16%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_ntlm_core.c.obj
+2026-10-05T07:04:43.7461677Z [ 16%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_range.c.obj
+2026-10-05T07:04:44.0385741Z [ 16%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_sasl.c.obj
+2026-10-05T07:04:44.3200645Z [ 16%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_sha512_256.c.obj
+2026-10-05T07:04:44.6019517Z [ 16%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_share.c.obj
+2026-10-05T07:04:44.8481885Z [ 18%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_sspi.c.obj
+2026-10-05T07:04:45.2568651Z [ 18%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_threads.c.obj
+2026-10-05T07:04:45.5698000Z [ 18%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_trc.c.obj
+2026-10-05T07:04:45.7095264Z [ 18%] Building C object lib/CMakeFiles/libcurl_object.dir/cw-out.c.obj
+2026-10-05T07:04:46.1360645Z [ 18%] Building C object lib/CMakeFiles/libcurl_object.dir/cw-pause.c.obj
+2026-10-05T07:04:46.5958406Z [ 21%] Building C object lib/CMakeFiles/libcurl_object.dir/dict.c.obj
+2026-10-05T07:04:46.6852337Z [ 21%] Building C object lib/CMakeFiles/libcurl_object.dir/dynhds.c.obj
+2026-10-05T07:04:47.0835866Z [ 21%] Building C object lib/CMakeFiles/libcurl_object.dir/easy.c.obj
+2026-10-05T07:04:47.4731912Z [ 21%] Building C object lib/CMakeFiles/libcurl_object.dir/easygetopt.c.obj
+2026-10-05T07:04:47.6458732Z [ 21%] Building C object lib/CMakeFiles/libcurl_object.dir/easyoptions.c.obj
+2026-10-05T07:04:48.1342341Z [ 21%] Building C object lib/CMakeFiles/libcurl_object.dir/escape.c.obj
+2026-10-05T07:04:48.3022802Z [ 24%] Building C object lib/CMakeFiles/libcurl_object.dir/fake_addrinfo.c.obj
+2026-10-05T07:04:48.5012759Z [ 24%] Building C object lib/CMakeFiles/libcurl_object.dir/file.c.obj
+2026-10-05T07:04:49.1150648Z [ 24%] Building C object lib/CMakeFiles/libcurl_object.dir/fileinfo.c.obj
+2026-10-05T07:04:49.1582343Z [ 24%] Building C object lib/CMakeFiles/libcurl_object.dir/formdata.c.obj
+2026-10-05T07:04:49.2956797Z [ 24%] Building C object lib/CMakeFiles/libcurl_object.dir/ftp.c.obj
+2026-10-05T07:04:49.9375795Z [ 27%] Building C object lib/CMakeFiles/libcurl_object.dir/ftplistparser.c.obj
+2026-10-05T07:04:50.0911898Z [ 27%] Building C object lib/CMakeFiles/libcurl_object.dir/getenv.c.obj
+2026-10-05T07:04:50.2421645Z [ 27%] Building C object lib/CMakeFiles/libcurl_object.dir/getinfo.c.obj
+2026-10-05T07:04:50.8175502Z [ 27%] Building C object lib/CMakeFiles/libcurl_object.dir/gopher.c.obj
+2026-10-05T07:04:50.9021168Z [ 27%] Building C object lib/CMakeFiles/libcurl_object.dir/hash.c.obj
+2026-10-05T07:04:51.2024052Z [ 27%] Building C object lib/CMakeFiles/libcurl_object.dir/headers.c.obj
+2026-10-05T07:04:51.6474449Z [ 29%] Building C object lib/CMakeFiles/libcurl_object.dir/hmac.c.obj
+2026-10-05T07:04:51.7864078Z [ 29%] Building C object lib/CMakeFiles/libcurl_object.dir/hsts.c.obj
+2026-10-05T07:04:52.1646318Z [ 29%] Building C object lib/CMakeFiles/libcurl_object.dir/http.c.obj
+2026-10-05T07:04:52.5474236Z [ 29%] Building C object lib/CMakeFiles/libcurl_object.dir/http1.c.obj
+2026-10-05T07:04:52.8165339Z [ 29%] Building C object lib/CMakeFiles/libcurl_object.dir/http2.c.obj
+2026-10-05T07:04:53.4959705Z [ 32%] Building C object lib/CMakeFiles/libcurl_object.dir/http_aws_sigv4.c.obj
+2026-10-05T07:04:54.2884000Z [ 32%] Building C object lib/CMakeFiles/libcurl_object.dir/http_httpsig.c.obj
+2026-10-05T07:04:54.5057528Z [ 32%] Building C object lib/CMakeFiles/libcurl_object.dir/curl_ed25519.c.obj
+2026-10-05T07:04:54.7261794Z [ 32%] Building C object lib/CMakeFiles/libcurl_object.dir/http_chunks.c.obj
+2026-10-05T07:04:55.1240919Z [ 32%] Building C object lib/CMakeFiles/libcurl_object.dir/http_digest.c.obj
+2026-10-05T07:04:55.2222971Z [ 35%] Building C object lib/CMakeFiles/libcurl_object.dir/http_negotiate.c.obj
+2026-10-05T07:04:55.7840211Z [ 35%] Building C object lib/CMakeFiles/libcurl_object.dir/http_ntlm.c.obj
+2026-10-05T07:04:56.0335361Z [ 35%] Building C object lib/CMakeFiles/libcurl_object.dir/http_proxy.c.obj
+2026-10-05T07:04:56.0996721Z [ 35%] Building C object lib/CMakeFiles/libcurl_object.dir/idn.c.obj
+2026-10-05T07:04:56.6490928Z [ 35%] Building C object lib/CMakeFiles/libcurl_object.dir/if2ip.c.obj
+2026-10-05T07:04:56.9440539Z [ 35%] Building C object lib/CMakeFiles/libcurl_object.dir/imap.c.obj
+2026-10-05T07:04:57.1042366Z [ 37%] Building C object lib/CMakeFiles/libcurl_object.dir/ldap.c.obj
+2026-10-05T07:04:57.5119278Z [ 37%] Building C object lib/CMakeFiles/libcurl_object.dir/llist.c.obj
+2026-10-05T07:04:57.7643305Z [ 37%] Building C object lib/CMakeFiles/libcurl_object.dir/macos.c.obj
+2026-10-05T07:04:57.9221731Z [ 37%] Building C object lib/CMakeFiles/libcurl_object.dir/md4.c.obj
+2026-10-05T07:04:58.4267853Z [ 37%] Building C object lib/CMakeFiles/libcurl_object.dir/md5.c.obj
+2026-10-05T07:04:58.6373432Z [ 40%] Building C object lib/CMakeFiles/libcurl_object.dir/memdebug.c.obj
+2026-10-05T07:04:58.6762245Z [ 40%] Building C object lib/CMakeFiles/libcurl_object.dir/mime.c.obj
+2026-10-05T07:04:59.2577511Z [ 40%] Building C object lib/CMakeFiles/libcurl_object.dir/mprintf.c.obj
+2026-10-05T07:04:59.4819166Z [ 40%] Building C object lib/CMakeFiles/libcurl_object.dir/mqtt.c.obj
+2026-10-05T07:05:00.2899478Z [ 40%] Building C object lib/CMakeFiles/libcurl_object.dir/multi.c.obj
+2026-10-05T07:05:00.3767152Z [ 40%] Building C object lib/CMakeFiles/libcurl_object.dir/multi_ev.c.obj
+2026-10-05T07:05:00.9122661Z [ 43%] Building C object lib/CMakeFiles/libcurl_object.dir/multi_ntfy.c.obj
+2026-10-05T07:05:01.3976318Z [ 43%] Building C object lib/CMakeFiles/libcurl_object.dir/netrc.c.obj
+2026-10-05T07:05:01.8425728Z [ 43%] Building C object lib/CMakeFiles/libcurl_object.dir/openldap.c.obj
+2026-10-05T07:05:02.2952011Z [ 43%] Building C object lib/CMakeFiles/libcurl_object.dir/parsedate.c.obj
+2026-10-05T07:05:02.4250228Z [ 43%] Building C object lib/CMakeFiles/libcurl_object.dir/peer.c.obj
+2026-10-05T07:05:02.6734337Z [ 45%] Building C object lib/CMakeFiles/libcurl_object.dir/pingpong.c.obj
+2026-10-05T07:05:03.2571719Z [ 45%] Building C object lib/CMakeFiles/libcurl_object.dir/pop3.c.obj
+2026-10-05T07:05:03.5426195Z [ 45%] Building C object lib/CMakeFiles/libcurl_object.dir/progress.c.obj
+2026-10-05T07:05:04.0472608Z [ 45%] Building C object lib/CMakeFiles/libcurl_object.dir/protocol.c.obj
+2026-10-05T07:05:04.1207675Z [ 45%] Building C object lib/CMakeFiles/libcurl_object.dir/proxy.c.obj
+2026-10-05T07:05:04.7399870Z [ 45%] Building C object lib/CMakeFiles/libcurl_object.dir/psl.c.obj
+2026-10-05T07:05:05.0118444Z [ 48%] Building C object lib/CMakeFiles/libcurl_object.dir/rand.c.obj
+2026-10-05T07:05:05.0589058Z [ 48%] Building C object lib/CMakeFiles/libcurl_object.dir/ratelimit.c.obj
+2026-10-05T07:05:05.6061861Z [ 48%] Building C object lib/CMakeFiles/libcurl_object.dir/request.c.obj
+2026-10-05T07:05:05.9213981Z [ 48%] Building C object lib/CMakeFiles/libcurl_object.dir/rtsp.c.obj
+2026-10-05T07:05:06.0379759Z [ 48%] Building C object lib/CMakeFiles/libcurl_object.dir/select.c.obj
+2026-10-05T07:05:06.6219851Z [ 51%] Building C object lib/CMakeFiles/libcurl_object.dir/sendf.c.obj
+2026-10-05T07:05:06.8085649Z [ 51%] Building C object lib/CMakeFiles/libcurl_object.dir/setopt.c.obj
+2026-10-05T07:05:07.1776677Z [ 51%] Building C object lib/CMakeFiles/libcurl_object.dir/sha256.c.obj
+2026-10-05T07:05:08.0165668Z [ 51%] Building C object lib/CMakeFiles/libcurl_object.dir/slist.c.obj
+2026-10-05T07:05:08.0298122Z [ 51%] Building C object lib/CMakeFiles/libcurl_object.dir/smb.c.obj
+2026-10-05T07:05:08.0968703Z [ 51%] Building C object lib/CMakeFiles/libcurl_object.dir/smtp.c.obj
+2026-10-05T07:05:08.8442404Z [ 54%] Building C object lib/CMakeFiles/libcurl_object.dir/socketpair.c.obj
+2026-10-05T07:05:08.8491733Z [ 54%] Building C object lib/CMakeFiles/libcurl_object.dir/socks.c.obj
+2026-10-05T07:05:09.0135903Z [ 54%] Building C object lib/CMakeFiles/libcurl_object.dir/socks_gssapi.c.obj
+2026-10-05T07:05:09.7280656Z [ 54%] Building C object lib/CMakeFiles/libcurl_object.dir/socks_sspi.c.obj
+2026-10-05T07:05:09.8500232Z [ 54%] Building C object lib/CMakeFiles/libcurl_object.dir/splay.c.obj
+2026-10-05T07:05:10.0464557Z [ 56%] Building C object lib/CMakeFiles/libcurl_object.dir/strcase.c.obj
+2026-10-05T07:05:10.6949384Z [ 56%] Building C object lib/CMakeFiles/libcurl_object.dir/strequal.c.obj
+2026-10-05T07:05:10.8107468Z [ 56%] Building C object lib/CMakeFiles/libcurl_object.dir/strerror.c.obj
+2026-10-05T07:05:10.9306985Z [ 56%] Building C object lib/CMakeFiles/libcurl_object.dir/system_win32.c.obj
+2026-10-05T07:05:11.5533386Z [ 56%] Building C object lib/CMakeFiles/libcurl_object.dir/telnet.c.obj
+2026-10-05T07:05:11.7486189Z [ 56%] Building C object lib/CMakeFiles/libcurl_object.dir/tftp.c.obj
+2026-10-05T07:05:11.7767925Z [ 59%] Building C object lib/CMakeFiles/libcurl_object.dir/thrdpool.c.obj
+2026-10-05T07:05:12.4340579Z [ 59%] Building C object lib/CMakeFiles/libcurl_object.dir/thrdqueue.c.obj
+2026-10-05T07:05:12.5865118Z [ 59%] Building C object lib/CMakeFiles/libcurl_object.dir/transfer.c.obj
+2026-10-05T07:05:12.7843299Z [ 59%] Building C object lib/CMakeFiles/libcurl_object.dir/uint-bset.c.obj
+2026-10-05T07:05:13.4112578Z [ 59%] Building C object lib/CMakeFiles/libcurl_object.dir/uint-hash.c.obj
+2026-10-05T07:05:13.6706274Z [ 62%] Building C object lib/CMakeFiles/libcurl_object.dir/uint-hashset.c.obj
+2026-10-05T07:05:13.7394176Z [ 62%] Building C object lib/CMakeFiles/libcurl_object.dir/uint-spbset.c.obj
+2026-10-05T07:05:14.2489900Z [ 62%] Building C object lib/CMakeFiles/libcurl_object.dir/uint-table.c.obj
+2026-10-05T07:05:14.6533503Z [ 62%] Building C object lib/CMakeFiles/libcurl_object.dir/url.c.obj
+2026-10-05T07:05:14.7067328Z [ 62%] Building C object lib/CMakeFiles/libcurl_object.dir/urlapi.c.obj
+2026-10-05T07:05:15.1725884Z [ 62%] Building C object lib/CMakeFiles/libcurl_object.dir/version.c.obj
+2026-10-05T07:05:16.0316841Z [ 64%] Building C object lib/CMakeFiles/libcurl_object.dir/ws.c.obj
+2026-10-05T07:05:16.2068831Z [ 64%] Building C object lib/CMakeFiles/libcurl_object.dir/vauth/cleartext.c.obj
+2026-10-05T07:05:16.5559277Z [ 64%] Building C object lib/CMakeFiles/libcurl_object.dir/vauth/cram.c.obj
+2026-10-05T07:05:16.8735427Z [ 64%] Building C object lib/CMakeFiles/libcurl_object.dir/vauth/digest.c.obj
+2026-10-05T07:05:17.0250082Z [ 64%] Building C object lib/CMakeFiles/libcurl_object.dir/vauth/digest_sspi.c.obj
+2026-10-05T07:05:17.4842454Z [ 67%] Building C object lib/CMakeFiles/libcurl_object.dir/vauth/gsasl.c.obj
+2026-10-05T07:05:17.7077363Z [ 67%] Building C object lib/CMakeFiles/libcurl_object.dir/vauth/krb5_gssapi.c.obj
+2026-10-05T07:05:18.0599846Z [ 67%] Building C object lib/CMakeFiles/libcurl_object.dir/vauth/krb5_sspi.c.obj
+2026-10-05T07:05:18.3271380Z [ 67%] Building C object lib/CMakeFiles/libcurl_object.dir/vauth/ntlm.c.obj
+2026-10-05T07:05:18.5279488Z [ 67%] Building C object lib/CMakeFiles/libcurl_object.dir/vauth/ntlm_sspi.c.obj
+2026-10-05T07:05:19.0211707Z [ 70%] Building C object lib/CMakeFiles/libcurl_object.dir/vauth/oauth2.c.obj
+2026-10-05T07:05:19.2105339Z [ 70%] Building C object lib/CMakeFiles/libcurl_object.dir/vauth/spnego_gssapi.c.obj
+2026-10-05T07:05:19.3443105Z [ 70%] Building C object lib/CMakeFiles/libcurl_object.dir/vauth/spnego_sspi.c.obj
+2026-10-05T07:05:19.8039401Z [ 70%] Building C object lib/CMakeFiles/libcurl_object.dir/vauth/vauth.c.obj
+2026-10-05T07:05:20.0536016Z [ 70%] Building C object lib/CMakeFiles/libcurl_object.dir/vdns/asyn-ares.c.obj
+2026-10-05T07:05:20.2765894Z [ 70%] Building C object lib/CMakeFiles/libcurl_object.dir/vdns/asyn-base.c.obj
+2026-10-05T07:05:20.6961158Z [ 72%] Building C object lib/CMakeFiles/libcurl_object.dir/vdns/asyn-thrdd.c.obj
+2026-10-05T07:05:20.8814915Z [ 72%] Building C object lib/CMakeFiles/libcurl_object.dir/vdns/cf-dns.c.obj
+2026-10-05T07:05:21.1949158Z [ 72%] Building C object lib/CMakeFiles/libcurl_object.dir/vdns/dnscache.c.obj
+2026-10-05T07:05:21.7120254Z [ 72%] Building C object lib/CMakeFiles/libcurl_object.dir/vdns/doh.c.obj
+2026-10-05T07:05:21.8888962Z [ 72%] Building C object lib/CMakeFiles/libcurl_object.dir/vdns/hostip.c.obj
+2026-10-05T07:05:22.3217214Z [ 75%] Building C object lib/CMakeFiles/libcurl_object.dir/vdns/hostip4.c.obj
+2026-10-05T07:05:22.8731774Z [ 75%] Building C object lib/CMakeFiles/libcurl_object.dir/vdns/hostip6.c.obj
+2026-10-05T07:05:23.0717185Z [ 75%] Building C object lib/CMakeFiles/libcurl_object.dir/vdns/httpsrr.c.obj
+2026-10-05T07:05:23.1749912Z [ 75%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/apple.c.obj
+2026-10-05T07:05:23.7237628Z [ 75%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/cipher_suite.c.obj
+2026-10-05T07:05:23.8693090Z [ 75%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/gtls.c.obj
+2026-10-05T07:05:24.0146099Z [ 78%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/hostcheck.c.obj
+2026-10-05T07:05:24.5646469Z [ 78%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/keylog.c.obj
+2026-10-05T07:05:24.7237016Z [ 78%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/mbedtls.c.obj
+2026-10-05T07:05:24.8482073Z [ 78%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/openssl.c.obj
+2026-10-05T07:05:25.4271013Z [ 78%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/rustls.c.obj
+2026-10-05T07:05:25.5991769Z [ 81%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/schannel.c.obj
+2026-10-05T07:05:25.6824815Z [ 81%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/schannel_verify.c.obj
+2026-10-05T07:05:26.1791720Z [ 81%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/vtls.c.obj
+2026-10-05T07:05:26.8067126Z [ 81%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/vtls_config.c.obj
+2026-10-05T07:05:27.0893546Z [ 81%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/vtls_scache.c.obj
+2026-10-05T07:05:27.6933762Z [ 81%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/vtls_spack.c.obj
+2026-10-05T07:05:27.7377326Z [ 83%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/wolfssl.c.obj
+2026-10-05T07:05:28.4386760Z [ 83%] Building C object lib/CMakeFiles/libcurl_object.dir/vtls/x509asn1.c.obj
+2026-10-05T07:05:28.5263984Z [ 83%] Building C object lib/CMakeFiles/libcurl_object.dir/vquic/capsule.c.obj
+2026-10-05T07:05:28.5303517Z [ 83%] Building C object lib/CMakeFiles/libcurl_object.dir/vquic/cf-capsule.c.obj
+2026-10-05T07:05:29.4079747Z [ 83%] Building C object lib/CMakeFiles/libcurl_object.dir/vquic/cf-ngtcp2.c.obj
+2026-10-05T07:05:29.5078101Z [ 86%] Building C object lib/CMakeFiles/libcurl_object.dir/vquic/cf-ngtcp2-cmn.c.obj
+2026-10-05T07:05:29.7570173Z [ 86%] Building C object lib/CMakeFiles/libcurl_object.dir/vquic/cf-ngtcp2-proxy.c.obj
+2026-10-05T07:05:30.1731197Z [ 86%] Building C object lib/CMakeFiles/libcurl_object.dir/vquic/cf-quiche.c.obj
+2026-10-05T07:05:30.4198661Z [ 86%] Building C object lib/CMakeFiles/libcurl_object.dir/vquic/vquic.c.obj
+2026-10-05T07:05:30.5885756Z [ 86%] Building C object lib/CMakeFiles/libcurl_object.dir/vquic/vquic-tls.c.obj
+2026-10-05T07:05:31.0657967Z [ 86%] Building C object lib/CMakeFiles/libcurl_object.dir/vssh/libssh.c.obj
+2026-10-05T07:05:31.3007260Z [ 89%] Building C object lib/CMakeFiles/libcurl_object.dir/vssh/libssh2.c.obj
+2026-10-05T07:05:31.3434856Z [ 89%] Building C object lib/CMakeFiles/libcurl_object.dir/vssh/vssh.c.obj
+2026-10-05T07:05:31.9010809Z [ 89%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/base64.c.obj
+2026-10-05T07:05:32.1727212Z [ 89%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/basename.c.obj
+2026-10-05T07:05:32.2005017Z [ 89%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/dynbuf.c.obj
+2026-10-05T07:05:32.7659911Z [ 91%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/fopen.c.obj
+2026-10-05T07:05:32.9957193Z [ 91%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/inet_ntop.c.obj
+2026-10-05T07:05:33.1518521Z [ 91%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/inet_pton.c.obj
+2026-10-05T07:05:33.7397986Z [ 91%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/multibyte.c.obj
+2026-10-05T07:05:33.9088324Z [ 91%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/nonblock.c.obj
+2026-10-05T07:05:34.0281956Z [ 91%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/snprintf.c.obj
+2026-10-05T07:05:34.5910699Z [ 94%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/strcopy.c.obj
+2026-10-05T07:05:34.7659200Z [ 94%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/strdup.c.obj
+2026-10-05T07:05:34.8874731Z [ 94%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/strerr.c.obj
+2026-10-05T07:05:35.4030821Z [ 94%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/strparse.c.obj
+2026-10-05T07:05:35.6429655Z [ 94%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/timediff.c.obj
+2026-10-05T07:05:35.7877550Z [ 97%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/timeval.c.obj
+2026-10-05T07:05:36.3723471Z [ 97%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/version_win32.c.obj
+2026-10-05T07:05:36.5380160Z [ 97%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/wait.c.obj
+2026-10-05T07:05:36.6120228Z [ 97%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/warnless.c.obj
+2026-10-05T07:05:37.2104625Z [ 97%] Building C object lib/CMakeFiles/libcurl_object.dir/curlx/winapi.c.obj
+2026-10-05T07:05:37.9245437Z [ 97%] Built target libcurl_object
+2026-10-05T07:05:37.9749343Z [100%] Linking C static library libcurl.a
+2026-10-05T07:05:38.2388756Z [100%] Built target libcurl_static
+2026-10-05T07:05:38.2627088Z + C:\Program Files\CMake\bin\cmake.EXE --install D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\build\curl --config Release
+2026-10-05T07:05:38.2764738Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/libcurl.a
+2026-10-05T07:05:38.2788707Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/bin/curl-config
+2026-10-05T07:05:38.2793103Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/pkgconfig/libcurl.pc
+2026-10-05T07:05:38.2796566Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/curl
+2026-10-05T07:05:38.2799041Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/curl/curl.h
+2026-10-05T07:05:38.2804181Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/curl/curlver.h
+2026-10-05T07:05:38.2807126Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/curl/easy.h
+2026-10-05T07:05:38.2810201Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/curl/header.h
+2026-10-05T07:05:38.2813007Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/curl/mprintf.h
+2026-10-05T07:05:38.2815996Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/curl/multi.h
+2026-10-05T07:05:38.2819199Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/curl/options.h
+2026-10-05T07:05:38.2825538Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/curl/stdcheaders.h
+2026-10-05T07:05:38.2828763Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/curl/system.h
+2026-10-05T07:05:38.2831724Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/curl/typecheck-gcc.h
+2026-10-05T07:05:38.2835852Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/curl/urlapi.h
+2026-10-05T07:05:38.2838667Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/include/curl/websockets.h
+2026-10-05T07:05:38.2844198Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/CURLTargets.cmake
+2026-10-05T07:05:38.2848198Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/CURLTargets-release.cmake
+2026-10-05T07:05:38.2852140Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/CURLConfigVersion.cmake
+2026-10-05T07:05:38.2854948Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/CURLConfig.cmake
+2026-10-05T07:05:38.2858097Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindBrotli.cmake
+2026-10-05T07:05:38.2860815Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindCares.cmake
+2026-10-05T07:05:38.2865582Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindGSS.cmake
+2026-10-05T07:05:38.2868689Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindGnuTLS.cmake
+2026-10-05T07:05:38.2871620Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindLDAP.cmake
+2026-10-05T07:05:38.2874811Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindLibbacktrace.cmake
+2026-10-05T07:05:38.2878173Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindLibgsasl.cmake
+2026-10-05T07:05:38.2881043Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindLibidn2.cmake
+2026-10-05T07:05:38.2883655Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindLibpsl.cmake
+2026-10-05T07:05:38.2886324Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindLibssh.cmake
+2026-10-05T07:05:38.2889678Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindLibssh2.cmake
+2026-10-05T07:05:38.2892576Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindLibuv.cmake
+2026-10-05T07:05:38.2895346Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindMbedTLS.cmake
+2026-10-05T07:05:38.2898278Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindNGHTTP2.cmake
+2026-10-05T07:05:38.2901079Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindNGHTTP3.cmake
+2026-10-05T07:05:38.2903836Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindNGTCP2.cmake
+2026-10-05T07:05:38.2906698Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindNettle.cmake
+2026-10-05T07:05:38.2909523Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindQuiche.cmake
+2026-10-05T07:05:38.2912187Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindRustls.cmake
+2026-10-05T07:05:38.2914932Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindWolfSSL.cmake
+2026-10-05T07:05:38.2918371Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-mingw-x64/install/lib/cmake/CURL/FindZstd.cmake
+2026-10-05T07:05:38.2974494Z Dependencies installed locally: D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-mingw-x64\install
+2026-10-05T07:05:38.4147957Z ##[group]Run cmake --preset windows-mingw-x64
+2026-10-05T07:05:38.4148596Z [36;1mcmake --preset windows-mingw-x64[0m
+2026-10-05T07:05:38.4149004Z [36;1mif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }[0m
+2026-10-05T07:05:38.4149400Z [36;1mcmake --build --preset windows-mingw-x64[0m
+2026-10-05T07:05:38.4185477Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-05T07:05:38.4185892Z env:
+2026-10-05T07:05:38.4186558Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:05:38.4187090Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-05T07:05:38.4187605Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:05:38.4188073Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:05:38.4188529Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:05:38.4188892Z ##[endgroup]
+2026-10-05T07:05:38.6503994Z Preset CMake variables:
+2026-10-05T07:05:38.6504437Z 
+2026-10-05T07:05:38.6504690Z   BUILD_TESTING="ON"
+2026-10-05T07:05:38.6505405Z   CMAKE_BUILD_TYPE="Release"
+2026-10-05T07:05:38.6505898Z   CMAKE_CXX_COMPILER="g++"
+2026-10-05T07:05:38.6506232Z 
+2026-10-05T07:05:40.7798665Z -- The CXX compiler identification is GNU 14.2.0
+2026-10-05T07:05:40.9748536Z -- Detecting CXX compiler ABI info
+2026-10-05T07:05:41.3079479Z -- Detecting CXX compiler ABI info - done
+2026-10-05T07:05:41.3290140Z -- Check for working CXX compiler: C:/mingw64/bin/g++.exe - skipped
+2026-10-05T07:05:41.3295031Z -- Detecting CXX compile features
+2026-10-05T07:05:41.3303708Z -- Detecting CXX compile features - done
+2026-10-05T07:05:41.6380858Z -- Found Python3: C:/hostedtoolcache/windows/Python/3.12.10/x64/python3.exe (found suitable version "3.12.10", minimum required is "3.12") found components: Interpreter
+2026-10-05T07:05:41.6392437Z -- Configuring done (3.0s)
+2026-10-05T07:05:41.7654705Z -- Generating done (0.1s)
+2026-10-05T07:05:41.7661481Z -- Build files have been written to: D:/a/itu-ders-bot/itu-ders-bot/build/windows-mingw-x64
+2026-10-05T07:05:43.2222987Z [  0%] Built target provenance_start
+2026-10-05T07:05:43.2682808Z [  3%] Building CXX object CMakeFiles/itu_platform.dir/src/platform_windows.cpp.obj
+2026-10-05T07:05:46.9669280Z [  7%] Linking CXX static library libitu_platform.a
+2026-10-05T07:05:47.0293075Z [  7%] Built target itu_platform
+2026-10-05T07:05:47.0848248Z [ 10%] Building CXX object CMakeFiles/itu_core.dir/src/http.cpp.obj
+2026-10-05T07:05:47.0880164Z [ 17%] Building CXX object CMakeFiles/itu_core_test.dir/src/http.cpp.obj
+2026-10-05T07:05:47.0881280Z [ 17%] Building CXX object CMakeFiles/setup.dir/setup/main.cpp.obj
+2026-10-05T07:05:49.8767960Z [ 21%] Building CXX object CMakeFiles/itu_core.dir/src/token.cpp.obj
+2026-10-05T07:05:50.0091929Z [ 25%] Building CXX object CMakeFiles/itu_core_test.dir/src/token.cpp.obj
+2026-10-05T07:05:51.9557273Z [ 28%] Linking CXX executable bin\setup.exe
+2026-10-05T07:05:53.3880617Z [ 28%] Built target setup
+2026-10-05T07:05:53.4081517Z [ 32%] Building CXX object CMakeFiles/itu_core.dir/src/clock.cpp.obj
+2026-10-05T07:05:56.0607066Z [ 35%] Building CXX object CMakeFiles/itu_core_test.dir/src/clock.cpp.obj
+2026-10-05T07:05:56.1078529Z [ 39%] Building CXX object CMakeFiles/setup_file_tests.dir/tests/setup_file_tests.cpp.obj
+2026-10-05T07:05:56.4018747Z [ 42%] Linking CXX static library libitu_core.a
+2026-10-05T07:05:56.4903660Z [ 42%] Built target itu_core
+2026-10-05T07:05:56.5070091Z [ 46%] Building CXX object CMakeFiles/itu_core_test.dir/src/http_socket_windows.cpp.obj
+2026-10-05T07:05:57.7331443Z [ 50%] Building CXX object CMakeFiles/windows_console_tests.dir/tests/windows_console_tests.cpp.obj
+2026-10-05T07:05:58.4118579Z [ 53%] Linking CXX static library libitu_core_test.a
+2026-10-05T07:05:58.4997046Z [ 53%] Built target itu_core_test
+2026-10-05T07:05:58.5524299Z [ 57%] Building CXX object CMakeFiles/main.dir/src/main.cpp.obj
+2026-10-05T07:06:02.8753028Z [ 60%] Linking CXX executable bin\setup_file_tests.exe
+2026-10-05T07:06:03.2170958Z [ 60%] Built target setup_file_tests
+2026-10-05T07:06:03.2646884Z [ 64%] Building CXX object CMakeFiles/transport_test.dir/tests/transport_test.cpp.obj
+2026-10-05T07:06:03.6686994Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp: In function 'int main(int, char**)':
+2026-10-05T07:06:03.6688853Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:12:33: warning: missing initializer for member 'HttpRequest::headers' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6690277Z    12 |         try { production.prepare({"GET", base}); } catch (...) { refused = true; }
+2026-10-05T07:06:03.6691142Z       |               ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+2026-10-05T07:06:03.6692542Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:12:33: warning: missing initializer for member 'HttpRequest::body' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6700357Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:17:24: warning: missing initializer for member 'HttpRequest::headers' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6701738Z    17 |         session.prepare({"GET", base + "/redirect"});
+2026-10-05T07:06:03.6702489Z       |         ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-05T07:06:03.6703845Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:17:24: warning: missing initializer for member 'HttpRequest::body' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6716678Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:23:33: warning: missing initializer for member 'HttpRequest::headers' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6718007Z    23 |         result = session.request({"HEAD", base + "/echo"});
+2026-10-05T07:06:03.6718834Z       |                  ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-05T07:06:03.6720098Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:23:33: warning: missing initializer for member 'HttpRequest::body' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6753994Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:27:33: warning: missing initializer for member 'HttpRequest::headers' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6755431Z    27 |         result = session.request({"GET", base + "/echo"});
+2026-10-05T07:06:03.6756330Z       |                  ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-05T07:06:03.6757677Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:27:33: warning: missing initializer for member 'HttpRequest::body' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6764023Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:31:33: warning: missing initializer for member 'HttpRequest::headers' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6765602Z    31 |         result = session.request({"GET", base + "/status"});
+2026-10-05T07:06:03.6766387Z       |                  ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-05T07:06:03.6767714Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:31:33: warning: missing initializer for member 'HttpRequest::body' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6769499Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:33:33: warning: missing initializer for member 'HttpRequest::headers' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6770756Z    33 |         result = session.request({"GET", base + "/chunked"});
+2026-10-05T07:06:03.6771527Z       |                  ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-05T07:06:03.6772777Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:33:33: warning: missing initializer for member 'HttpRequest::body' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6774567Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:36:34: warning: missing initializer for member 'HttpRequest::headers' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6775790Z    36 |         result = isolated.request({"GET", base + "/echo"});
+2026-10-05T07:06:03.6777911Z       |                  ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-05T07:06:03.6779181Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:36:34: warning: missing initializer for member 'HttpRequest::body' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6780985Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:38:33: warning: missing initializer for member 'HttpRequest::body' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6783328Z    38 |         result = session.request({"GET", base + "/crosshost", {"Authorization: ***"}});
+2026-10-05T07:06:03.6784226Z       |                  ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-05T07:06:03.6785618Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:42:31: warning: missing initializer for member 'HttpRequest::headers' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6786801Z    42 |         try { isolated.request({"GET", tls_base + "/echo"}); }
+2026-10-05T07:06:03.6787476Z       |               ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-05T07:06:03.6788647Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:42:31: warning: missing initializer for member 'HttpRequest::body' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6790287Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:46:33: warning: missing initializer for member 'HttpRequest::headers' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6791774Z    46 |         result = trusted.request({"GET", tls_base + "/echo"});
+2026-10-05T07:06:03.6792449Z       |                  ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-05T07:06:03.6793580Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:46:33: warning: missing initializer for member 'HttpRequest::body' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6800095Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:51:30: warning: missing initializer for member 'HttpRequest::headers' [-Wmissing-field-initializers]
+2026-10-05T07:06:03.6801331Z    51 |         try { trusted.request({"GET", mismatch + "/echo"}); }
+2026-10-05T07:06:03.6802047Z       |               ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2026-10-05T07:06:03.6803195Z D:\a\itu-ders-bot\itu-ders-bot\tests\transport_test.cpp:51:30: warning: missing initializer for member 'HttpRequest::body' [-Wmissing-field-initializers]
+2026-10-05T07:06:04.2632197Z [ 67%] Linking CXX executable bin\transport_test.exe
+2026-10-05T07:06:04.7250543Z [ 67%] Built target transport_test
+2026-10-05T07:06:04.7840246Z [ 71%] Building CXX object CMakeFiles/auth_driver.dir/tests/auth_driver.cpp.obj
+2026-10-05T07:06:05.4260522Z [ 75%] Linking CXX executable bin\auth_driver.exe
+2026-10-05T07:06:05.7874954Z [ 75%] Built target auth_driver
+2026-10-05T07:06:05.8353494Z [ 78%] Building CXX object CMakeFiles/core_tests.dir/tests/core_tests.cpp.obj
+2026-10-05T07:06:06.2854662Z [ 82%] Linking CXX executable bin\windows_console_tests.exe
+2026-10-05T07:06:06.6038377Z [ 82%] Built target windows_console_tests
+2026-10-05T07:06:06.6574381Z [ 85%] Building CXX object CMakeFiles/application_driver.dir/tests/application_driver.cpp.obj
+2026-10-05T07:06:07.2870453Z [ 89%] Linking CXX executable bin\main.exe
+2026-10-05T07:06:07.7376565Z [ 89%] Built target main
+2026-10-05T07:06:07.7881277Z [ 92%] Generating build manifest with current build provenance
+2026-10-05T07:06:08.0440848Z [ 92%] Built target build_manifest
+2026-10-05T07:06:14.3801514Z [ 96%] Linking CXX executable bin\application_driver.exe
+2026-10-05T07:06:14.7296211Z [ 96%] Built target application_driver
+2026-10-05T07:06:16.5428782Z [100%] Linking CXX executable bin\core_tests.exe
+2026-10-05T07:06:16.8383404Z [100%] Built target core_tests
+2026-10-05T07:06:16.9657308Z ##[group]Run ctest --preset windows-mingw-x64 --parallel 3
+2026-10-05T07:06:16.9657954Z [36;1mctest --preset windows-mingw-x64 --parallel 3[0m
+2026-10-05T07:06:16.9658385Z [36;1mif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }[0m
+2026-10-05T07:06:16.9658962Z [36;1mpython tests/native_artifacts.py build/windows-mingw-x64/bin --target windows-x64[0m
+2026-10-05T07:06:16.9695117Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-05T07:06:16.9695542Z env:
+2026-10-05T07:06:16.9695889Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:06:16.9696460Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-05T07:06:16.9696991Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:06:16.9697460Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:06:16.9697917Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:06:16.9698415Z ##[endgroup]
+2026-10-05T07:06:17.7670207Z Test project D:/a/itu-ders-bot/itu-ders-bot/build/windows-mingw-x64
+2026-10-05T07:06:17.7755430Z     Start 1: transport
+2026-10-05T07:06:17.7802163Z     Start 2: authentication
+2026-10-05T07:06:17.7855440Z     Start 3: core_and_clock
+2026-10-05T07:06:17.8023807Z 1/9 Test #3: core_and_clock ...................   Passed    0.02 sec
+2026-10-05T07:06:17.8036126Z     Start 4: application_flags
+2026-10-05T07:06:19.0453285Z 2/9 Test #1: transport ........................   Passed    1.27 sec
+2026-10-05T07:06:19.0456853Z     Start 5: setup_terminal
+2026-10-05T07:06:20.2706223Z 3/9 Test #5: setup_terminal ...................   Passed    1.22 sec
+2026-10-05T07:06:20.2714841Z     Start 6: setup_files
+2026-10-05T07:06:20.3359233Z 4/9 Test #6: setup_files ......................   Passed    0.06 sec
+2026-10-05T07:06:20.3362087Z     Start 7: artifact_integrity
+2026-10-05T07:06:21.1923580Z 5/9 Test #7: artifact_integrity ...............   Passed    0.86 sec
+2026-10-05T07:06:21.1928277Z     Start 8: manifest_paths
+2026-10-05T07:06:25.0054792Z 6/9 Test #2: authentication ...................   Passed    7.22 sec
+2026-10-05T07:06:25.0058492Z     Start 9: build_provenance
+2026-10-05T07:06:45.2528352Z 7/9 Test #4: application_flags ................   Passed   27.45 sec
+2026-10-05T07:06:47.8682803Z 8/9 Test #8: manifest_paths ...................   Passed   26.68 sec
+2026-10-05T07:07:40.3396686Z 9/9 Test #9: build_provenance .................   Passed   75.33 sec
+2026-10-05T07:07:40.3402916Z 
+2026-10-05T07:07:40.3403438Z 100% tests passed, 0 tests failed out of 9
+2026-10-05T07:07:40.3403770Z 
+2026-10-05T07:07:40.3403936Z Total Test time (real) =  82.57 sec
+2026-10-05T07:07:40.4687163Z Native architecture, runtime dependencies, archive contents/checksums and safe startup passed.
+2026-10-05T07:07:40.5749973Z ##[group]Run python scripts/package.py build/windows-mingw-x64/bin --target windows-x64 --output dist/mingw
+2026-10-05T07:07:40.5750972Z [36;1mpython scripts/package.py build/windows-mingw-x64/bin --target windows-x64 --output dist/mingw[0m
+2026-10-05T07:07:40.5751675Z [36;1mif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }[0m
+2026-10-05T07:07:40.5752231Z [36;1m$archives = @(Get-ChildItem -LiteralPath dist/mingw -Filter '*-windows-x64.zip')[0m
+2026-10-05T07:07:40.5752906Z [36;1mif ($archives.Count -ne 1) { throw 'Expected exactly one MinGW Windows archive' }[0m
+2026-10-05T07:07:40.5753428Z [36;1m$archivePath = $archives[0].FullName[0m
+2026-10-05T07:07:40.5753894Z [36;1mpython tests/native_artifacts.py "$archivePath" --target windows-x64[0m
+2026-10-05T07:07:40.5791021Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-05T07:07:40.5791459Z env:
+2026-10-05T07:07:40.5791874Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:07:40.5792575Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-05T07:07:40.5793147Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:07:40.5793593Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:07:40.5794037Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:07:40.5794479Z ##[endgroup]
+2026-10-05T07:07:41.2932907Z D:\a\itu-ders-bot\itu-ders-bot\dist\mingw\itu-ders-bot-1.0.0-windows-x64.zip
+2026-10-05T07:07:41.6808011Z Native architecture, runtime dependencies, archive contents/checksums and safe startup passed.
+2026-10-05T07:07:41.7562328Z Post job cleanup.
+2026-10-05T07:07:41.8995106Z (node:4784) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-05T07:07:41.8995972Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-05T07:07:41.9301343Z Post job cleanup.
+2026-10-05T07:07:42.1195451Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-05T07:07:42.1428518Z git version 2.55.0.windows.5
+2026-10-05T07:07:42.1491789Z Temporarily overriding HOME='D:\a\_temp\ec60248c-f9a2-4617-8b1f-1351eb2b02c7' before making global git config changes
+2026-10-05T07:07:42.1492937Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-05T07:07:42.1503961Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\itu-ders-bot\itu-ders-bot
+2026-10-05T07:07:42.1769510Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-05T07:07:42.2051304Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-05T07:07:42.7018093Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-05T07:07:42.7224345Z http.https://github.com/.extraheader
+2026-10-05T07:07:42.7263729Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2026-10-05T07:07:42.7505279Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-05T07:07:43.2310811Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-05T07:07:43.2554663Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-05T07:07:43.7350799Z Cleaning up orphan processes
+2026-10-05T07:07:43.7919414Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

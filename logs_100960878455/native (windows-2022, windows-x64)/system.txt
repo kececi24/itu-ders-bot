@@ -1,0 +1,8 @@
+2026-10-05T07:03:48.2940000Z Requested labels: windows-2022
+2026-10-05T07:03:48.2940000Z Job defined at: kececi24/itu-ders-bot/.github/workflows/release.yml@refs/heads/cross-platform
+2026-10-05T07:03:48.2940000Z Waiting for a runner to pick up this job...
+2026-10-05T07:03:48.2920000Z Evaluating native.if
+2026-10-05T07:03:48.2920000Z Evaluating: success()
+2026-10-05T07:03:48.2920000Z Result: true
+2026-10-05T07:03:48.7950000Z Job is about to start running on the hosted runner: GitHub Actions 1000000146
+2026-10-05T07:03:48.7960000Z Job is waiting for a hosted runner to come online.

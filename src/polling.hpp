@@ -23,6 +23,7 @@ struct Runtime {
     std::function<std::optional<std::string>()> read_state;
     std::function<void(const std::string&)> write_state;
     std::function<TokenResult()> login, refresh;
+    std::function<void(const HttpRequest&)> prepare;
     std::function<HttpResponse(const HttpRequest&)> request;
     std::function<void(HttpSession::BeforeTransfer, HttpSession::AfterTransfer)> observers;
     std::function<void(const Json&)> log;

@@ -12,6 +12,7 @@ import socket
 class Fixture(http.server.BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
     applied_requests = {}
+    cooldown_targets = []
     applied_lock = threading.Lock()
 
     def log_message(self, *args):
@@ -30,7 +31,10 @@ class Fixture(http.server.BaseHTTPRequestHandler):
         body = self.rfile.read(int(self.headers.get("Content-Length", "0")))
         path = self.path.split("?", 1)[0]
         assert path != "/must-not-dispatch", "cancelled transfer reached the fixture"
-        if path in ("/apply-no-headers", "/apply-partial", "/apply-mixed"):
+        if path == "/cooldown-target":
+            with self.applied_lock:
+                self.cooldown_targets.append(self.path.split("?", 1)[1])
+        if path in ("/apply-no-headers", "/apply-partial", "/apply-mixed", "/rate-partial"):
             assert self.command == "POST" and body == b"synthetic-secret-payload"
             with self.applied_lock:
                 self.applied_requests[path] = self.applied_requests.get(path, 0) + 1
@@ -48,6 +52,16 @@ class Fixture(http.server.BaseHTTPRequestHandler):
                 time.sleep(0.25)
                 self.close_connection = True
                 return
+            if path == "/rate-partial":
+                self.send_response(429)
+                self.send_header("Retry-After", "120")
+                self.send_header("Content-Length", "1000")
+                self.end_headers()
+                self.wfile.write(b"rate-limited-partial")
+                self.wfile.flush()
+                time.sleep(0.25)
+                self.close_connection = True
+                return
             result = b'{"results":[{"success":true},{"success":false}]}'
             self.send_response(200)
             self.send_header("Content-Length", str(len(result)))
@@ -58,9 +72,21 @@ class Fixture(http.server.BaseHTTPRequestHandler):
             time.sleep(0.15)
         if self.path == "/cancel":
             time.sleep(3)
-        if self.path == "/redirect-unavailable":
+        if path.startswith("/redirect-cooldown-"):
+            kind = path.removeprefix("/redirect-cooldown-")
+            retry_after = {
+                "positive": "120", "date": "Thu, 01 Jan 2099 00:00:00 GMT",
+                "zero": "0", "past": "Sat, 01 Jan 2000 00:00:00 GMT",
+                "invalid": "synthetic-secret-invalid-header",
+            }[kind]
+            self.send_response(302)
+            self.send_header("Location", "/cooldown-target?" + kind)
+            self.send_header("Retry-After", retry_after)
+            self.send_header("Set-Cookie", "synthetic-secret-cookie=yes; Path=/")
+            result = b"synthetic-secret-redirect-body"
+        elif self.path == "/redirect-unavailable":
             self.send_response(307)
-            self.send_header("Location", f"http://127.0.0.1:{closed_socket.getsockname()[1]}/")
+            self.send_header("Location", f"http://127.0.0.1:{refused_port}/")
             result = b""
         elif self.path == "/crosshost":
             self.send_response(302)
@@ -80,6 +106,8 @@ class Fixture(http.server.BaseHTTPRequestHandler):
             return
         else:
             self.send_response(418 if self.path == "/status" else 200)
+            if path == "/cooldown-final":
+                self.send_header("Retry-After", "120")
             self.send_header("X-Final", "yes")
             self.send_header("X-Connection", str(self.client_address[1]))
             self.send_header("X-Auth", "yes" if self.headers.get("Authorization") else "no")
@@ -92,6 +120,11 @@ class Fixture(http.server.BaseHTTPRequestHandler):
             except (BrokenPipeError, ConnectionResetError):
                 pass
 
+
+closed_socket = socket.socket()
+closed_socket.bind(("127.0.0.1", 0))
+refused_port = closed_socket.getsockname()[1]
+closed_socket.close()
 
 # Public, deliberately untrusted offline fixture material. Never install this CA.
 fixture = Path(__file__).resolve().parent / "fixtures" / "tls"
@@ -108,18 +141,17 @@ tls_server.socket = context.wrap_socket(tls_server.socket, server_side=True)
 threading.Thread(target=tls_server.serve_forever, daemon=True).start()
 server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Fixture)
 server.daemon_threads = True
-closed_socket = socket.socket()
-closed_socket.bind(("127.0.0.1", 0))  # Reserve a port without listening: deterministic connection refusal.
 threading.Thread(target=server.serve_forever, daemon=True).start()
 try:
-    result = subprocess.run([sys.argv[1], f"http://127.0.0.1:{server.server_port}", f"https://localhost:{tls_server.server_port}", str(ca), f"http://127.0.0.1:{closed_socket.getsockname()[1]}/"], timeout=30)
+    result = subprocess.run([sys.argv[1], f"http://127.0.0.1:{server.server_port}", f"https://localhost:{tls_server.server_port}", str(ca), f"http://127.0.0.1:{refused_port}/"], timeout=30)
     assert Fixture.applied_requests == {
-        "/apply-no-headers": 1, "/apply-partial": 1, "/apply-mixed": 1
+        "/apply-no-headers": 1, "/apply-partial": 1, "/apply-mixed": 1, "/rate-partial": 1
     }, "Synthetic requests were not applied exactly once (unexpected retry or missing request)"
+    assert Fixture.cooldown_targets == ["zero", "past", "invalid", "positive"], \
+        "Redirect target was dispatched during an active cooldown"
 finally:
     server.shutdown()
     server.server_close()
     tls_server.shutdown()
     tls_server.server_close()
-    closed_socket.close()
 sys.exit(result.returncode)

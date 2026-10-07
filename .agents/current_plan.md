@@ -1,28 +1,14 @@
 # Current Plan
 
-Last updated: 2026-10-05
-Primary ExecPlan: `.agents/exec_plans/active/2026-10-04-registration-polling.md`
-Secondary: `.agents/exec_plans/active/cross-platform-port.md` (teammate Windows acceptance pending)
+Last updated: 2026-10-07 07:53 Europe/Istanbul
 State: ACTIVE
 
-## Current Objective
+## Registration polling
 
-Implement authorized registration polling in feature-sized checkpoints; persist each completed feature and actual validation promptly.
+Primary: .agents/exec_plans/active/2026-10-04-registration-polling.md
 
-## Last Verified State
-
-- HEAD2df7c3b contains prior port fixes. Mac tools/SDK/curl/Python/loopback and Ubuntu22 Docker compiler/local-tool preflight PASS; official guidance refreshed without live OBS calls.
-
-## Next Actions
-
-1. Integrate config/classification, private state/clock/cancellation and HTTP/auth worker features; implement scheduler/governor and deterministic tests.
-2. Integrate local-clock defaults/flags/logging, setup/docs; run affected/full native and archive checks.
-3. Record Windows feature verification separately from pending port acceptance.
-
-## Blockers / Risks
-
-- Exact OBS volume/auth contracts remain unknown; explicit budgets and conservative unknown-outcome stops are mandatory. Native Windows unavailable here.
-
-## Handoff Notes
-
-- Primary owns CMake/main/scheduler/plans; workers own separate contracts/platform/HTTP-auth files. No personal data, live OBS, global installs, Git mutations or remote workflows.
+- Teammate executes current Windows MSVC/MinGW suites (12 tests each) and updates acceptance results.
+- Record results for the newer polling tree, then close this plan; any demonstrated defect takes priority. Released-port Windows acceptance is already closed and does not need repeating for its own sake.
+- Preserve the selected integration: MinGW CI remains required; PR/manual/version-tag triggers apply. Do not replace current timing/polling behavior with released-port defaults.
+- Live OBS rate-limit/JWT testing is explicitly deferred; no live calls.
+- Preserve the dirty working tree and user plan permissions; no Git mutation or global installation.

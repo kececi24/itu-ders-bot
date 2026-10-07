@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from unittest import mock
 
 
@@ -170,7 +171,9 @@ int external_value();
 int helper() {return DEPENDENCY_VALUE + ADDED_VALUE + external_value() + CONFIG_VALUE + CONFIG_LIST_VALUE + MODULE_VALUE;}
 ''')
         for name in ("main", "setup"):
-            (root / "src" / f"{name}.cpp").write_text("int helper(); int main() {return helper();}\n")
+            (root / "src" / f"{name}.cpp").write_text(
+                'int helper(); static const char* volatile compiled_at = __TIME__; '
+                'int main() {(void)compiled_at; return helper();}\n')
         (root / "CMakeLists.txt").write_text('''cmake_minimum_required(VERSION 3.25)
 project(ProvenanceFixture VERSION 1.0.0 LANGUAGES CXX)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<0:>")
@@ -209,7 +212,32 @@ include(cmake/BuildProvenance.cmake)
         def validate():
             manifest = json.loads(manifest_path.read_text())
             validate_provenance(manifest, root, build / "bin")
+            # Validate each successful-link receipt as well as the manifest's
+            # raw executable hashes. A new link is allowed to change bytes, but
+            # an event alone must never attest an unrelated binary or inputs.
+            started = (build / "provenance-start.json").read_text()
+            assert json.loads(started) == manifest["inputs"]
+            fingerprint = hashlib.sha256(started.encode()).hexdigest()
+            for name, binary_hash in manifest["binaries"].items():
+                receipt, = build.glob(f"{name}-*.sha256")
+                assert json.loads(receipt.read_text()) == {
+                    "binary": binary_hash, "inputs": fingerprint,
+                }, receipt
             return manifest
+
+        def unchanged_inputs(previous, current, context, *, allow_relink=False):
+            changed = {key: (previous.get(key), current.get(key))
+                       for key in previous.keys() | current.keys()
+                       if previous.get(key) != current.get(key)}
+            # MSBuild may schedule a real relink on repeated target builds.
+            # PE timestamps can then change even with identical inputs; binary
+            # reproducibility is not a provenance requirement. validate() above
+            # still requires the current raw bytes, receipt and inputs to agree.
+            allowed = {"binaries"} if allow_relink else set()
+            assert set(changed) <= allowed, f"{context}: changed manifest fields: {changed}"
+            if "binaries" in changed:
+                print(f"{context}: inputs unchanged; validated relink hashes "
+                      f"{json.dumps(changed['binaries'], sort_keys=True)}")
 
         suffix = ".exe" if target == "windows-x64" else ""
 
@@ -245,11 +273,28 @@ include(cmake/BuildProvenance.cmake)
         run()
         first = validate()
         header_time = (build / "provenance-inputs.h").stat().st_mtime_ns
-        run()  # A legitimate no-op build is eligible.
-        assert first == validate()
+        run()  # An unchanged-input build is eligible, including a valid relink.
+        unchanged_inputs(first, validate(), "Repeated build", allow_relink=msvc)
         assert (build / "provenance-inputs.h").stat().st_mtime_ns == header_time
         receipt_path, = build.glob("main-*.sha256")
         build_config = receipt_path.stem.removeprefix("main-")
+
+        # Recompiling identical source contents can legitimately change binary
+        # bytes. Keep the timestamp observable in these synthetic executables
+        # so this checks refreshed receipts rather than a byte-identical relink.
+        before_recompile = validate()
+        time.sleep(1.1)
+        for name in ("main", "setup"):
+            (root / "src" / f"{name}.cpp").touch()
+        run()
+        after_recompile = validate()
+        unchanged_inputs(before_recompile, after_recompile,
+                         "Same-input real recompile", allow_relink=True)
+        assert (build / "provenance-inputs.h").stat().st_mtime_ns == header_time
+        changed_binaries = {name for name in ("main", "setup")
+                            if before_recompile["binaries"][name] != after_recompile["binaries"][name]}
+        assert changed_binaries == {"main", "setup"}, changed_binaries
+        result(0)
 
         def script(name, arguments, success=True):
             completed = subprocess.run(
@@ -294,6 +339,7 @@ include(cmake/BuildProvenance.cmake)
         assert receipt_path.read_bytes() == receipt_bytes
         assert receipt_path.stat().st_mtime_ns == receipt_time
         run()
+        before_relink = validate()
         # PRE_LINK alone cannot attest an output either. A real link must
         # recreate it, including for unchanged-input rebuilds.
         start()
@@ -301,7 +347,7 @@ include(cmake/BuildProvenance.cmake)
         assert not (build / "bin" / ("main" + suffix)).exists()
         post_build(success=False)
         run()
-        validate()
+        unchanged_inputs(before_relink, validate(), "Forced unchanged-input relink", allow_relink=True)
         result(0)
         receipt = receipt_path.read_text()
         finalizer = {
@@ -385,7 +431,7 @@ include(cmake/BuildProvenance.cmake)
             (location / "__pycache__").mkdir()
             (location / "__pycache__/ignored").write_bytes(b"cache")
         run()
-        assert before_metadata == validate()
+        unchanged_inputs(before_metadata, validate(), "Ignored metadata build", allow_relink=msvc)
         assert (build / "provenance-inputs.h").stat().st_mtime_ns == header_time
         for hidden in (root / "include/.hidden.hpp", external / "include/.hidden.hpp"):
             hidden.write_text("// legitimate hidden input\n")
@@ -548,16 +594,22 @@ include(cmake/BuildProvenance.cmake)
         for missing_snapshot in ("provenance-configure.json", "provenance-configured-cache.txt"):
             (build / missing_snapshot).unlink()
             rejected(validate)
-            # The start script must fail closed, while a normal CMake build is
-            # allowed to regenerate a missing file(GENERATE) output first.
+            # The start script must fail closed. Recovery explicitly reruns
+            # configure: generators differ in whether a build regenerates a
+            # deleted file(GENERATE) output before provenance_start executes.
             probe = subprocess.run([cmake, f"-DSOURCE_DIR={root}", f"-DBINARY_DIR={build}",
                                     "-DSTART_BUILD=ON", "-P", str(root / "cmake/ProvenanceInputs.cmake")],
                                    capture_output=True, text=True)
             assert probe.returncode != 0, probe.stdout + probe.stderr
+            assert "Missing configure provenance; re-run CMake before building" in probe.stdout + probe.stderr
+            assert not manifest_path.exists()
+            subprocess.run(configure, check=True)
+            assert (build / missing_snapshot).is_file(), missing_snapshot
             assert not manifest_path.exists()
             run()
             validate()
             result(5)
+            print(f"Recovered missing configure snapshot: {missing_snapshot}")
 
         # Both unavailable Git and Git reporting an error must fail closed.
         release = dict(manifest, revision="a" * 40, dirty=False)
@@ -573,7 +625,7 @@ include(cmake/BuildProvenance.cmake)
                 subprocess.CompletedProcess([], 0, "")]):
             validate_release(release, root)
         verify_hidden_untracked_release(repository, temporary, validate_release)
-        print("Completed, no-op, preserved-mtime source/header/archive, generated cache/flags and imported-library binding before first build and after reconfigure, recursive configure inventories, dependency additions/removals, hidden-file parity, partial, failed, replaced, untracked release and staged-copy provenance checks passed.")
+        print("Completed, unchanged-input builds and real recompiles/relinks, no-link receipt preservation, preserved-mtime source/header/archive, generated cache/flags and imported-library binding before first build and after reconfigure, recursive configure inventories, dependency additions/removals, hidden-file parity, partial, failed, replaced, missing configure snapshot recovery, untracked release and staged-copy provenance checks passed.")
 
 
 if __name__ == "__main__":

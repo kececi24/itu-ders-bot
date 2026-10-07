@@ -22,7 +22,8 @@ static json valid_config() {
           "request_budget":{"count":20,"window_seconds":3600}}})");
 }
 static HttpResponse response(const json& entries, long status = 200) {
-    return {status, json{{"ecrnResultList", entries}}.dump(), {}, {}};
+    const auto list = entries.is_array() ? entries : (entries.is_null() ? json::array() : json::array({entries}));
+    return {status, json{{"ecrnResultList", list}}.dump(), {}, {}};
 }
 static json entry(const char* crn, const char* code) { return {{"crn", crn}, {"resultCode", code}}; }
 
@@ -50,13 +51,13 @@ int main() {
             refuses([&] { (void)parse(bad); }, "required polling field");
         }
         for (const auto* field : {"min_interval_ms", "max_interval_ms", "expected_interval_ms", "backoff_base_ms", "backoff_max_ms", "max_attempts"}) {
-            for (const json number : {json(-1), json(0), json(1.25), json("5000"), json(true), json(std::numeric_limits<std::uint64_t>::max())}) {
+            for (const json& number : {json(-1), json(0), json(1.25), json("5000"), json(true), json(std::numeric_limits<std::uint64_t>::max())}) {
                 auto bad = original; bad["polling"][field] = number;
                 refuses([&] { (void)parse(bad); }, "invalid duration/count must fail without narrowing");
             }
         }
         for (const auto* field : {"count", "window_seconds"}) {
-            for (const json number : {json(-1), json(0), json(1.5), json(std::numeric_limits<std::uint64_t>::max())}) {
+            for (const json& number : {json(-1), json(0), json(1.5), json(std::numeric_limits<std::uint64_t>::max())}) {
                 auto bad = original; bad["polling"]["request_budget"][field] = number;
                 refuses([&] { (void)parse(bad); }, "invalid budget must fail");
             }
@@ -82,11 +83,11 @@ int main() {
         uniform["polling"]["distribution"] = "uniform";
         uniform["polling"]["expected_interval_ms"] = 31500;
         require(parse(uniform).distribution == Distribution::uniform, "uniform midpoint accepted");
-        for (const json crns : {json::array(), json::array({"001", "001"}), json::array({""}), json::array({" 001"}), json::array({"001x"}), json::array({1})}) {
+        for (const json& crns : {json::array(), json::array({"001", "001"}), json::array({""}), json::array({" 001"}), json::array({"001x"}), json::array({1})}) {
             auto bad = original; bad["courses"]["crn"] = crns;
             refuses([&] { (void)parse(bad); }, "invalid add CRNs");
         }
-        for (const json drops : {json::array({"003"}), json(""), json(nullptr)}) {
+        for (const json& drops : {json::array({"003"}), json(""), json(nullptr)}) {
             auto bad = original; bad["courses"]["scrn"] = drops;
             refuses([&] { (void)parse(bad); }, "polling drops are refused");
         }
@@ -109,7 +110,7 @@ int main() {
             require(result.complete && result.action == Action::stop_unknown, "uncharacterized response never authorizes replay");
             require(std::find(result.codes.begin(), result.codes.end(), "arbitrary-secret-server-text") == result.codes.end(), "unknown server content excluded from structured result codes");
         }
-        for (const json list : {json::array(), json::array({entry("001", "successResult")}),
+        for (const json& list : {json::array(), json::array({entry("001", "successResult")}),
              json::array({entry("001", "successResult"), entry("001", "VAL06"), entry("002", "VAL06")}),
              json::array({entry("001", "successResult"), json{{"crn", "001"}}, entry("002", "VAL06")}),
              json::array({entry("001", "successResult"), entry("002", "VAL06"), entry("003", "VAL06")})}) {

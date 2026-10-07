@@ -38,6 +38,33 @@ int main(int argc, char** argv) {
     try {
         expiry_tests();
         const std::string mode = argv[2];
+        if (mode == "redirect_limited" || mode == "redirect_limited_reset") {
+            TokenFetcher fetcher(HttpSession::TestOptions{true, ""}, argv[1]);
+            std::size_t admitted = 0, observed = 0;
+            HttpTransferInfo transfer;
+            fetcher.set_observer([&](const HttpRequest&) { ++admitted; }, [&](const HttpTransferInfo& info) {
+                ++observed; transfer = info;
+            });
+            if (mode == "redirect_limited_reset") {
+                fetcher.set_observer({}, {});
+                check(!fetcher.get_token("test ü&+", "fixture-password\t&+", true).bearer.empty(),
+                      "ordinary authentication stopped after removing polling observers");
+                check(admitted == 0 && observed == 0, "removed observers were invoked");
+                return 0;
+            }
+            bool limited = false;
+            try { fetcher.get_token("test ü&+", "fixture-password\t&+", true); }
+            catch (const HttpTransportError& error) {
+                limited = error.http_status == 302 && error.curl_code == 23 && error.retry_after == "3600" &&
+                    transfer.retry_after == "3600" && transfer.http_status == 302 &&
+                    !transfer.request_count && !error.proven_pre_dispatch;
+                const std::string diagnostic = error.what();
+                check(diagnostic.find("fixture-") == std::string::npos && diagnostic.find("3600") == std::string::npos,
+                      "authentication redirect diagnostics exposed response metadata");
+            }
+            check(limited && admitted == 1 && observed == 1, "authentication redirect cooldown was not reported");
+            return 0;
+        }
         if (mode.compare(0, 7, "refresh") == 0) {
             TokenFetcher fetcher(HttpSession::TestOptions{true, ""}, argv[1]);
             std::size_t transfers = 0, requests = 0;

@@ -1,0 +1,1178 @@
+﻿2026-10-05T07:03:52.0976999Z Current runner version: '2.337.0'
+2026-10-05T07:03:52.1003534Z ##[group]Runner Image Provisioner
+2026-10-05T07:03:52.1004336Z Hosted Compute Agent
+2026-10-05T07:03:52.1004896Z Version: 20260901.588
+2026-10-05T07:03:52.1005490Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+2026-10-05T07:03:52.1006169Z Build Date: 2026-09-01T19:56:44Z
+2026-10-05T07:03:52.1006811Z Worker ID: {3ccac7cb-df5b-4e54-b944-3d08db5737cd}
+2026-10-05T07:03:52.1007543Z Azure Region: westus2
+2026-10-05T07:03:52.1008061Z ##[endgroup]
+2026-10-05T07:03:52.1009551Z ##[group]Operating System
+2026-10-05T07:03:52.1010214Z Microsoft Windows Server 2022
+2026-10-05T07:03:52.1010810Z 10.0.20348
+2026-10-05T07:03:52.1011285Z Datacenter
+2026-10-05T07:03:52.1011781Z ##[endgroup]
+2026-10-05T07:03:52.1012297Z ##[group]Runner Image
+2026-10-05T07:03:52.1012858Z Image: windows-2022
+2026-10-05T07:03:52.1013403Z Version: 20260927.320.1
+2026-10-05T07:03:52.1014854Z Included Software: https://github.com/actions/runner-images/blob/win22/20260927.320/images/windows/Windows2022-Readme.md
+2026-10-05T07:03:52.1016436Z Image Release: https://github.com/actions/runner-images/releases/tag/win22%2F20260927.320
+2026-10-05T07:03:52.1017382Z ##[endgroup]
+2026-10-05T07:03:52.1018487Z ##[group]GITHUB_TOKEN Permissions
+2026-10-05T07:03:52.1020665Z Contents: read
+2026-10-05T07:03:52.1021227Z Metadata: read
+2026-10-05T07:03:52.1021733Z ##[endgroup]
+2026-10-05T07:03:52.1023839Z Secret source: Actions
+2026-10-05T07:03:52.1024755Z Cache mode: write
+2026-10-05T07:03:52.1025560Z Prepare workflow directory
+2026-10-05T07:03:52.1617582Z Prepare all required actions
+2026-10-05T07:03:52.1665617Z Getting action download info
+2026-10-05T07:03:52.5537846Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-05T07:03:52.6698766Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-10-05T07:03:52.7984136Z Download action repository 'ilammy/msvc-dev-cmd@v1' (SHA:0b201ec74fa43914dc39ae48a89fd1d8cb592756)
+2026-10-05T07:03:53.0967790Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-10-05T07:03:53.4313019Z Complete job name: native (windows-2022, windows-x64)
+2026-10-05T07:03:53.5806732Z ##[group]Run actions/checkout@v4
+2026-10-05T07:03:53.5807738Z with:
+2026-10-05T07:03:53.5808158Z   repository: kececi24/itu-ders-bot
+2026-10-05T07:03:53.5812035Z   token: ***
+2026-10-05T07:03:53.5812483Z   ssh-strict: true
+2026-10-05T07:03:53.5812881Z   ssh-user: git
+2026-10-05T07:03:53.5813285Z   persist-credentials: true
+2026-10-05T07:03:53.5813744Z   clean: true
+2026-10-05T07:03:53.5814156Z   sparse-checkout-cone-mode: true
+2026-10-05T07:03:53.5814635Z   fetch-depth: 1
+2026-10-05T07:03:53.5815042Z   fetch-tags: false
+2026-10-05T07:03:53.5815447Z   show-progress: true
+2026-10-05T07:03:53.5815855Z   lfs: false
+2026-10-05T07:03:53.5816219Z   submodules: false
+2026-10-05T07:03:53.5816622Z   set-safe-directory: true
+2026-10-05T07:03:53.5817137Z   allow-unsafe-pr-checkout: false
+2026-10-05T07:03:53.5817821Z env:
+2026-10-05T07:03:53.5818199Z   ITU_TARGET: windows-x64
+2026-10-05T07:03:53.5818676Z   RELEASE_TAG: 
+2026-10-05T07:03:53.5819050Z ##[endgroup]
+2026-10-05T07:03:53.7278754Z Syncing repository: kececi24/itu-ders-bot
+2026-10-05T07:03:53.7281008Z ##[group]Getting Git version info
+2026-10-05T07:03:53.7281696Z Working directory is 'D:\a\itu-ders-bot\itu-ders-bot'
+2026-10-05T07:03:53.8457598Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-05T07:03:54.2581568Z git version 2.55.0.windows.5
+2026-10-05T07:03:54.2619630Z ##[endgroup]
+2026-10-05T07:03:54.2640393Z Temporarily overriding HOME='D:\a\_temp\0f430a81-d54b-41c2-ad26-04b25b454e00' before making global git config changes
+2026-10-05T07:03:54.2642530Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-05T07:03:54.2652053Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\itu-ders-bot\itu-ders-bot
+2026-10-05T07:03:54.3190144Z Deleting the contents of 'D:\a\itu-ders-bot\itu-ders-bot'
+2026-10-05T07:03:54.3195807Z ##[group]Initializing the repository
+2026-10-05T07:03:54.3205580Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\itu-ders-bot\itu-ders-bot
+2026-10-05T07:03:54.4022629Z Initialized empty Git repository in D:/a/itu-ders-bot/itu-ders-bot/.git/
+2026-10-05T07:03:54.4059323Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/kececi24/itu-ders-bot
+2026-10-05T07:03:54.4592018Z ##[endgroup]
+2026-10-05T07:03:54.4593213Z ##[group]Disabling automatic garbage collection
+2026-10-05T07:03:54.4602127Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-05T07:03:54.4825137Z ##[endgroup]
+2026-10-05T07:03:54.4826176Z ##[group]Setting up auth
+2026-10-05T07:03:54.4837694Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-05T07:03:54.5068583Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-05T07:03:55.8715888Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-05T07:03:55.8954943Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-05T07:03:56.3388148Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-05T07:03:56.3624586Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-05T07:03:56.7942019Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-05T07:03:56.8177291Z ##[endgroup]
+2026-10-05T07:03:56.8177850Z ##[group]Fetching the repository
+2026-10-05T07:03:56.8192784Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +2df7c3bdc246803240c57b94d60ef2de9833fff9:refs/remotes/origin/cross-platform
+2026-10-05T07:03:58.2849625Z From https://github.com/kececi24/itu-ders-bot
+2026-10-05T07:03:58.2850851Z  * [new ref]         2df7c3bdc246803240c57b94d60ef2de9833fff9 -> origin/cross-platform
+2026-10-05T07:03:58.2882141Z ##[endgroup]
+2026-10-05T07:03:58.2882857Z ##[group]Determining the checkout info
+2026-10-05T07:03:58.2885089Z ##[endgroup]
+2026-10-05T07:03:58.2894746Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-05T07:03:58.3369448Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-05T07:03:58.3542874Z ##[group]Checking out the ref
+2026-10-05T07:03:58.3551799Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force -B cross-platform refs/remotes/origin/cross-platform
+2026-10-05T07:03:58.4275137Z Switched to a new branch 'cross-platform'
+2026-10-05T07:03:58.4341483Z branch 'cross-platform' set up to track 'origin/cross-platform'.
+2026-10-05T07:03:58.4373601Z ##[endgroup]
+2026-10-05T07:03:58.4683580Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-05T07:03:58.4893664Z 2df7c3bdc246803240c57b94d60ef2de9833fff9
+2026-10-05T07:03:58.5300001Z ##[group]Run actions/setup-python@v5
+2026-10-05T07:03:58.5300389Z with:
+2026-10-05T07:03:58.5300604Z   python-version: 3.12
+2026-10-05T07:03:58.5300855Z   check-latest: false
+2026-10-05T07:03:58.5303349Z   token: ***
+2026-10-05T07:03:58.5303570Z   update-environment: true
+2026-10-05T07:03:58.5303816Z   allow-prereleases: false
+2026-10-05T07:03:58.5304069Z   freethreaded: false
+2026-10-05T07:03:58.5304307Z env:
+2026-10-05T07:03:58.5305278Z   ITU_TARGET: windows-x64
+2026-10-05T07:03:58.5305510Z   RELEASE_TAG: 
+2026-10-05T07:03:58.5305708Z ##[endgroup]
+2026-10-05T07:03:58.6834910Z ##[group]Installed versions
+2026-10-05T07:03:58.6977764Z (node:2816) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-05T07:03:58.6978853Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-05T07:03:58.6980216Z Successfully set up CPython (3.12.10)
+2026-10-05T07:03:58.6981005Z ##[endgroup]
+2026-10-05T07:03:58.7250033Z ##[group]Run ilammy/msvc-dev-cmd@v1
+2026-10-05T07:03:58.7250405Z with:
+2026-10-05T07:03:58.7250598Z   arch: x64
+2026-10-05T07:03:58.7250776Z env:
+2026-10-05T07:03:58.7250957Z   ITU_TARGET: windows-x64
+2026-10-05T07:03:58.7251177Z   RELEASE_TAG: 
+2026-10-05T07:03:58.7251464Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:03:58.7251974Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-05T07:03:58.7252475Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:03:58.7252890Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:03:58.7253303Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:03:58.7253636Z ##[endgroup]
+2026-10-05T07:03:59.1998776Z Found with vswhere: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat
+2026-10-05T07:04:04.4919181Z ##[group]Environment variables
+2026-10-05T07:04:04.4919809Z Setting CommandPromptType
+2026-10-05T07:04:04.4929449Z Setting DevEnvDir
+2026-10-05T07:04:04.4933255Z Setting ExtensionSdkDir
+2026-10-05T07:04:04.4935968Z Setting EXTERNAL_INCLUDE
+2026-10-05T07:04:04.4941638Z Setting Framework40Version
+2026-10-05T07:04:04.4944036Z Setting FrameworkDir
+2026-10-05T07:04:04.4946326Z Setting FrameworkDir64
+2026-10-05T07:04:04.4948657Z Setting FrameworkVersion
+2026-10-05T07:04:04.4951244Z Setting FrameworkVersion64
+2026-10-05T07:04:04.4954385Z Setting FSHARPINSTALLDIR
+2026-10-05T07:04:04.4958128Z Setting HTMLHelpDir
+2026-10-05T07:04:04.4960512Z Setting IFCPATH
+2026-10-05T07:04:04.4963424Z Setting INCLUDE
+2026-10-05T07:04:04.4967316Z Setting is_x64_arch
+2026-10-05T07:04:04.4970222Z Setting LIB
+2026-10-05T07:04:04.4973064Z Setting LIBPATH
+2026-10-05T07:04:04.4976233Z Setting NETFXSDKDir
+2026-10-05T07:04:04.4979760Z Setting Path
+2026-10-05T07:04:04.4983771Z Setting Platform
+2026-10-05T07:04:04.4986863Z Setting UCRTVersion
+2026-10-05T07:04:04.4991347Z Setting UniversalCRTSdkDir
+2026-10-05T07:04:04.4997593Z Setting VCIDEInstallDir
+2026-10-05T07:04:04.4998287Z Setting VCINSTALLDIR
+2026-10-05T07:04:04.4998920Z Setting VCPKG_ROOT
+2026-10-05T07:04:04.4999524Z Setting VCToolsInstallDir
+2026-10-05T07:04:04.5001476Z Setting VCToolsRedistDir
+2026-10-05T07:04:04.5004175Z Setting VCToolsVersion
+2026-10-05T07:04:04.5006960Z Setting VisualStudioVersion
+2026-10-05T07:04:04.5009169Z Setting VS170COMNTOOLS
+2026-10-05T07:04:04.5011463Z Setting VSCMD_ARG_app_plat
+2026-10-05T07:04:04.5013548Z Setting VSCMD_ARG_HOST_ARCH
+2026-10-05T07:04:04.5015840Z Setting VSCMD_ARG_TGT_ARCH
+2026-10-05T07:04:04.5018036Z Setting VSCMD_VER
+2026-10-05T07:04:04.5020252Z Setting VSINSTALLDIR
+2026-10-05T07:04:04.5022068Z Setting VSSDK150INSTALL
+2026-10-05T07:04:04.5023984Z Setting VSSDKINSTALL
+2026-10-05T07:04:04.5026219Z Setting WindowsLibPath
+2026-10-05T07:04:04.5028107Z Setting WindowsSdkBinPath
+2026-10-05T07:04:04.5029994Z Setting WindowsSdkDir
+2026-10-05T07:04:04.5031835Z Setting WindowsSDKLibVersion
+2026-10-05T07:04:04.5033792Z Setting WindowsSdkVerBinPath
+2026-10-05T07:04:04.5035597Z Setting WindowsSDKVersion
+2026-10-05T07:04:04.5037428Z Setting WindowsSDK_ExecutablePath_x64
+2026-10-05T07:04:04.5039242Z Setting WindowsSDK_ExecutablePath_x86
+2026-10-05T07:04:04.5041105Z Setting __DOTNET_ADD_64BIT
+2026-10-05T07:04:04.5043033Z Setting __DOTNET_PREFERRED_BITNESS
+2026-10-05T07:04:04.5044825Z Setting __VSCMD_PREINIT_PATH
+2026-10-05T07:04:04.5047784Z ##[endgroup]
+2026-10-05T07:04:04.5048059Z Configured Developer Command Prompt
+2026-10-05T07:04:04.5262507Z ##[group]Run cmake --version
+2026-10-05T07:04:04.5262893Z [36;1mcmake --version[0m
+2026-10-05T07:04:04.5263139Z [36;1mpython --version[0m
+2026-10-05T07:04:04.5263414Z [36;1mif [[ "$ITU_TARGET" == macos-arm64 ]]; then[0m
+2026-10-05T07:04:04.5263724Z [36;1m  test "$(uname -m)" = arm64[0m
+2026-10-05T07:04:04.5264016Z [36;1m  clang++ --version | grep 'Apple clang'[0m
+2026-10-05T07:04:04.5264311Z [36;1mfi[0m
+2026-10-05T07:04:04.5264646Z [36;1mpython scripts/bootstrap.py --target "$ITU_TARGET" --preflight-only[0m
+2026-10-05T07:04:04.5283145Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+2026-10-05T07:04:04.5283563Z env:
+2026-10-05T07:04:04.5283751Z   ITU_TARGET: windows-x64
+2026-10-05T07:04:04.5283970Z   RELEASE_TAG: 
+2026-10-05T07:04:04.5284246Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:04:04.5284738Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-05T07:04:04.5285237Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:04:04.5285644Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:04:04.5286043Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:04:04.5286377Z   CommandPromptType: Native
+2026-10-05T07:04:04.5286736Z   DevEnvDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\
+2026-10-05T07:04:04.5287270Z   ExtensionSdkDir: C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs
+2026-10-05T07:04:04.5289700Z   EXTERNAL_INCLUDE: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\VS\include;C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\winrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\cppwinrt;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um
+2026-10-05T07:04:04.5292018Z   Framework40Version: v4.0
+2026-10-05T07:04:04.5292290Z   FrameworkDir: C:\Windows\Microsoft.NET\Framework64\
+2026-10-05T07:04:04.5292641Z   FrameworkDir64: C:\Windows\Microsoft.NET\Framework64\
+2026-10-05T07:04:04.5292953Z   FrameworkVersion: v4.0.30319
+2026-10-05T07:04:04.5293188Z   FrameworkVersion64: v4.0.30319
+2026-10-05T07:04:04.5293724Z   FSHARPINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools
+2026-10-05T07:04:04.5294332Z   HTMLHelpDir: C:\Program Files (x86)\HTML Help Workshop
+2026-10-05T07:04:04.5294819Z   IFCPATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ifc\x64
+2026-10-05T07:04:04.5297276Z   INCLUDE: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\VS\include;C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\winrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\cppwinrt;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um
+2026-10-05T07:04:04.5299497Z   is_x64_arch: true
+2026-10-05T07:04:04.5302837Z   LIB: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\lib\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\lib\um\x64;C:\Program Files (x86)\Windows Kits\10\lib\10.0.26100.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\\lib\10.0.26100.0\\um\x64
+2026-10-05T07:04:04.5305819Z   LIBPATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\lib\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\lib\x86\store\references;C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.26100.0;C:\Program Files (x86)\Windows Kits\10\References\10.0.26100.0;C:\Windows\Microsoft.NET\Framework64\v4.0.30319
+2026-10-05T07:04:04.5307570Z   NETFXSDKDir: C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\
+2026-10-05T07:04:04.5323489Z   Path: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VC\VCPackages;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TestWindow;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TeamFoundation\Team Explorer;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\bin\Roslyn;C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\;C:\Program Files (x86)\HTML Help Workshop;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Team Tools\DiagnosticsHub\Collector;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\Extensions\Microsoft\CodeCoverage.Console;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin;C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\\x64;C:\Program Files (x86)\Windows Kits\10\bin\\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\\MSBuild\Current\Bin\amd64;C:\Windows\Microsoft.NET\Framework64\v4.0.30319;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\;C:\Users\runneradmin\AppData\Roaming\Python\Python312\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64;C:\Program Files\MongoDB\Server\7.0\bin;C:\aliyun-cli;C:\vcpkg;C:\Program Files (x86)\NSIS\;C:\tools\zstd;C:\Program Files\Mercurial\;C:\hostedtoolcache\windows\stack\3.11.1\x64;C:\cabal\bin;C:\\ghcup\bin;C:\mingw64\bin;C:\Program Files\dotnet;C:\Program Files\MySQL\MySQL Server 8.0\bin;C:\Program Files\R\R-4.6.1\bin\x64;C:\SeleniumWebDrivers\GeckoDriver;C:\SeleniumWebDrivers\EdgeDriver\;C:\SeleniumWebDrivers\ChromeDriver;C:\Program Files (x86)\sbt\bin;C:\Program Files (x86)\GitHub CLI;C:\Program Files\Git\bin;C:\Program Files (x86)\pipx_bin;C:\npm\prefix;C:\hostedtoolcache\windows\go\1.24.13\x64\bin;C:\hostedtoolcache\windows\Ruby\3.3.12\x64\bin;C:\Program Files\OpenSSL\bin;C:\tools\kotlinc\bin;C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\8.0.504-1\x64\bin;C:\Program Files\ImageMagick-7.1.2-Q16-HDRI;C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin;C:\ProgramData\kind;C:\ProgramData\Chocolatey\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files\PowerShell\7\;C:\Program Files\Microsoft\Web Platform Installer\;C:\Program Files\TortoiseSVN\bin;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\150\Tools\Binn\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files (x86)\WiX Toolset v3.14\bin;C:\Program Files\Microsoft SQL Server\130\DTS\Binn\;C:\Program Files\Microsoft SQL Server\140\DTS\Binn\;C:\Program Files\Microsoft SQL Server\150\DTS\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files\Microsoft SQL Server\170\DTS\Binn\;C:\Strawberry\c\bin;C:\Strawberry\perl\site\bin;C:\Strawberry\perl\bin;C:\ProgramData\chocolatey\lib\pulumi\tools\Pulumi\bin;C:\Program Files\CMake\bin;C:\ProgramData\chocolatey\lib\maven\apache-maven-3.9.16\bin;C:\Program Files\Microsoft Service Fabric\bin\Fabric\Fabric.Code;C:\Program Files\Microsoft SDKs\Service Fabric\Tools\ServiceFabricLocalClusterManager;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Program Files\GitHub CLI\;c:\tools\php;C:\Program Files\Amazon\AWSCLIV2\;C:\Program Files\Amazon\SessionManagerPlugin\bin\;C:\Program Files\Amazon\AWSSAMCLI\bin\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\mongosh\;C:\Program Files\LLVM\bin;C:\Program Files (x86)\LLVM\bin;C:\Users\runneradmin\.dotnet\tools;C:\Users\runneradmin\.cargo\bin;C:\Users\runneradmin\AppData\Local\Microsoft\WindowsApps;C:\Program Files (x86)\Microsoft Visual Studio\Installer;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VC\Linux\bin\ConnectionManagerExe;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\vcpkg
+2026-10-05T07:04:04.5339906Z   Platform: x64
+2026-10-05T07:04:04.5340107Z   UCRTVersion: 10.0.26100.0
+2026-10-05T07:04:04.5340421Z   UniversalCRTSdkDir: C:\Program Files (x86)\Windows Kits\10\
+2026-10-05T07:04:04.5340934Z   VCIDEInstallDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VC\
+2026-10-05T07:04:04.5341480Z   VCINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\
+2026-10-05T07:04:04.5342105Z   VCPKG_ROOT: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\vcpkg
+2026-10-05T07:04:04.5342690Z   VCToolsInstallDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\
+2026-10-05T07:04:04.5343372Z   VCToolsRedistDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Redist\MSVC\14.44.35112\
+2026-10-05T07:04:04.5343843Z   VCToolsVersion: 14.44.35207
+2026-10-05T07:04:04.5344079Z   VisualStudioVersion: 17.0
+2026-10-05T07:04:04.5344462Z   VS170COMNTOOLS: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\
+2026-10-05T07:04:04.5344891Z   VSCMD_ARG_app_plat: Desktop
+2026-10-05T07:04:04.5345147Z   VSCMD_ARG_HOST_ARCH: x64
+2026-10-05T07:04:04.5345360Z   VSCMD_ARG_TGT_ARCH: x64
+2026-10-05T07:04:04.5345566Z   VSCMD_VER: 17.14.41
+2026-10-05T07:04:04.5345892Z   VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\
+2026-10-05T07:04:04.5346397Z   VSSDK150INSTALL: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VSSDK
+2026-10-05T07:04:04.5346941Z   VSSDKINSTALL: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VSSDK
+2026-10-05T07:04:04.5347647Z   WindowsLibPath: C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.26100.0;C:\Program Files (x86)\Windows Kits\10\References\10.0.26100.0
+2026-10-05T07:04:04.5348320Z   WindowsSdkBinPath: C:\Program Files (x86)\Windows Kits\10\bin\
+2026-10-05T07:04:04.5348704Z   WindowsSdkDir: C:\Program Files (x86)\Windows Kits\10\
+2026-10-05T07:04:04.5349016Z   WindowsSDKLibVersion: 10.0.26100.0\
+2026-10-05T07:04:04.5349396Z   WindowsSdkVerBinPath: C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\
+2026-10-05T07:04:04.5349787Z   WindowsSDKVersion: 10.0.26100.0\
+2026-10-05T07:04:04.5350254Z   WindowsSDK_ExecutablePath_x64: C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\
+2026-10-05T07:04:04.5350932Z   WindowsSDK_ExecutablePath_x86: C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\
+2026-10-05T07:04:04.5351395Z   __DOTNET_ADD_64BIT: 1
+2026-10-05T07:04:04.5351612Z   __DOTNET_PREFERRED_BITNESS: 64
+2026-10-05T07:04:04.5361529Z   __VSCMD_PREINIT_PATH: C:\Users\runneradmin\AppData\Roaming\Python\Python312\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64;C:\Program Files\MongoDB\Server\7.0\bin;C:\aliyun-cli;C:\vcpkg;C:\Program Files (x86)\NSIS\;C:\tools\zstd;C:\Program Files\Mercurial\;C:\hostedtoolcache\windows\stack\3.11.1\x64;C:\cabal\bin;C:\\ghcup\bin;C:\mingw64\bin;C:\Program Files\dotnet;C:\Program Files\MySQL\MySQL Server 8.0\bin;C:\Program Files\R\R-4.6.1\bin\x64;C:\SeleniumWebDrivers\GeckoDriver;C:\SeleniumWebDrivers\EdgeDriver\;C:\SeleniumWebDrivers\ChromeDriver;C:\Program Files (x86)\sbt\bin;C:\Program Files (x86)\GitHub CLI;C:\Program Files\Git\bin;C:\Program Files (x86)\pipx_bin;C:\npm\prefix;C:\hostedtoolcache\windows\go\1.24.13\x64\bin;C:\hostedtoolcache\windows\Python\3.12.10\x64\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64;C:\hostedtoolcache\windows\Ruby\3.3.12\x64\bin;C:\Program Files\OpenSSL\bin;C:\tools\kotlinc\bin;C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\8.0.504-1\x64\bin;C:\Program Files\ImageMagick-7.1.2-Q16-HDRI;C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin;C:\ProgramData\kind;C:\ProgramData\Chocolatey\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files\PowerShell\7\;C:\Program Files\Microsoft\Web Platform Installer\;C:\Program Files\TortoiseSVN\bin;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\150\Tools\Binn\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files (x86)\WiX Toolset v3.14\bin;C:\Program Files\Microsoft SQL Server\130\DTS\Binn\;C:\Program Files\Microsoft SQL Server\140\DTS\Binn\;C:\Program Files\Microsoft SQL Server\150\DTS\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files\Microsoft SQL Server\170\DTS\Binn\;C:\Strawberry\c\bin;C:\Strawberry\perl\site\bin;C:\Strawberry\perl\bin;C:\ProgramData\chocolatey\lib\pulumi\tools\Pulumi\bin;C:\Program Files\CMake\bin;C:\ProgramData\chocolatey\lib\maven\apache-maven-3.9.16\bin;C:\Program Files\Microsoft Service Fabric\bin\Fabric\Fabric.Code;C:\Program Files\Microsoft SDKs\Service Fabric\Tools\ServiceFabricLocalClusterManager;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Program Files\GitHub CLI\;c:\tools\php;C:\Program Files (x86)\sbt\bin;C:\Program Files\Amazon\AWSCLIV2\;C:\Program Files\Amazon\SessionManagerPlugin\bin\;C:\Program Files\Amazon\AWSSAMCLI\bin\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\mongosh\;C:\Program Files\LLVM\bin;C:\Program Files (x86)\LLVM\bin;C:\Users\runneradmin\.dotnet\tools;C:\Users\runneradmin\.cargo\bin;C:\Users\runneradmin\AppData\Local\Microsoft\WindowsApps;C:\Program Files (x86)\Microsoft Visual Studio\Installer
+2026-10-05T07:04:04.5371506Z ##[endgroup]
+2026-10-05T07:04:05.3633411Z cmake version 3.31.6
+2026-10-05T07:04:05.3633739Z 
+2026-10-05T07:04:05.3633987Z CMake suite maintained and supported by Kitware (kitware.com/cmake).
+2026-10-05T07:04:05.5340052Z Python 3.12.10
+2026-10-05T07:04:07.0986532Z + C:\Program Files\CMake\bin\cmake.EXE -S D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\preflight -B D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\preflight\build -G Visual Studio 17 2022 -A x64
+2026-10-05T07:04:07.2646286Z -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.20348.
+2026-10-05T07:04:16.7959517Z -- The C compiler identification is MSVC 19.44.35229.0
+2026-10-05T07:04:16.9201126Z -- Detecting C compiler ABI info
+2026-10-05T07:04:17.9627071Z -- Detecting C compiler ABI info - done
+2026-10-05T07:04:17.9774075Z -- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+2026-10-05T07:04:17.9789600Z -- Detecting C compile features
+2026-10-05T07:04:17.9835397Z -- Detecting C compile features - done
+2026-10-05T07:04:17.9989874Z -- Configuring done (10.9s)
+2026-10-05T07:04:18.0164429Z -- Generating done (0.0s)
+2026-10-05T07:04:18.0172105Z -- Build files have been written to: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/preflight/build
+2026-10-05T07:04:18.0230826Z + C:\Program Files\CMake\bin\cmake.EXE --build D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\preflight\build --config Release
+2026-10-05T07:04:18.1217488Z MSBuild version 17.14.60+43b635718 for .NET Framework
+2026-10-05T07:04:18.1521576Z 
+2026-10-05T07:04:18.4675900Z   1>Checking Build System
+2026-10-05T07:04:18.6203640Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/preflight/CMakeLists.txt
+2026-10-05T07:04:18.7442608Z   main.c
+2026-10-05T07:04:19.1006831Z   preflight.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\preflight\build\Release\preflight.exe
+2026-10-05T07:04:19.1505625Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/preflight/CMakeLists.txt
+2026-10-05T07:04:19.2064122Z Native build prerequisites passed; no downloads attempted.
+2026-10-05T07:04:19.2472861Z ##[group]Run python scripts/bootstrap.py --target "$ITU_TARGET"
+2026-10-05T07:04:19.2473432Z [36;1mpython scripts/bootstrap.py --target "$ITU_TARGET"[0m
+2026-10-05T07:04:19.2487713Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+2026-10-05T07:04:19.2488117Z env:
+2026-10-05T07:04:19.2488308Z   ITU_TARGET: windows-x64
+2026-10-05T07:04:19.2488541Z   RELEASE_TAG: 
+2026-10-05T07:04:19.2488831Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:04:19.2489316Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-05T07:04:19.2489791Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:04:19.2490209Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:04:19.2490630Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:04:19.2490975Z   CommandPromptType: Native
+2026-10-05T07:04:19.2491376Z   DevEnvDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\
+2026-10-05T07:04:19.2491940Z   ExtensionSdkDir: C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs
+2026-10-05T07:04:19.2494508Z   EXTERNAL_INCLUDE: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\VS\include;C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\winrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\cppwinrt;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um
+2026-10-05T07:04:19.2496886Z   Framework40Version: v4.0
+2026-10-05T07:04:19.2497158Z   FrameworkDir: C:\Windows\Microsoft.NET\Framework64\
+2026-10-05T07:04:19.2497512Z   FrameworkDir64: C:\Windows\Microsoft.NET\Framework64\
+2026-10-05T07:04:19.2497820Z   FrameworkVersion: v4.0.30319
+2026-10-05T07:04:19.2498057Z   FrameworkVersion64: v4.0.30319
+2026-10-05T07:04:19.2498604Z   FSHARPINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools
+2026-10-05T07:04:19.2499564Z   HTMLHelpDir: C:\Program Files (x86)\HTML Help Workshop
+2026-10-05T07:04:19.2500385Z   IFCPATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ifc\x64
+2026-10-05T07:04:19.2502945Z   INCLUDE: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\VS\include;C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\winrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\cppwinrt;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um
+2026-10-05T07:04:19.2505464Z   is_x64_arch: true
+2026-10-05T07:04:19.2506764Z   LIB: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\lib\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\lib\um\x64;C:\Program Files (x86)\Windows Kits\10\lib\10.0.26100.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\\lib\10.0.26100.0\\um\x64
+2026-10-05T07:04:19.2511209Z   LIBPATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\lib\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\lib\x86\store\references;C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.26100.0;C:\Program Files (x86)\Windows Kits\10\References\10.0.26100.0;C:\Windows\Microsoft.NET\Framework64\v4.0.30319
+2026-10-05T07:04:19.2513173Z   NETFXSDKDir: C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\
+2026-10-05T07:04:19.2529999Z   Path: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VC\VCPackages;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TestWindow;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TeamFoundation\Team Explorer;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\bin\Roslyn;C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\;C:\Program Files (x86)\HTML Help Workshop;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Team Tools\DiagnosticsHub\Collector;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\Extensions\Microsoft\CodeCoverage.Console;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin;C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\\x64;C:\Program Files (x86)\Windows Kits\10\bin\\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\\MSBuild\Current\Bin\amd64;C:\Windows\Microsoft.NET\Framework64\v4.0.30319;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\;C:\Users\runneradmin\AppData\Roaming\Python\Python312\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64;C:\Program Files\MongoDB\Server\7.0\bin;C:\aliyun-cli;C:\vcpkg;C:\Program Files (x86)\NSIS\;C:\tools\zstd;C:\Program Files\Mercurial\;C:\hostedtoolcache\windows\stack\3.11.1\x64;C:\cabal\bin;C:\\ghcup\bin;C:\mingw64\bin;C:\Program Files\dotnet;C:\Program Files\MySQL\MySQL Server 8.0\bin;C:\Program Files\R\R-4.6.1\bin\x64;C:\SeleniumWebDrivers\GeckoDriver;C:\SeleniumWebDrivers\EdgeDriver\;C:\SeleniumWebDrivers\ChromeDriver;C:\Program Files (x86)\sbt\bin;C:\Program Files (x86)\GitHub CLI;C:\Program Files\Git\bin;C:\Program Files (x86)\pipx_bin;C:\npm\prefix;C:\hostedtoolcache\windows\go\1.24.13\x64\bin;C:\hostedtoolcache\windows\Ruby\3.3.12\x64\bin;C:\Program Files\OpenSSL\bin;C:\tools\kotlinc\bin;C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\8.0.504-1\x64\bin;C:\Program Files\ImageMagick-7.1.2-Q16-HDRI;C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin;C:\ProgramData\kind;C:\ProgramData\Chocolatey\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files\PowerShell\7\;C:\Program Files\Microsoft\Web Platform Installer\;C:\Program Files\TortoiseSVN\bin;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\150\Tools\Binn\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files (x86)\WiX Toolset v3.14\bin;C:\Program Files\Microsoft SQL Server\130\DTS\Binn\;C:\Program Files\Microsoft SQL Server\140\DTS\Binn\;C:\Program Files\Microsoft SQL Server\150\DTS\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files\Microsoft SQL Server\170\DTS\Binn\;C:\Strawberry\c\bin;C:\Strawberry\perl\site\bin;C:\Strawberry\perl\bin;C:\ProgramData\chocolatey\lib\pulumi\tools\Pulumi\bin;C:\Program Files\CMake\bin;C:\ProgramData\chocolatey\lib\maven\apache-maven-3.9.16\bin;C:\Program Files\Microsoft Service Fabric\bin\Fabric\Fabric.Code;C:\Program Files\Microsoft SDKs\Service Fabric\Tools\ServiceFabricLocalClusterManager;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Program Files\GitHub CLI\;c:\tools\php;C:\Program Files\Amazon\AWSCLIV2\;C:\Program Files\Amazon\SessionManagerPlugin\bin\;C:\Program Files\Amazon\AWSSAMCLI\bin\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\mongosh\;C:\Program Files\LLVM\bin;C:\Program Files (x86)\LLVM\bin;C:\Users\runneradmin\.dotnet\tools;C:\Users\runneradmin\.cargo\bin;C:\Users\runneradmin\AppData\Local\Microsoft\WindowsApps;C:\Program Files (x86)\Microsoft Visual Studio\Installer;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VC\Linux\bin\ConnectionManagerExe;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\vcpkg
+2026-10-05T07:04:19.2547062Z   Platform: x64
+2026-10-05T07:04:19.2547272Z   UCRTVersion: 10.0.26100.0
+2026-10-05T07:04:19.2547588Z   UniversalCRTSdkDir: C:\Program Files (x86)\Windows Kits\10\
+2026-10-05T07:04:19.2548113Z   VCIDEInstallDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VC\
+2026-10-05T07:04:19.2548676Z   VCINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\
+2026-10-05T07:04:19.2549184Z   VCPKG_ROOT: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\vcpkg
+2026-10-05T07:04:19.2549785Z   VCToolsInstallDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\
+2026-10-05T07:04:19.2550508Z   VCToolsRedistDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Redist\MSVC\14.44.35112\
+2026-10-05T07:04:19.2551012Z   VCToolsVersion: 14.44.35207
+2026-10-05T07:04:19.2551261Z   VisualStudioVersion: 17.0
+2026-10-05T07:04:19.2551651Z   VS170COMNTOOLS: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\
+2026-10-05T07:04:19.2552085Z   VSCMD_ARG_app_plat: Desktop
+2026-10-05T07:04:19.2552315Z   VSCMD_ARG_HOST_ARCH: x64
+2026-10-05T07:04:19.2552535Z   VSCMD_ARG_TGT_ARCH: x64
+2026-10-05T07:04:19.2552747Z   VSCMD_VER: 17.14.41
+2026-10-05T07:04:19.2553069Z   VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\
+2026-10-05T07:04:19.2553597Z   VSSDK150INSTALL: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VSSDK
+2026-10-05T07:04:19.2554114Z   VSSDKINSTALL: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VSSDK
+2026-10-05T07:04:19.2554840Z   WindowsLibPath: C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.26100.0;C:\Program Files (x86)\Windows Kits\10\References\10.0.26100.0
+2026-10-05T07:04:19.2555530Z   WindowsSdkBinPath: C:\Program Files (x86)\Windows Kits\10\bin\
+2026-10-05T07:04:19.2555922Z   WindowsSdkDir: C:\Program Files (x86)\Windows Kits\10\
+2026-10-05T07:04:19.2556240Z   WindowsSDKLibVersion: 10.0.26100.0\
+2026-10-05T07:04:19.2556627Z   WindowsSdkVerBinPath: C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\
+2026-10-05T07:04:19.2557030Z   WindowsSDKVersion: 10.0.26100.0\
+2026-10-05T07:04:19.2557502Z   WindowsSDK_ExecutablePath_x64: C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\
+2026-10-05T07:04:19.2558299Z   WindowsSDK_ExecutablePath_x86: C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\
+2026-10-05T07:04:19.2558775Z   __DOTNET_ADD_64BIT: 1
+2026-10-05T07:04:19.2558989Z   __DOTNET_PREFERRED_BITNESS: 64
+2026-10-05T07:04:19.2569284Z   __VSCMD_PREINIT_PATH: C:\Users\runneradmin\AppData\Roaming\Python\Python312\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64;C:\Program Files\MongoDB\Server\7.0\bin;C:\aliyun-cli;C:\vcpkg;C:\Program Files (x86)\NSIS\;C:\tools\zstd;C:\Program Files\Mercurial\;C:\hostedtoolcache\windows\stack\3.11.1\x64;C:\cabal\bin;C:\\ghcup\bin;C:\mingw64\bin;C:\Program Files\dotnet;C:\Program Files\MySQL\MySQL Server 8.0\bin;C:\Program Files\R\R-4.6.1\bin\x64;C:\SeleniumWebDrivers\GeckoDriver;C:\SeleniumWebDrivers\EdgeDriver\;C:\SeleniumWebDrivers\ChromeDriver;C:\Program Files (x86)\sbt\bin;C:\Program Files (x86)\GitHub CLI;C:\Program Files\Git\bin;C:\Program Files (x86)\pipx_bin;C:\npm\prefix;C:\hostedtoolcache\windows\go\1.24.13\x64\bin;C:\hostedtoolcache\windows\Python\3.12.10\x64\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64;C:\hostedtoolcache\windows\Ruby\3.3.12\x64\bin;C:\Program Files\OpenSSL\bin;C:\tools\kotlinc\bin;C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\8.0.504-1\x64\bin;C:\Program Files\ImageMagick-7.1.2-Q16-HDRI;C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin;C:\ProgramData\kind;C:\ProgramData\Chocolatey\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files\PowerShell\7\;C:\Program Files\Microsoft\Web Platform Installer\;C:\Program Files\TortoiseSVN\bin;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\150\Tools\Binn\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files (x86)\WiX Toolset v3.14\bin;C:\Program Files\Microsoft SQL Server\130\DTS\Binn\;C:\Program Files\Microsoft SQL Server\140\DTS\Binn\;C:\Program Files\Microsoft SQL Server\150\DTS\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files\Microsoft SQL Server\170\DTS\Binn\;C:\Strawberry\c\bin;C:\Strawberry\perl\site\bin;C:\Strawberry\perl\bin;C:\ProgramData\chocolatey\lib\pulumi\tools\Pulumi\bin;C:\Program Files\CMake\bin;C:\ProgramData\chocolatey\lib\maven\apache-maven-3.9.16\bin;C:\Program Files\Microsoft Service Fabric\bin\Fabric\Fabric.Code;C:\Program Files\Microsoft SDKs\Service Fabric\Tools\ServiceFabricLocalClusterManager;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Program Files\GitHub CLI\;c:\tools\php;C:\Program Files (x86)\sbt\bin;C:\Program Files\Amazon\AWSCLIV2\;C:\Program Files\Amazon\SessionManagerPlugin\bin\;C:\Program Files\Amazon\AWSSAMCLI\bin\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\mongosh\;C:\Program Files\LLVM\bin;C:\Program Files (x86)\LLVM\bin;C:\Users\runneradmin\.dotnet\tools;C:\Users\runneradmin\.cargo\bin;C:\Users\runneradmin\AppData\Local\Microsoft\WindowsApps;C:\Program Files (x86)\Microsoft Visual Studio\Installer
+2026-10-05T07:04:19.2579614Z ##[endgroup]
+2026-10-05T07:04:19.4551929Z + C:\Program Files\CMake\bin\cmake.EXE -S D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\preflight -B D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\preflight\build -G Visual Studio 17 2022 -A x64
+2026-10-05T07:04:19.4835191Z -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.20348.
+2026-10-05T07:04:19.4932294Z -- Configuring done (0.0s)
+2026-10-05T07:04:19.5099567Z -- Generating done (0.0s)
+2026-10-05T07:04:19.5106770Z -- Build files have been written to: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/preflight/build
+2026-10-05T07:04:19.5145479Z + C:\Program Files\CMake\bin\cmake.EXE --build D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\preflight\build --config Release
+2026-10-05T07:04:19.6097160Z MSBuild version 17.14.60+43b635718 for .NET Framework
+2026-10-05T07:04:19.6411489Z 
+2026-10-05T07:04:19.9424672Z   1>Checking Build System
+2026-10-05T07:04:20.0871624Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/preflight/CMakeLists.txt
+2026-10-05T07:04:20.2163712Z   main.c
+2026-10-05T07:04:20.3639780Z   preflight.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\preflight\build\Release\preflight.exe
+2026-10-05T07:04:20.4167048Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/preflight/CMakeLists.txt
+2026-10-05T07:04:20.4671479Z Downloading pinned zlib 1.3.2...
+2026-10-05T07:04:21.2341497Z Verified zlib 1.3.2; extracting project-local sources...
+2026-10-05T07:04:21.4381358Z Downloading pinned nghttp2 1.70.0...
+2026-10-05T07:04:21.6611954Z Verified nghttp2 1.70.0; extracting project-local sources...
+2026-10-05T07:04:22.8667925Z Downloading pinned curl 8.22.0...
+2026-10-05T07:04:23.1890798Z Verified curl 8.22.0; extracting project-local sources...
+2026-10-05T07:04:26.0929393Z + C:\Program Files\CMake\bin\cmake.EXE -S D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\sources\zlib-1.3.2 -B D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\zlib -G Visual Studio 17 2022 -A x64 -DCMAKE_INSTALL_PREFIX=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_POLICY_DEFAULT_CMP0091=NEW -DZLIB_BUILD_SHARED=OFF -DZLIB_BUILD_STATIC=ON -DZLIB_BUILD_TESTING=OFF
+2026-10-05T07:04:26.1247830Z -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.20348.
+2026-10-05T07:04:27.1498758Z -- The C compiler identification is MSVC 19.44.35229.0
+2026-10-05T07:04:27.1801138Z -- Detecting C compiler ABI info
+2026-10-05T07:04:29.6919425Z -- Detecting C compiler ABI info - done
+2026-10-05T07:04:29.7215021Z -- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+2026-10-05T07:04:29.7219327Z -- Detecting C compile features
+2026-10-05T07:04:29.7225988Z -- Detecting C compile features - done
+2026-10-05T07:04:29.7939489Z -- Looking for sys/types.h
+2026-10-05T07:04:30.7517547Z -- Looking for sys/types.h - found
+2026-10-05T07:04:30.7519270Z -- Looking for stdint.h
+2026-10-05T07:04:31.4868076Z -- Looking for stdint.h - found
+2026-10-05T07:04:31.4869785Z -- Looking for stddef.h
+2026-10-05T07:04:32.2305954Z -- Looking for stddef.h - found
+2026-10-05T07:04:32.2306644Z -- Check size of off64_t
+2026-10-05T07:04:33.4082327Z -- Check size of off64_t - failed
+2026-10-05T07:04:33.4084618Z -- Looking for fseeko
+2026-10-05T07:04:34.0787248Z -- Looking for fseeko - not found
+2026-10-05T07:04:34.0788904Z -- Looking for stdarg.h
+2026-10-05T07:04:34.8253779Z -- Looking for stdarg.h - found
+2026-10-05T07:04:34.8255512Z -- Looking for unistd.h
+2026-10-05T07:04:35.5590522Z -- Looking for unistd.h - not found
+2026-10-05T07:04:35.5592238Z -- Performing Test HAVE___ATTR__VIS_HIDDEN
+2026-10-05T07:04:36.0872199Z -- Performing Test HAVE___ATTR__VIS_HIDDEN - Failed
+2026-10-05T07:04:36.0977669Z -- Configuring done (10.0s)
+2026-10-05T07:04:36.1351380Z -- Generating done (0.0s)
+2026-10-05T07:04:36.1353674Z CMake Warning:
+2026-10-05T07:04:36.1354363Z   Manually-specified variables were not used by the project:
+2026-10-05T07:04:36.1354997Z 
+2026-10-05T07:04:36.1355182Z     BUILD_TESTING
+2026-10-05T07:04:36.1355604Z     CMAKE_BUILD_TYPE
+2026-10-05T07:04:36.1356060Z     CMAKE_POLICY_DEFAULT_CMP0091
+2026-10-05T07:04:36.1356377Z 
+2026-10-05T07:04:36.1356385Z 
+2026-10-05T07:04:36.1364720Z -- Build files have been written to: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/build/zlib
+2026-10-05T07:04:36.1432220Z + C:\Program Files\CMake\bin\cmake.EXE --build D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\zlib --config Release --parallel 3
+2026-10-05T07:04:36.2405116Z MSBuild version 17.14.60+43b635718 for .NET Framework
+2026-10-05T07:04:36.2709528Z 
+2026-10-05T07:04:36.5988664Z   1>Checking Build System
+2026-10-05T07:04:36.7459241Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/sources/zlib-1.3.2/CMakeLists.txt
+2026-10-05T07:04:36.8739275Z   adler32.c
+2026-10-05T07:04:36.9084246Z   compress.c
+2026-10-05T07:04:36.9182453Z   crc32.c
+2026-10-05T07:04:36.9372709Z   deflate.c
+2026-10-05T07:04:36.9581470Z   gzclose.c
+2026-10-05T07:04:37.0115526Z   gzlib.c
+2026-10-05T07:04:37.0381451Z   gzread.c
+2026-10-05T07:04:37.0651375Z   gzwrite.c
+2026-10-05T07:04:37.0917339Z   inflate.c
+2026-10-05T07:04:37.1122444Z   infback.c
+2026-10-05T07:04:37.1309228Z   inftrees.c
+2026-10-05T07:04:37.1493643Z   inffast.c
+2026-10-05T07:04:37.1662517Z   trees.c
+2026-10-05T07:04:37.1871832Z   uncompr.c
+2026-10-05T07:04:37.1974742Z   zutil.c
+2026-10-05T07:04:37.2226735Z   Generating Code...
+2026-10-05T07:04:38.3904452Z   zlibstatic.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\zlib\Release\zs.lib
+2026-10-05T07:04:38.4469508Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/sources/zlib-1.3.2/CMakeLists.txt
+2026-10-05T07:04:38.5007371Z + C:\Program Files\CMake\bin\cmake.EXE --install D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\zlib --config Release
+2026-10-05T07:04:38.5149475Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/zs.lib
+2026-10-05T07:04:38.5160395Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/zlib/ZLIB-static.cmake
+2026-10-05T07:04:38.5165901Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/zlib/ZLIB-static-release.cmake
+2026-10-05T07:04:38.5170417Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/zlib/ZLIBConfig.cmake
+2026-10-05T07:04:38.5174397Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/zlib/ZLIBConfigVersion.cmake
+2026-10-05T07:04:38.5179779Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/zconf.h
+2026-10-05T07:04:38.5184241Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/zlib.h
+2026-10-05T07:04:38.5193739Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/share/man/man3/zlib.3
+2026-10-05T07:04:38.5200287Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/share/doc/zlib/zlib/LICENSE
+2026-10-05T07:04:38.5204289Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/share/doc/zlib/zlib/algorithm.txt
+2026-10-05T07:04:38.5208519Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/share/doc/zlib/zlib/crc-doc.1.0.pdf
+2026-10-05T07:04:38.5222413Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/share/doc/zlib/zlib/rfc1950.txt
+2026-10-05T07:04:38.5226880Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/share/doc/zlib/zlib/rfc1951.txt
+2026-10-05T07:04:38.5231750Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/share/doc/zlib/zlib/rfc1952.txt
+2026-10-05T07:04:38.5236207Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/share/doc/zlib/zlib/txtvsbin.txt
+2026-10-05T07:04:38.5245313Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/pkgconfig/zlib.pc
+2026-10-05T07:04:38.5283031Z + C:\Program Files\CMake\bin\cmake.EXE -S D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\sources\nghttp2-1.70.0 -B D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\nghttp2 -G Visual Studio 17 2022 -A x64 -DCMAKE_INSTALL_PREFIX=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_POLICY_DEFAULT_CMP0091=NEW -DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_CRT=ON -DENABLE_DOC=OFF -DENABLE_FAILMALLOC=OFF -DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=ON -DCMAKE_DISABLE_FIND_PACKAGE_Libngtcp2=ON -DCMAKE_DISABLE_FIND_PACKAGE_Libnghttp3=ON -DCMAKE_DISABLE_FIND_PACKAGE_Systemd=ON -DCMAKE_DISABLE_FIND_PACKAGE_Jansson=ON -DCMAKE_DISABLE_FIND_PACKAGE_Libevent=ON
+2026-10-05T07:04:38.5590249Z -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.20348.
+2026-10-05T07:04:39.5670565Z -- The C compiler identification is MSVC 19.44.35229.0
+2026-10-05T07:04:39.5979189Z -- Detecting C compiler ABI info
+2026-10-05T07:04:40.3389987Z -- Detecting C compiler ABI info - done
+2026-10-05T07:04:40.3683868Z -- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+2026-10-05T07:04:40.3688884Z -- Detecting C compile features
+2026-10-05T07:04:40.3695239Z -- Detecting C compile features - done
+2026-10-05T07:04:41.5410210Z -- Found Python3: C:/hostedtoolcache/windows/Python/3.14.7/x64/python3.exe (found version "3.14.7") found components: Interpreter
+2026-10-05T07:04:43.4389733Z -- Could NOT find LibXml2 (missing: LIBXML2_LIBRARY LIBXML2_INCLUDE_DIR) (Required is at least version "2.6.26")
+2026-10-05T07:04:43.5660129Z -- Could NOT find Jemalloc (missing: JEMALLOC_LIBRARY JEMALLOC_INCLUDE_DIR) 
+2026-10-05T07:04:43.5806632Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+2026-10-05T07:04:44.0654326Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+2026-10-05T07:04:44.0654998Z -- Looking for pthread_create in pthreads
+2026-10-05T07:04:44.6474828Z -- Looking for pthread_create in pthreads - not found
+2026-10-05T07:04:44.6475652Z -- Looking for pthread_create in pthread
+2026-10-05T07:04:45.2146503Z -- Looking for pthread_create in pthread - not found
+2026-10-05T07:04:45.2158555Z -- Found Threads: TRUE
+2026-10-05T07:04:45.2176065Z -- Looking for arpa/inet.h
+2026-10-05T07:04:45.7065552Z -- Looking for arpa/inet.h - not found
+2026-10-05T07:04:45.7067407Z -- Looking for fcntl.h
+2026-10-05T07:04:46.4460736Z -- Looking for fcntl.h - found
+2026-10-05T07:04:46.4462389Z -- Looking for inttypes.h
+2026-10-05T07:04:47.2098637Z -- Looking for inttypes.h - found
+2026-10-05T07:04:47.2100419Z -- Looking for limits.h
+2026-10-05T07:04:47.9311978Z -- Looking for limits.h - found
+2026-10-05T07:04:47.9313643Z -- Looking for netdb.h
+2026-10-05T07:04:48.4293117Z -- Looking for netdb.h - not found
+2026-10-05T07:04:48.4294817Z -- Looking for netinet/in.h
+2026-10-05T07:04:48.9163167Z -- Looking for netinet/in.h - not found
+2026-10-05T07:04:48.9164797Z -- Looking for netinet/ip.h
+2026-10-05T07:04:49.4032022Z -- Looking for netinet/ip.h - not found
+2026-10-05T07:04:49.4033704Z -- Looking for pwd.h
+2026-10-05T07:04:49.8875918Z -- Looking for pwd.h - not found
+2026-10-05T07:04:49.8877620Z -- Looking for sys/socket.h
+2026-10-05T07:04:50.3789756Z -- Looking for sys/socket.h - not found
+2026-10-05T07:04:50.3791635Z -- Looking for sys/time.h
+2026-10-05T07:04:50.8611232Z -- Looking for sys/time.h - not found
+2026-10-05T07:04:50.8612925Z -- Looking for syslog.h
+2026-10-05T07:04:51.3581816Z -- Looking for syslog.h - not found
+2026-10-05T07:04:51.3583417Z -- Looking for unistd.h
+2026-10-05T07:04:51.8471459Z -- Looking for unistd.h - not found
+2026-10-05T07:04:51.8473014Z -- Looking for windows.h
+2026-10-05T07:04:53.9534804Z -- Looking for windows.h - found
+2026-10-05T07:04:53.9547158Z -- Looking for sys/types.h
+2026-10-05T07:04:54.6777183Z -- Looking for sys/types.h - found
+2026-10-05T07:04:54.6778812Z -- Looking for stdint.h
+2026-10-05T07:04:55.4192638Z -- Looking for stdint.h - found
+2026-10-05T07:04:55.4194284Z -- Looking for stddef.h
+2026-10-05T07:04:56.1616324Z -- Looking for stddef.h - found
+2026-10-05T07:04:56.1616882Z -- Check size of ssize_t
+2026-10-05T07:04:56.6705271Z -- Check size of ssize_t - failed
+2026-10-05T07:04:56.6744213Z -- Performing Test HAVE_STRUCT_TM_TM_GMTOFF
+2026-10-05T07:04:57.1744106Z -- Performing Test HAVE_STRUCT_TM_TM_GMTOFF - Failed
+2026-10-05T07:04:57.1748024Z -- Looking for _Exit
+2026-10-05T07:04:57.9082586Z -- Looking for _Exit - found
+2026-10-05T07:04:57.9083478Z -- Looking for accept4
+2026-10-05T07:04:58.5532289Z -- Looking for accept4 - not found
+2026-10-05T07:04:58.5532840Z -- Looking for clock_gettime
+2026-10-05T07:04:59.1982440Z -- Looking for clock_gettime - not found
+2026-10-05T07:04:59.1983065Z -- Looking for mkostemp
+2026-10-05T07:04:59.8360580Z -- Looking for mkostemp - not found
+2026-10-05T07:04:59.8361146Z -- Looking for pipe2
+2026-10-05T07:05:00.4937529Z -- Looking for pipe2 - not found
+2026-10-05T07:05:00.4939646Z -- Looking for GetTickCount64
+2026-10-05T07:05:01.4320297Z -- Looking for GetTickCount64 - found
+2026-10-05T07:05:01.4326396Z -- Looking for initgroups
+2026-10-05T07:05:01.9189591Z -- Looking for initgroups - not found
+2026-10-05T07:05:01.9192310Z -- Looking for CLOCK_MONOTONIC
+2026-10-05T07:05:02.4118062Z -- Looking for CLOCK_MONOTONIC - not found
+2026-10-05T07:05:02.4379660Z -- summary of build options:
+2026-10-05T07:05:02.4380094Z 
+2026-10-05T07:05:02.4380681Z     Package version: 1.70.0
+2026-10-05T07:05:02.4381218Z     Library version: 43:5:29
+2026-10-05T07:05:02.4381998Z     Install prefix:  D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install
+2026-10-05T07:05:02.4382867Z     Target system:   Windows
+2026-10-05T07:05:02.4384078Z     Compiler:
+2026-10-05T07:05:02.4384509Z       Build type:     Release
+2026-10-05T07:05:02.4385786Z       C compiler:     C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe
+2026-10-05T07:05:02.4386827Z       CFLAGS:         /O2 /Ob2  /DWIN32 /D_WINDOWS /W3
+2026-10-05T07:05:02.4387319Z       C++ compiler:   
+2026-10-05T07:05:02.4387669Z       CXXFLAGS:        
+2026-10-05T07:05:02.4388051Z       WARNCFLAGS:     
+2026-10-05T07:05:02.4388425Z       CXX1XCXXFLAGS:  
+2026-10-05T07:05:02.4388812Z       WARNCXXFLAGS:   
+2026-10-05T07:05:02.4389144Z     Python:
+2026-10-05T07:05:02.4389648Z       Python:          C:/hostedtoolcache/windows/Python/3.14.7/x64/python3.exe
+2026-10-05T07:05:02.4390407Z       Python3_VERSION: 3.14.7
+2026-10-05T07:05:02.4390792Z     Test:
+2026-10-05T07:05:02.4391106Z       Failmalloc:     OFF
+2026-10-05T07:05:02.4391482Z       Build Test:     OFF
+2026-10-05T07:05:02.4391818Z     Libs:
+2026-10-05T07:05:02.4392125Z       OpenSSL:         (LIBS='')
+2026-10-05T07:05:02.4392533Z       wolfSSL:         (LIBS='')
+2026-10-05T07:05:02.4392943Z       Libxml2:        FALSE (LIBS='')
+2026-10-05T07:05:02.4393390Z       Libev:           (LIBS='')
+2026-10-05T07:05:02.4393775Z       Libc-ares:       (LIBS='')
+2026-10-05T07:05:02.4394163Z       Libngtcp2:       (LIBS='')
+2026-10-05T07:05:02.4394579Z       Libngtcp2_crypto_quictls:  (LIBS='')
+2026-10-05T07:05:02.4395087Z       Libngtcp2_crypto_libressl:  (LIBS='')
+2026-10-05T07:05:02.4395610Z       Libngtcp2_crypto_wolfssl:  (LIBS='')
+2026-10-05T07:05:02.4396111Z       Libnghttp3:      (LIBS='')
+2026-10-05T07:05:02.4396559Z       Libbpf:          (LIBS='')
+2026-10-05T07:05:02.4397067Z       Libevent(SSL):   (LIBS='')
+2026-10-05T07:05:02.4397512Z       Jansson:         (LIBS='')
+2026-10-05T07:05:02.4397973Z       Jemalloc:       FALSE (LIBS='')
+2026-10-05T07:05:02.4398433Z       Zlib:            (LIBS='')
+2026-10-05T07:05:02.4398855Z       Systemd:         (LIBS='')
+2026-10-05T07:05:02.4399279Z       Libbrotlienc:    (LIBS='')
+2026-10-05T07:05:02.4399709Z       Libbrotlidec:    (LIBS='')
+2026-10-05T07:05:02.4400089Z     Third-party:
+2026-10-05T07:05:02.4400418Z       http-parser:    
+2026-10-05T07:05:02.4400763Z       MRuby:          0
+2026-10-05T07:05:02.4401098Z       Neverbleed:     0
+2026-10-05T07:05:02.4401434Z     Features:
+2026-10-05T07:05:02.4401743Z       Applications:   OFF
+2026-10-05T07:05:02.4402122Z       HPACK tools:    OFF
+2026-10-05T07:05:02.4402480Z       Examples:       OFF
+2026-10-05T07:05:02.4402838Z       Threading:      ON
+2026-10-05T07:05:02.4403214Z       HTTP/3(EXPERIMENTAL): OFF
+2026-10-05T07:05:02.4403481Z 
+2026-10-05T07:05:02.4403641Z -- Configuring done (23.9s)
+2026-10-05T07:05:02.5048436Z -- Generating done (0.1s)
+2026-10-05T07:05:02.5057801Z -- Build files have been written to: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/build/nghttp2
+2026-10-05T07:05:02.5174516Z + C:\Program Files\CMake\bin\cmake.EXE --build D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\nghttp2 --config Release --parallel 3
+2026-10-05T07:05:02.6135318Z MSBuild version 17.14.60+43b635718 for .NET Framework
+2026-10-05T07:05:02.6438420Z 
+2026-10-05T07:05:02.9427457Z   1>Checking Build System
+2026-10-05T07:05:03.0906534Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/sources/nghttp2-1.70.0/lib/CMakeLists.txt
+2026-10-05T07:05:03.2245366Z   nghttp2_pq.c
+2026-10-05T07:05:03.2537363Z   nghttp2_map.c
+2026-10-05T07:05:03.2815996Z   nghttp2_queue.c
+2026-10-05T07:05:03.3028275Z   nghttp2_frame.c
+2026-10-05T07:05:03.3379788Z   nghttp2_buf.c
+2026-10-05T07:05:03.3644353Z   nghttp2_stream.c
+2026-10-05T07:05:03.3855524Z   nghttp2_outbound_item.c
+2026-10-05T07:05:03.4047624Z   nghttp2_session.c
+2026-10-05T07:05:03.4513961Z   nghttp2_submit.c
+2026-10-05T07:05:03.4748453Z   nghttp2_helper.c
+2026-10-05T07:05:03.4944791Z   nghttp2_alpn.c
+2026-10-05T07:05:03.5160920Z   nghttp2_hd.c
+2026-10-05T07:05:03.5553668Z   nghttp2_hd_huffman.c
+2026-10-05T07:05:03.5777942Z D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\sources\nghttp2-1.70.0\lib\nghttp2_hd.c(1888,25): warning C4244: 'return': conversion from 'nghttp2_ssize' to 'int', possible loss of data [D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\nghttp2\lib\nghttp2_static.vcxproj]
+2026-10-05T07:05:03.5836409Z   nghttp2_hd_huffman_data.c
+2026-10-05T07:05:03.6101312Z   nghttp2_version.c
+2026-10-05T07:05:03.6255450Z   nghttp2_priority_spec.c
+2026-10-05T07:05:03.6407219Z   nghttp2_option.c
+2026-10-05T07:05:03.6585320Z   nghttp2_callbacks.c
+2026-10-05T07:05:03.6725333Z   nghttp2_mem.c
+2026-10-05T07:05:03.6861102Z   nghttp2_http.c
+2026-10-05T07:05:03.7163043Z   Generating Code...
+2026-10-05T07:05:04.8293095Z   Compiling...
+2026-10-05T07:05:04.8293589Z   nghttp2_rcbuf.c
+2026-10-05T07:05:04.8473957Z   nghttp2_extpri.c
+2026-10-05T07:05:04.8645506Z   nghttp2_ratelim.c
+2026-10-05T07:05:04.8818645Z   nghttp2_time.c
+2026-10-05T07:05:05.0775261Z   nghttp2_debug.c
+2026-10-05T07:05:05.0998426Z   sfparse.c
+2026-10-05T07:05:05.1190405Z   Generating Code...
+2026-10-05T07:05:05.3387304Z   nghttp2_static.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\nghttp2\lib\Release\nghttp2.lib
+2026-10-05T07:05:05.3951282Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/sources/nghttp2-1.70.0/CMakeLists.txt
+2026-10-05T07:05:05.4503215Z + C:\Program Files\CMake\bin\cmake.EXE --install D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\nghttp2 --config Release
+2026-10-05T07:05:05.4641910Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/share/doc/nghttp2/README.rst
+2026-10-05T07:05:05.4655955Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/nghttp2/nghttp2.h
+2026-10-05T07:05:05.4663340Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/nghttp2/nghttp2ver.h
+2026-10-05T07:05:05.4669913Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/nghttp2/nghttp2Config.cmake
+2026-10-05T07:05:05.4674238Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/nghttp2/nghttp2ConfigVersion.cmake
+2026-10-05T07:05:05.4679360Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/nghttp2/nghttp2Targets.cmake
+2026-10-05T07:05:05.4685214Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/nghttp2/nghttp2Targets-release.cmake
+2026-10-05T07:05:05.4690201Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/nghttp2.lib
+2026-10-05T07:05:05.4701854Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/pkgconfig/libnghttp2.pc
+2026-10-05T07:05:05.4759449Z + C:\Program Files\CMake\bin\cmake.EXE -S D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\sources\curl-8.22.0 -B D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\curl -G Visual Studio 17 2022 -A x64 -DCMAKE_INSTALL_PREFIX=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_POLICY_DEFAULT_CMP0091=NEW -DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON -DBUILD_CURL_EXE=OFF -DBUILD_LIBCURL_DOCS=OFF -DBUILD_MISC_DOCS=OFF -DENABLE_CURL_MANUAL=OFF -DHTTP_ONLY=ON -DCURL_USE_LIBPSL=OFF -DCURL_USE_LIBSSH2=OFF -DCURL_USE_GSSAPI=OFF -DUSE_LIBIDN2=OFF -DCURL_BROTLI=OFF -DCURL_ZSTD=OFF -DCURL_ZLIB=ON -DUSE_NGHTTP2=ON -DUSE_NGTCP2=OFF -DCURL_USE_PKGCONFIG=OFF -DCURL_USE_CMAKECONFIG=OFF -DENABLE_THREADED_RESOLVER=ON -DZLIB_INCLUDE_DIR=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include -DZLIB_LIBRARY=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/zs.lib -DNGHTTP2_INCLUDE_DIR=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include -DNGHTTP2_LIBRARY=D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/nghttp2.lib -DNGHTTP2_USE_STATIC_LIBS=ON -DCURL_USE_SCHANNEL=ON -DCURL_USE_OPENSSL=OFF -DENABLE_UNICODE=ON -DCURL_STATIC_CRT=ON
+2026-10-05T07:05:05.4944576Z -- Using CMake version 3.31.6
+2026-10-05T07:05:05.5036472Z -- curl version=[8.22.0]
+2026-10-05T07:05:05.5161476Z -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.20348.
+2026-10-05T07:05:06.5219672Z -- The C compiler identification is MSVC 19.44.35229.0
+2026-10-05T07:05:06.5531685Z -- Detecting C compiler ABI info
+2026-10-05T07:05:07.2903600Z -- Detecting C compiler ABI info - done
+2026-10-05T07:05:07.3256745Z -- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+2026-10-05T07:05:07.3261361Z -- Detecting C compile features
+2026-10-05T07:05:07.3267981Z -- Detecting C compile features - done
+2026-10-05T07:05:07.3289831Z -- CMake platform flags: WIN32 MSVC-1944
+2026-10-05T07:05:07.3291422Z -- Performing Test HAVE_WIN32_WINNT
+2026-10-05T07:05:08.1205632Z -- Performing Test HAVE_WIN32_WINNT - Success
+2026-10-05T07:05:08.1206160Z -- Found _WIN32_WINNT=0x0a00
+2026-10-05T07:05:08.1217307Z -- Picky compiler options: -W4 -Wall -wd4061 -wd4191 -wd4255 -wd4464 -wd4548 -wd4574 -wd4668 -wd4710 -wd4711 -wd4746 -wd4820 -wd5045
+2026-10-05T07:05:08.2376575Z -- Found Perl: C:/Program Files/Git/usr/bin/perl.exe (found version "5.42.3")
+2026-10-05T07:05:08.2544649Z -- Found ZLIB: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/zs.lib (found version "1.3.2")
+2026-10-05T07:05:08.2565119Z -- Found NGHTTP2: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include (found version "1.70.0")
+2026-10-05T07:05:08.2596563Z -- Check size of time_t
+2026-10-05T07:05:10.8698169Z -- Check size of time_t - done
+2026-10-05T07:05:10.9326119Z -- Protocols: http https
+2026-10-05T07:05:10.9330865Z -- Features: alt-svc AsynchDNS HSTS HTTP2 HTTPS-proxy IPv6 Kerberos Largefile libz SPNEGO SSL SSPI threadsafe Unicode UnixSockets
+2026-10-05T07:05:10.9332119Z -- Enabled SSL backends: Schannel
+2026-10-05T07:05:10.9545157Z -- 
+2026-10-05T07:05:10.9545573Z buildinfo.configure.tool: cmake
+2026-10-05T07:05:10.9546100Z buildinfo.configure.command: C:/Program Files/CMake/bin/cmake.exe
+2026-10-05T07:05:10.9546620Z buildinfo.configure.version: 3.31.6
+2026-10-05T07:05:10.9552735Z buildinfo.configure.args: -DBUILD_CURL_EXE="OFF" -DBUILD_LIBCURL_DOCS="OFF" -DBUILD_MISC_DOCS="OFF" -DBUILD_SHARED_LIBS="OFF" -DBUILD_STATIC_LIBS="ON" -DBUILD_TESTING="OFF" -DCMAKE_BUILD_TYPE="Release" -DCMAKE_INSTALL_LIBDIR="lib" -DCMAKE_INSTALL_PREFIX="D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install" -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded" -DCMAKE_POLICY_DEFAULT_CMP0091="NEW" -DCURL_BROTLI="OFF" -DCURL_STATIC_CRT="ON" -DCURL_USE_CMAKECONFIG="OFF" -DCURL_USE_GSSAPI="OFF" -DCURL_USE_LIBPSL="OFF" -DCURL_USE_LIBSSH2="OFF" -DCURL_USE_OPENSSL="OFF" -DCURL_USE_PKGCONFIG="OFF" -DCURL_USE_SCHANNEL="ON" -DCURL_ZLIB="ON" -DCURL_ZSTD="OFF" -DENABLE_CURL_MANUAL="OFF" -DENABLE_THREADED_RESOLVER="ON" -DENABLE_UNICODE="ON" -DHTTP_ONLY="ON" -DNGHTTP2_INCLUDE_DIR="D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include" -DNGHTTP2_LIBRARY="D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/nghttp2.lib" -DNGHTTP2_USE_STATIC_LIBS="ON" -DUSE_LIBIDN2="OFF" -DUSE_NGHTTP2="ON" -DUSE_NGTCP2="OFF" -DZLIB_INCLUDE_DIR="D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include" -DZLIB_LIBRARY="D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/zs.lib"
+2026-10-05T07:05:10.9559782Z buildinfo.configure.generator: Visual Studio 17 2022
+2026-10-05T07:05:10.9560402Z buildinfo.configure.make: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/amd64/MSBuild.exe
+2026-10-05T07:05:10.9560976Z buildinfo.host.cpu: AMD64
+2026-10-05T07:05:10.9561240Z buildinfo.host.os: Windows
+2026-10-05T07:05:10.9561665Z buildinfo.target.cpu: AMD64
+2026-10-05T07:05:10.9561924Z buildinfo.target.os: Windows
+2026-10-05T07:05:10.9562191Z buildinfo.target.flags: WIN32 MSVC-1944
+2026-10-05T07:05:10.9562528Z buildinfo.compiler: MSVC
+2026-10-05T07:05:10.9562782Z buildinfo.compiler.version: 19.44.35229.0
+2026-10-05T07:05:10.9563055Z buildinfo.sysroot: 
+2026-10-05T07:05:10.9563187Z 
+2026-10-05T07:05:10.9563285Z -- Configuring done (5.5s)
+2026-10-05T07:05:11.6314986Z CMake Warning:
+2026-10-05T07:05:11.6315682Z   Manually-specified variables were not used by the project:
+2026-10-05T07:05:11.6316228Z -- Generating done (0.7s)
+2026-10-05T07:05:11.6316472Z 
+2026-10-05T07:05:11.6316601Z     CMAKE_BUILD_TYPE
+2026-10-05T07:05:11.6316927Z     CMAKE_POLICY_DEFAULT_CMP0091
+2026-10-05T07:05:11.6317180Z 
+2026-10-05T07:05:11.6317187Z 
+2026-10-05T07:05:11.6326274Z -- Build files have been written to: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/build/curl
+2026-10-05T07:05:11.6517031Z + C:\Program Files\CMake\bin\cmake.EXE --build D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\curl --config Release --parallel 3
+2026-10-05T07:05:11.7517324Z MSBuild version 17.14.60+43b635718 for .NET Framework
+2026-10-05T07:05:11.7817326Z 
+2026-10-05T07:05:12.0979883Z   1>Checking Build System
+2026-10-05T07:05:12.4260020Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/sources/curl-8.22.0/lib/CMakeLists.txt
+2026-10-05T07:05:12.6870343Z   altsvc.c
+2026-10-05T07:05:12.6876080Z   amigaos.c
+2026-10-05T07:05:12.6877913Z   api.c
+2026-10-05T07:05:12.6880517Z   bufq.c
+2026-10-05T07:05:13.1955260Z   bufref.c
+2026-10-05T07:05:13.2216470Z   cf-h1-proxy.c
+2026-10-05T07:05:13.2322033Z   cf-h2-proxy.c
+2026-10-05T07:05:13.2355449Z   cf-haproxy.c
+2026-10-05T07:05:13.6051799Z   cf-https-connect.c
+2026-10-05T07:05:13.6077702Z   cf-ip-happy.c
+2026-10-05T07:05:13.6200372Z   cf-recvbuf.c
+2026-10-05T07:05:13.9042940Z   cf-setup.c
+2026-10-05T07:05:13.9342136Z   cf-socket.c
+2026-10-05T07:05:13.9423508Z   cfilters.c
+2026-10-05T07:05:14.0492253Z   conncache.c
+2026-10-05T07:05:14.3405061Z   connect.c
+2026-10-05T07:05:14.3405552Z   content_encoding.c
+2026-10-05T07:05:14.3438249Z   cookie.c
+2026-10-05T07:05:14.4837381Z   creds.c
+2026-10-05T07:05:14.6934502Z   cshutdn.c
+2026-10-05T07:05:14.7594087Z   curl_addrinfo.c
+2026-10-05T07:05:14.7813314Z   curl_endian.c
+2026-10-05T07:05:14.8877640Z   curl_fnmatch.c
+2026-10-05T07:05:15.0310577Z   curl_fopen.c
+2026-10-05T07:05:15.0574871Z   curl_get_line.c
+2026-10-05T07:05:15.0584402Z   curl_gethostname.c
+2026-10-05T07:05:15.1262652Z   curl_gssapi.c
+2026-10-05T07:05:15.2561497Z   curl_memrchr.c
+2026-10-05T07:05:15.2839920Z   curl_ntlm_core.c
+2026-10-05T07:05:15.3234580Z   curl_range.c
+2026-10-05T07:05:15.3534502Z   curl_sasl.c
+2026-10-05T07:05:15.4789933Z   curl_sha512_256.c
+2026-10-05T07:05:15.5298421Z   curl_share.c
+2026-10-05T07:05:15.5759728Z   curl_sspi.c
+2026-10-05T07:05:15.5767665Z   curl_threads.c
+2026-10-05T07:05:15.7466443Z   curl_trc.c
+2026-10-05T07:05:15.7677910Z   cw-out.c
+2026-10-05T07:05:15.7916805Z   cw-pause.c
+2026-10-05T07:05:15.8468331Z   dict.c
+2026-10-05T07:05:16.0724868Z   dynhds.c
+2026-10-05T07:05:16.0780355Z   easy.c
+2026-10-05T07:05:16.1192341Z   easygetopt.c
+2026-10-05T07:05:16.3334115Z   easyoptions.c
+2026-10-05T07:05:16.3601366Z   escape.c
+2026-10-05T07:05:16.3679969Z   fake_addrinfo.c
+2026-10-05T07:05:16.3698314Z   file.c
+2026-10-05T07:05:16.5817897Z   fileinfo.c
+2026-10-05T07:05:16.5982291Z   formdata.c
+2026-10-05T07:05:16.6228032Z   ftp.c
+2026-10-05T07:05:16.6247732Z   ftplistparser.c
+2026-10-05T07:05:16.7866792Z   getenv.c
+2026-10-05T07:05:16.8613252Z   getinfo.c
+2026-10-05T07:05:16.8806473Z   gopher.c
+2026-10-05T07:05:16.8826252Z   hash.c
+2026-10-05T07:05:17.0762477Z   headers.c
+2026-10-05T07:05:17.1351444Z   hmac.c
+2026-10-05T07:05:17.1407746Z   hsts.c
+2026-10-05T07:05:17.2231375Z   http.c
+2026-10-05T07:05:17.2373026Z   http1.c
+2026-10-05T07:05:17.3752095Z   http2.c
+2026-10-05T07:05:17.4578713Z   http_aws_sigv4.c
+2026-10-05T07:05:17.5087527Z   http_httpsig.c
+2026-10-05T07:05:17.9910459Z   curl_ed25519.c
+2026-10-05T07:05:18.0006399Z   http_chunks.c
+2026-10-05T07:05:18.0589752Z   http_digest.c
+2026-10-05T07:05:18.2179645Z   http_negotiate.c
+2026-10-05T07:05:18.3099980Z   http_ntlm.c
+2026-10-05T07:05:18.3121056Z   http_proxy.c
+2026-10-05T07:05:18.3140396Z   idn.c
+2026-10-05T07:05:18.4506110Z   if2ip.c
+2026-10-05T07:05:18.4528320Z   imap.c
+2026-10-05T07:05:18.5972407Z   ldap.c
+2026-10-05T07:05:18.6141328Z   llist.c
+2026-10-05T07:05:18.6957366Z   macos.c
+2026-10-05T07:05:18.8433429Z   md4.c
+2026-10-05T07:05:18.8463085Z   md5.c
+2026-10-05T07:05:18.8530803Z   memdebug.c
+2026-10-05T07:05:18.8735134Z   mime.c
+2026-10-05T07:05:18.9218089Z   mprintf.c
+2026-10-05T07:05:19.0686593Z   mqtt.c
+2026-10-05T07:05:19.2731926Z   multi.c
+2026-10-05T07:05:19.3506111Z   multi_ev.c
+2026-10-05T07:05:19.3564049Z   multi_ntfy.c
+2026-10-05T07:05:19.7123271Z   netrc.c
+2026-10-05T07:05:19.7253757Z   openldap.c
+2026-10-05T07:05:19.7288303Z   parsedate.c
+2026-10-05T07:05:19.8275862Z   peer.c
+2026-10-05T07:05:20.0393162Z   pingpong.c
+2026-10-05T07:05:20.0420500Z   pop3.c
+2026-10-05T07:05:20.0448175Z   progress.c
+2026-10-05T07:05:20.0737406Z   protocol.c
+2026-10-05T07:05:20.1884948Z   proxy.c
+2026-10-05T07:05:20.3522822Z   psl.c
+2026-10-05T07:05:20.3583369Z   rand.c
+2026-10-05T07:05:20.3615939Z   ratelimit.c
+2026-10-05T07:05:20.5093040Z   request.c
+2026-10-05T07:05:20.5762746Z   rtsp.c
+2026-10-05T07:05:20.6190438Z   select.c
+2026-10-05T07:05:20.8136903Z   sendf.c
+2026-10-05T07:05:20.8170984Z   setopt.c
+2026-10-05T07:05:20.8187905Z   sha256.c
+2026-10-05T07:05:21.0072674Z   slist.c
+2026-10-05T07:05:21.0223796Z   smb.c
+2026-10-05T07:05:21.2743908Z   smtp.c
+2026-10-05T07:05:21.2888426Z   socketpair.c
+2026-10-05T07:05:21.3112342Z   socks.c
+2026-10-05T07:05:21.3184678Z   socks_gssapi.c
+2026-10-05T07:05:21.5257637Z   socks_sspi.c
+2026-10-05T07:05:21.5353786Z   splay.c
+2026-10-05T07:05:21.7752901Z   strcase.c
+2026-10-05T07:05:21.7766340Z   strequal.c
+2026-10-05T07:05:21.7784165Z   strerror.c
+2026-10-05T07:05:21.8473687Z   system_win32.c
+2026-10-05T07:05:22.0163566Z   telnet.c
+2026-10-05T07:05:22.0186754Z   tftp.c
+2026-10-05T07:05:22.0531456Z   thrdpool.c
+2026-10-05T07:05:22.0923494Z   thrdqueue.c
+2026-10-05T07:05:22.2247274Z   transfer.c
+2026-10-05T07:05:22.2600686Z   uint-bset.c
+2026-10-05T07:05:22.3772277Z   uint-hash.c
+2026-10-05T07:05:22.3890809Z   uint-hashset.c
+2026-10-05T07:05:22.4209518Z   uint-spbset.c
+2026-10-05T07:05:22.5134942Z   uint-table.c
+2026-10-05T07:05:22.6299284Z   url.c
+2026-10-05T07:05:22.6607827Z   urlapi.c
+2026-10-05T07:05:22.7251805Z   version.c
+2026-10-05T07:05:22.7647528Z   ws.c
+2026-10-05T07:05:23.0226225Z   cleartext.c
+2026-10-05T07:05:23.0299559Z   cram.c
+2026-10-05T07:05:23.2117965Z   digest.c
+2026-10-05T07:05:23.2743533Z   digest_sspi.c
+2026-10-05T07:05:23.3268673Z   gsasl.c
+2026-10-05T07:05:23.3625015Z   krb5_gssapi.c
+2026-10-05T07:05:23.5621069Z   krb5_sspi.c
+2026-10-05T07:05:23.5790175Z   ntlm.c
+2026-10-05T07:05:23.5809201Z   ntlm_sspi.c
+2026-10-05T07:05:23.5918594Z   oauth2.c
+2026-10-05T07:05:23.8008262Z   spnego_gssapi.c
+2026-10-05T07:05:23.8042227Z   spnego_sspi.c
+2026-10-05T07:05:23.8058050Z   vauth.c
+2026-10-05T07:05:23.8201809Z   asyn-ares.c
+2026-10-05T07:05:23.9948419Z   asyn-base.c
+2026-10-05T07:05:24.0414208Z   asyn-thrdd.c
+2026-10-05T07:05:24.0664735Z   cf-dns.c
+2026-10-05T07:05:24.2452501Z   dnscache.c
+2026-10-05T07:05:24.3962666Z   doh.c
+2026-10-05T07:05:24.3979427Z   hostip.c
+2026-10-05T07:05:24.4365838Z   hostip4.c
+2026-10-05T07:05:24.4740069Z   hostip6.c
+2026-10-05T07:05:24.6529541Z   httpsrr.c
+2026-10-05T07:05:24.6838851Z   apple.c
+2026-10-05T07:05:24.8426036Z   cipher_suite.c
+2026-10-05T07:05:24.8758154Z   gtls.c
+2026-10-05T07:05:24.8779143Z   hostcheck.c
+2026-10-05T07:05:24.9430497Z   keylog.c
+2026-10-05T07:05:24.9450865Z   mbedtls.c
+2026-10-05T07:05:25.1174684Z   openssl.c
+2026-10-05T07:05:25.1197596Z   rustls.c
+2026-10-05T07:05:25.1678589Z   schannel.c
+2026-10-05T07:05:25.1700332Z   schannel_verify.c
+2026-10-05T07:05:25.3397621Z   vtls.c
+2026-10-05T07:05:25.3418725Z   vtls_config.c
+2026-10-05T07:05:25.5591042Z   vtls_scache.c
+2026-10-05T07:05:25.7547440Z   vtls_spack.c
+2026-10-05T07:05:25.7612486Z   wolfssl.c
+2026-10-05T07:05:25.7948922Z   x509asn1.c
+2026-10-05T07:05:26.0124798Z   capsule.c
+2026-10-05T07:05:26.0211933Z   cf-capsule.c
+2026-10-05T07:05:26.2425587Z   cf-ngtcp2.c
+2026-10-05T07:05:26.2718181Z   cf-ngtcp2-cmn.c
+2026-10-05T07:05:26.2725105Z   cf-ngtcp2-proxy.c
+2026-10-05T07:05:26.2762487Z   cf-quiche.c
+2026-10-05T07:05:26.2788629Z   vquic.c
+2026-10-05T07:05:26.4993182Z   vquic-tls.c
+2026-10-05T07:05:26.5003520Z   libssh.c
+2026-10-05T07:05:26.5009811Z   libssh2.c
+2026-10-05T07:05:26.5244886Z   vssh.c
+2026-10-05T07:05:26.7188652Z   base64.c
+2026-10-05T07:05:26.7215310Z   basename.c
+2026-10-05T07:05:26.7230508Z   dynbuf.c
+2026-10-05T07:05:26.8398197Z   fopen.c
+2026-10-05T07:05:26.9578834Z   inet_ntop.c
+2026-10-05T07:05:26.9637295Z   inet_pton.c
+2026-10-05T07:05:26.9722548Z   multibyte.c
+2026-10-05T07:05:27.0048523Z   nonblock.c
+2026-10-05T07:05:27.2075463Z   snprintf.c
+2026-10-05T07:05:27.2200867Z   strcopy.c
+2026-10-05T07:05:27.2221680Z   strdup.c
+2026-10-05T07:05:27.4143227Z   strerr.c
+2026-10-05T07:05:27.4289466Z   strparse.c
+2026-10-05T07:05:27.4304851Z   timediff.c
+2026-10-05T07:05:27.4473394Z   timeval.c
+2026-10-05T07:05:27.4590806Z   version_win32.c
+2026-10-05T07:05:27.6789808Z   wait.c
+2026-10-05T07:05:27.6859753Z   warnless.c
+2026-10-05T07:05:27.6865333Z   winapi.c
+2026-10-05T07:05:28.3469890Z   libcurl_object.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\curl\lib\libcurl_object.dir\Release\libcurl_object.lib
+2026-10-05T07:05:28.4856584Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/sources/curl-8.22.0/lib/CMakeLists.txt
+2026-10-05T07:05:28.6102704Z   libcurl_static.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\curl\lib\Release\libcurl.lib
+2026-10-05T07:05:28.6634826Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/sources/curl-8.22.0/CMakeLists.txt
+2026-10-05T07:05:28.7233614Z + C:\Program Files\CMake\bin\cmake.EXE --install D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\build\curl --config Release
+2026-10-05T07:05:28.7381636Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/libcurl.lib
+2026-10-05T07:05:28.7427227Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/bin/curl-config
+2026-10-05T07:05:28.7432896Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/pkgconfig/libcurl.pc
+2026-10-05T07:05:28.7437672Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/curl
+2026-10-05T07:05:28.7441074Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/curl/curl.h
+2026-10-05T07:05:28.7447708Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/curl/curlver.h
+2026-10-05T07:05:28.7452013Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/curl/easy.h
+2026-10-05T07:05:28.7456353Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/curl/header.h
+2026-10-05T07:05:28.7460869Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/curl/mprintf.h
+2026-10-05T07:05:28.7465127Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/curl/multi.h
+2026-10-05T07:05:28.7469993Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/curl/options.h
+2026-10-05T07:05:28.7476386Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/curl/stdcheaders.h
+2026-10-05T07:05:28.7480572Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/curl/system.h
+2026-10-05T07:05:28.7486358Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/curl/typecheck-gcc.h
+2026-10-05T07:05:28.7493187Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/curl/urlapi.h
+2026-10-05T07:05:28.7497544Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/include/curl/websockets.h
+2026-10-05T07:05:28.7504197Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/CURLTargets.cmake
+2026-10-05T07:05:28.7509833Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/CURLTargets-release.cmake
+2026-10-05T07:05:28.7514898Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/CURLConfigVersion.cmake
+2026-10-05T07:05:28.7519146Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/CURLConfig.cmake
+2026-10-05T07:05:28.7523734Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindBrotli.cmake
+2026-10-05T07:05:28.7527945Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindCares.cmake
+2026-10-05T07:05:28.7535293Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindGSS.cmake
+2026-10-05T07:05:28.7539849Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindGnuTLS.cmake
+2026-10-05T07:05:28.7544220Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindLDAP.cmake
+2026-10-05T07:05:28.7548907Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindLibbacktrace.cmake
+2026-10-05T07:05:28.7553187Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindLibgsasl.cmake
+2026-10-05T07:05:28.7557360Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindLibidn2.cmake
+2026-10-05T07:05:28.7561755Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindLibpsl.cmake
+2026-10-05T07:05:28.7565946Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindLibssh.cmake
+2026-10-05T07:05:28.7570558Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindLibssh2.cmake
+2026-10-05T07:05:28.7575060Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindLibuv.cmake
+2026-10-05T07:05:28.7579289Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindMbedTLS.cmake
+2026-10-05T07:05:28.7583912Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindNGHTTP2.cmake
+2026-10-05T07:05:28.7588384Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindNGHTTP3.cmake
+2026-10-05T07:05:28.7593586Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindNGTCP2.cmake
+2026-10-05T07:05:28.7598337Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindNettle.cmake
+2026-10-05T07:05:28.7602617Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindQuiche.cmake
+2026-10-05T07:05:28.7607101Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindRustls.cmake
+2026-10-05T07:05:28.7611415Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindWolfSSL.cmake
+2026-10-05T07:05:28.7616077Z -- Installing: D:/a/itu-ders-bot/itu-ders-bot/.deps/windows-x64/install/lib/cmake/CURL/FindZstd.cmake
+2026-10-05T07:05:28.7679326Z Dependencies installed locally: D:\a\itu-ders-bot\itu-ders-bot\.deps\windows-x64\install
+2026-10-05T07:05:28.7995166Z ##[group]Run cmake --preset "$ITU_TARGET"
+2026-10-05T07:05:28.7995565Z [36;1mcmake --preset "$ITU_TARGET"[0m
+2026-10-05T07:05:28.7995860Z [36;1mcmake --build --preset "$ITU_TARGET"[0m
+2026-10-05T07:05:28.8009587Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+2026-10-05T07:05:28.8010082Z env:
+2026-10-05T07:05:28.8010268Z   ITU_TARGET: windows-x64
+2026-10-05T07:05:28.8010502Z   RELEASE_TAG: 
+2026-10-05T07:05:28.8010782Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:05:28.8011242Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-05T07:05:28.8011694Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:05:28.8012116Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:05:28.8012531Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:05:28.8012865Z   CommandPromptType: Native
+2026-10-05T07:05:28.8013250Z   DevEnvDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\
+2026-10-05T07:05:28.8013785Z   ExtensionSdkDir: C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs
+2026-10-05T07:05:28.8016216Z   EXTERNAL_INCLUDE: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\VS\include;C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\winrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\cppwinrt;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um
+2026-10-05T07:05:28.8018502Z   Framework40Version: v4.0
+2026-10-05T07:05:28.8018776Z   FrameworkDir: C:\Windows\Microsoft.NET\Framework64\
+2026-10-05T07:05:28.8019155Z   FrameworkDir64: C:\Windows\Microsoft.NET\Framework64\
+2026-10-05T07:05:28.8019479Z   FrameworkVersion: v4.0.30319
+2026-10-05T07:05:28.8019714Z   FrameworkVersion64: v4.0.30319
+2026-10-05T07:05:28.8020264Z   FSHARPINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools
+2026-10-05T07:05:28.8020888Z   HTMLHelpDir: C:\Program Files (x86)\HTML Help Workshop
+2026-10-05T07:05:28.8021385Z   IFCPATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ifc\x64
+2026-10-05T07:05:28.8023835Z   INCLUDE: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\VS\include;C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\winrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\cppwinrt;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um
+2026-10-05T07:05:28.8026080Z   is_x64_arch: true
+2026-10-05T07:05:28.8027328Z   LIB: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\lib\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\lib\um\x64;C:\Program Files (x86)\Windows Kits\10\lib\10.0.26100.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\\lib\10.0.26100.0\\um\x64
+2026-10-05T07:05:28.8031997Z   LIBPATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\lib\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\lib\x86\store\references;C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.26100.0;C:\Program Files (x86)\Windows Kits\10\References\10.0.26100.0;C:\Windows\Microsoft.NET\Framework64\v4.0.30319
+2026-10-05T07:05:28.8033857Z   NETFXSDKDir: C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\
+2026-10-05T07:05:28.8049720Z   Path: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VC\VCPackages;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TestWindow;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TeamFoundation\Team Explorer;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\bin\Roslyn;C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\;C:\Program Files (x86)\HTML Help Workshop;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Team Tools\DiagnosticsHub\Collector;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\Extensions\Microsoft\CodeCoverage.Console;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin;C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\\x64;C:\Program Files (x86)\Windows Kits\10\bin\\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\\MSBuild\Current\Bin\amd64;C:\Windows\Microsoft.NET\Framework64\v4.0.30319;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\;C:\Users\runneradmin\AppData\Roaming\Python\Python312\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64;C:\Program Files\MongoDB\Server\7.0\bin;C:\aliyun-cli;C:\vcpkg;C:\Program Files (x86)\NSIS\;C:\tools\zstd;C:\Program Files\Mercurial\;C:\hostedtoolcache\windows\stack\3.11.1\x64;C:\cabal\bin;C:\\ghcup\bin;C:\mingw64\bin;C:\Program Files\dotnet;C:\Program Files\MySQL\MySQL Server 8.0\bin;C:\Program Files\R\R-4.6.1\bin\x64;C:\SeleniumWebDrivers\GeckoDriver;C:\SeleniumWebDrivers\EdgeDriver\;C:\SeleniumWebDrivers\ChromeDriver;C:\Program Files (x86)\sbt\bin;C:\Program Files (x86)\GitHub CLI;C:\Program Files\Git\bin;C:\Program Files (x86)\pipx_bin;C:\npm\prefix;C:\hostedtoolcache\windows\go\1.24.13\x64\bin;C:\hostedtoolcache\windows\Ruby\3.3.12\x64\bin;C:\Program Files\OpenSSL\bin;C:\tools\kotlinc\bin;C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\8.0.504-1\x64\bin;C:\Program Files\ImageMagick-7.1.2-Q16-HDRI;C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin;C:\ProgramData\kind;C:\ProgramData\Chocolatey\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files\PowerShell\7\;C:\Program Files\Microsoft\Web Platform Installer\;C:\Program Files\TortoiseSVN\bin;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\150\Tools\Binn\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files (x86)\WiX Toolset v3.14\bin;C:\Program Files\Microsoft SQL Server\130\DTS\Binn\;C:\Program Files\Microsoft SQL Server\140\DTS\Binn\;C:\Program Files\Microsoft SQL Server\150\DTS\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files\Microsoft SQL Server\170\DTS\Binn\;C:\Strawberry\c\bin;C:\Strawberry\perl\site\bin;C:\Strawberry\perl\bin;C:\ProgramData\chocolatey\lib\pulumi\tools\Pulumi\bin;C:\Program Files\CMake\bin;C:\ProgramData\chocolatey\lib\maven\apache-maven-3.9.16\bin;C:\Program Files\Microsoft Service Fabric\bin\Fabric\Fabric.Code;C:\Program Files\Microsoft SDKs\Service Fabric\Tools\ServiceFabricLocalClusterManager;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Program Files\GitHub CLI\;c:\tools\php;C:\Program Files\Amazon\AWSCLIV2\;C:\Program Files\Amazon\SessionManagerPlugin\bin\;C:\Program Files\Amazon\AWSSAMCLI\bin\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\mongosh\;C:\Program Files\LLVM\bin;C:\Program Files (x86)\LLVM\bin;C:\Users\runneradmin\.dotnet\tools;C:\Users\runneradmin\.cargo\bin;C:\Users\runneradmin\AppData\Local\Microsoft\WindowsApps;C:\Program Files (x86)\Microsoft Visual Studio\Installer;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VC\Linux\bin\ConnectionManagerExe;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\vcpkg
+2026-10-05T07:05:28.8065254Z   Platform: x64
+2026-10-05T07:05:28.8065457Z   UCRTVersion: 10.0.26100.0
+2026-10-05T07:05:28.8065761Z   UniversalCRTSdkDir: C:\Program Files (x86)\Windows Kits\10\
+2026-10-05T07:05:28.8066304Z   VCIDEInstallDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VC\
+2026-10-05T07:05:28.8066848Z   VCINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\
+2026-10-05T07:05:28.8067361Z   VCPKG_ROOT: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\vcpkg
+2026-10-05T07:05:28.8067984Z   VCToolsInstallDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\
+2026-10-05T07:05:28.8068656Z   VCToolsRedistDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Redist\MSVC\14.44.35112\
+2026-10-05T07:05:28.8069124Z   VCToolsVersion: 14.44.35207
+2026-10-05T07:05:28.8069355Z   VisualStudioVersion: 17.0
+2026-10-05T07:05:28.8069730Z   VS170COMNTOOLS: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\
+2026-10-05T07:05:28.8070169Z   VSCMD_ARG_app_plat: Desktop
+2026-10-05T07:05:28.8070393Z   VSCMD_ARG_HOST_ARCH: x64
+2026-10-05T07:05:28.8070608Z   VSCMD_ARG_TGT_ARCH: x64
+2026-10-05T07:05:28.8070809Z   VSCMD_VER: 17.14.41
+2026-10-05T07:05:28.8071112Z   VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\
+2026-10-05T07:05:28.8071610Z   VSSDK150INSTALL: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VSSDK
+2026-10-05T07:05:28.8072116Z   VSSDKINSTALL: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VSSDK
+2026-10-05T07:05:28.8072828Z   WindowsLibPath: C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.26100.0;C:\Program Files (x86)\Windows Kits\10\References\10.0.26100.0
+2026-10-05T07:05:28.8073493Z   WindowsSdkBinPath: C:\Program Files (x86)\Windows Kits\10\bin\
+2026-10-05T07:05:28.8073874Z   WindowsSdkDir: C:\Program Files (x86)\Windows Kits\10\
+2026-10-05T07:05:28.8074186Z   WindowsSDKLibVersion: 10.0.26100.0\
+2026-10-05T07:05:28.8074558Z   WindowsSdkVerBinPath: C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\
+2026-10-05T07:05:28.8074958Z   WindowsSDKVersion: 10.0.26100.0\
+2026-10-05T07:05:28.8075417Z   WindowsSDK_ExecutablePath_x64: C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\
+2026-10-05T07:05:28.8076101Z   WindowsSDK_ExecutablePath_x86: C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\
+2026-10-05T07:05:28.8076558Z   __DOTNET_ADD_64BIT: 1
+2026-10-05T07:05:28.8076772Z   __DOTNET_PREFERRED_BITNESS: 64
+2026-10-05T07:05:28.8086647Z   __VSCMD_PREINIT_PATH: C:\Users\runneradmin\AppData\Roaming\Python\Python312\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64;C:\Program Files\MongoDB\Server\7.0\bin;C:\aliyun-cli;C:\vcpkg;C:\Program Files (x86)\NSIS\;C:\tools\zstd;C:\Program Files\Mercurial\;C:\hostedtoolcache\windows\stack\3.11.1\x64;C:\cabal\bin;C:\\ghcup\bin;C:\mingw64\bin;C:\Program Files\dotnet;C:\Program Files\MySQL\MySQL Server 8.0\bin;C:\Program Files\R\R-4.6.1\bin\x64;C:\SeleniumWebDrivers\GeckoDriver;C:\SeleniumWebDrivers\EdgeDriver\;C:\SeleniumWebDrivers\ChromeDriver;C:\Program Files (x86)\sbt\bin;C:\Program Files (x86)\GitHub CLI;C:\Program Files\Git\bin;C:\Program Files (x86)\pipx_bin;C:\npm\prefix;C:\hostedtoolcache\windows\go\1.24.13\x64\bin;C:\hostedtoolcache\windows\Python\3.12.10\x64\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64;C:\hostedtoolcache\windows\Ruby\3.3.12\x64\bin;C:\Program Files\OpenSSL\bin;C:\tools\kotlinc\bin;C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\8.0.504-1\x64\bin;C:\Program Files\ImageMagick-7.1.2-Q16-HDRI;C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin;C:\ProgramData\kind;C:\ProgramData\Chocolatey\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files\PowerShell\7\;C:\Program Files\Microsoft\Web Platform Installer\;C:\Program Files\TortoiseSVN\bin;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\150\Tools\Binn\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files (x86)\WiX Toolset v3.14\bin;C:\Program Files\Microsoft SQL Server\130\DTS\Binn\;C:\Program Files\Microsoft SQL Server\140\DTS\Binn\;C:\Program Files\Microsoft SQL Server\150\DTS\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files\Microsoft SQL Server\170\DTS\Binn\;C:\Strawberry\c\bin;C:\Strawberry\perl\site\bin;C:\Strawberry\perl\bin;C:\ProgramData\chocolatey\lib\pulumi\tools\Pulumi\bin;C:\Program Files\CMake\bin;C:\ProgramData\chocolatey\lib\maven\apache-maven-3.9.16\bin;C:\Program Files\Microsoft Service Fabric\bin\Fabric\Fabric.Code;C:\Program Files\Microsoft SDKs\Service Fabric\Tools\ServiceFabricLocalClusterManager;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Program Files\GitHub CLI\;c:\tools\php;C:\Program Files (x86)\sbt\bin;C:\Program Files\Amazon\AWSCLIV2\;C:\Program Files\Amazon\SessionManagerPlugin\bin\;C:\Program Files\Amazon\AWSSAMCLI\bin\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\mongosh\;C:\Program Files\LLVM\bin;C:\Program Files (x86)\LLVM\bin;C:\Users\runneradmin\.dotnet\tools;C:\Users\runneradmin\.cargo\bin;C:\Users\runneradmin\AppData\Local\Microsoft\WindowsApps;C:\Program Files (x86)\Microsoft Visual Studio\Installer
+2026-10-05T07:05:28.8096506Z ##[endgroup]
+2026-10-05T07:05:28.8739930Z Preset CMake variables:
+2026-10-05T07:05:28.8740197Z 
+2026-10-05T07:05:28.8740296Z   BUILD_TESTING="ON"
+2026-10-05T07:05:28.8740551Z   CMAKE_BUILD_TYPE="Release"
+2026-10-05T07:05:28.8740733Z 
+2026-10-05T07:05:28.8888170Z -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.20348.
+2026-10-05T07:05:30.5060171Z -- The CXX compiler identification is MSVC 19.44.35229.0
+2026-10-05T07:05:30.5410132Z -- Detecting CXX compiler ABI info
+2026-10-05T07:05:31.3018415Z -- Detecting CXX compiler ABI info - done
+2026-10-05T07:05:31.3449194Z -- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+2026-10-05T07:05:31.3454908Z -- Detecting CXX compile features
+2026-10-05T07:05:31.3464061Z -- Detecting CXX compile features - done
+2026-10-05T07:05:31.8023281Z -- Found Python3: C:/hostedtoolcache/windows/Python/3.12.10/x64/python3.exe (found suitable version "3.12.10", minimum required is "3.12") found components: Interpreter
+2026-10-05T07:05:31.8036020Z -- Configuring done (2.9s)
+2026-10-05T07:05:31.9068132Z CMake Warning:
+2026-10-05T07:05:31.9068717Z -- Generating done (0.1s)
+2026-10-05T07:05:31.9070863Z   Manually-specified variables were not used by the project:
+2026-10-05T07:05:31.9071680Z 
+2026-10-05T07:05:31.9071859Z     CMAKE_BUILD_TYPE
+2026-10-05T07:05:31.9072104Z 
+2026-10-05T07:05:31.9072111Z 
+2026-10-05T07:05:31.9078257Z -- Build files have been written to: D:/a/itu-ders-bot/itu-ders-bot/build/windows-x64
+2026-10-05T07:05:32.0190932Z MSBuild version 17.14.60+43b635718 for .NET Framework
+2026-10-05T07:05:32.0490233Z 
+2026-10-05T07:05:32.3658773Z   1>Checking Build System
+2026-10-05T07:05:33.6399211Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:05:33.7487494Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:05:33.8766911Z   platform_windows.cpp
+2026-10-05T07:05:36.1094996Z   itu_platform.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\build\windows-x64\Release\itu_platform.lib
+2026-10-05T07:05:36.1761374Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:05:36.1795188Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:05:36.2609360Z   main.cpp
+2026-10-05T07:05:36.2610105Z   http.cpp
+2026-10-05T07:05:37.3261839Z   token.cpp
+2026-10-05T07:05:38.3065343Z   clock.cpp
+2026-10-05T07:05:40.2268516Z   Generating Code...
+2026-10-05T07:05:42.1594967Z   itu_core.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\build\windows-x64\Release\itu_core.lib
+2026-10-05T07:05:42.2161917Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:05:42.2871781Z   main.cpp
+2026-10-05T07:05:42.6692703Z   setup.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\build\windows-x64\bin\setup.exe
+2026-10-05T07:05:47.3931681Z   main.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\build\windows-x64\bin\main.exe
+2026-10-05T07:05:47.5005459Z   Generating build manifest with current build provenance
+2026-10-05T07:05:47.6672109Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:05:47.8890293Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:05:47.8892979Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:05:48.0223088Z   http.cpp
+2026-10-05T07:05:48.0267373Z cl : command line  warning D9025: overriding '/DNDEBUG' with '/UNDEBUG' [D:\a\itu-ders-bot\itu-ders-bot\build\windows-x64\setup_file_tests.vcxproj]
+2026-10-05T07:05:48.0651419Z   setup_file_tests.cpp
+2026-10-05T07:05:48.0914088Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:05:48.1895643Z   windows_console_tests.cpp
+2026-10-05T07:05:48.4236430Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:05:48.7965711Z   core_tests.cpp
+2026-10-05T07:05:49.5786248Z   token.cpp
+2026-10-05T07:05:50.7960286Z   clock.cpp
+2026-10-05T07:05:54.8330543Z   setup_file_tests.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\build\windows-x64\bin\setup_file_tests.exe
+2026-10-05T07:05:55.8065553Z   windows_console_tests.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\build\windows-x64\bin\windows_console_tests.exe
+2026-10-05T07:05:56.0643542Z   http_socket_windows.cpp
+2026-10-05T07:05:56.6756745Z   Generating Code...
+2026-10-05T07:06:00.8108203Z   itu_core_test.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\build\windows-x64\Release\itu_core_test.lib
+2026-10-05T07:06:00.8778054Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:06:00.8825716Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:06:00.9618677Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:06:00.9729413Z   auth_driver.cpp
+2026-10-05T07:06:01.0601143Z   transport_test.cpp
+2026-10-05T07:06:01.0728734Z   application_driver.cpp
+2026-10-05T07:06:02.1340985Z   core_tests.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\build\windows-x64\bin\core_tests.exe
+2026-10-05T07:06:02.4486559Z   auth_driver.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\build\windows-x64\bin\auth_driver.exe
+2026-10-05T07:06:02.6082703Z D:\a\itu-ders-bot\itu-ders-bot\tests\application_driver.cpp(8,34): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [D:\a\itu-ders-bot\itu-ders-bot\build\windows-x64\application_driver.vcxproj]
+2026-10-05T07:06:02.8652009Z   transport_test.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\build\windows-x64\bin\transport_test.exe
+2026-10-05T07:06:06.6413205Z   application_driver.vcxproj -> D:\a\itu-ders-bot\itu-ders-bot\build\windows-x64\bin\application_driver.exe
+2026-10-05T07:06:06.6981521Z   Building Custom Rule D:/a/itu-ders-bot/itu-ders-bot/CMakeLists.txt
+2026-10-05T07:06:06.7854138Z ##[group]Run ctest --preset "$ITU_TARGET" --parallel 3
+2026-10-05T07:06:06.7854633Z [36;1mctest --preset "$ITU_TARGET" --parallel 3[0m
+2026-10-05T07:06:06.7855149Z [36;1mpython tests/native_artifacts.py "build/$ITU_TARGET/bin" --target "$ITU_TARGET"[0m
+2026-10-05T07:06:06.7868924Z shell: C:\Program Files\Git\bin\bash.EXE --noprofile --norc -e -o pipefail {0}
+2026-10-05T07:06:06.7869350Z env:
+2026-10-05T07:06:06.7869541Z   ITU_TARGET: windows-x64
+2026-10-05T07:06:06.7869766Z   RELEASE_TAG: 
+2026-10-05T07:06:06.7870058Z   pythonLocation: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:06:06.7870574Z   PKG_CONFIG_PATH: C:\hostedtoolcache\windows\Python\3.12.10\x64/lib/pkgconfig
+2026-10-05T07:06:06.7871036Z   Python_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:06:06.7871451Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:06:06.7871900Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.12.10\x64
+2026-10-05T07:06:06.7872243Z   CommandPromptType: Native
+2026-10-05T07:06:06.7872610Z   DevEnvDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\
+2026-10-05T07:06:06.7873167Z   ExtensionSdkDir: C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs
+2026-10-05T07:06:06.7875639Z   EXTERNAL_INCLUDE: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\VS\include;C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\winrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\cppwinrt;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um
+2026-10-05T07:06:06.7877966Z   Framework40Version: v4.0
+2026-10-05T07:06:06.7878247Z   FrameworkDir: C:\Windows\Microsoft.NET\Framework64\
+2026-10-05T07:06:06.7878610Z   FrameworkDir64: C:\Windows\Microsoft.NET\Framework64\
+2026-10-05T07:06:06.7878925Z   FrameworkVersion: v4.0.30319
+2026-10-05T07:06:06.7879167Z   FrameworkVersion64: v4.0.30319
+2026-10-05T07:06:06.7879715Z   FSHARPINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools
+2026-10-05T07:06:06.7880369Z   HTMLHelpDir: C:\Program Files (x86)\HTML Help Workshop
+2026-10-05T07:06:06.7880869Z   IFCPATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ifc\x64
+2026-10-05T07:06:06.7883303Z   INCLUDE: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\include;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\VS\include;C:\Program Files (x86)\Windows Kits\10\include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\shared;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\winrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\cppwinrt;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\include\um
+2026-10-05T07:06:06.7885714Z   is_x64_arch: true
+2026-10-05T07:06:06.7886971Z   LIB: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\lib\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\lib\um\x64;C:\Program Files (x86)\Windows Kits\10\lib\10.0.26100.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\\lib\10.0.26100.0\\um\x64
+2026-10-05T07:06:06.7891726Z   LIBPATH: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\ATLMFC\lib\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\lib\x86\store\references;C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.26100.0;C:\Program Files (x86)\Windows Kits\10\References\10.0.26100.0;C:\Windows\Microsoft.NET\Framework64\v4.0.30319
+2026-10-05T07:06:06.7893613Z   NETFXSDKDir: C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\
+2026-10-05T07:06:06.7909541Z   Path: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VC\VCPackages;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TestWindow;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\TeamFoundation\Team Explorer;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\bin\Roslyn;C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\;C:\Program Files (x86)\HTML Help Workshop;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\FSharp\Tools;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Team Tools\DiagnosticsHub\Collector;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\Extensions\Microsoft\CodeCoverage.Console;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin;C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\\x64;C:\Program Files (x86)\Windows Kits\10\bin\\x64;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\\MSBuild\Current\Bin\amd64;C:\Windows\Microsoft.NET\Framework64\v4.0.30319;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\;C:\Users\runneradmin\AppData\Roaming\Python\Python312\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64;C:\Program Files\MongoDB\Server\7.0\bin;C:\aliyun-cli;C:\vcpkg;C:\Program Files (x86)\NSIS\;C:\tools\zstd;C:\Program Files\Mercurial\;C:\hostedtoolcache\windows\stack\3.11.1\x64;C:\cabal\bin;C:\\ghcup\bin;C:\mingw64\bin;C:\Program Files\dotnet;C:\Program Files\MySQL\MySQL Server 8.0\bin;C:\Program Files\R\R-4.6.1\bin\x64;C:\SeleniumWebDrivers\GeckoDriver;C:\SeleniumWebDrivers\EdgeDriver\;C:\SeleniumWebDrivers\ChromeDriver;C:\Program Files (x86)\sbt\bin;C:\Program Files (x86)\GitHub CLI;C:\Program Files\Git\bin;C:\Program Files (x86)\pipx_bin;C:\npm\prefix;C:\hostedtoolcache\windows\go\1.24.13\x64\bin;C:\hostedtoolcache\windows\Ruby\3.3.12\x64\bin;C:\Program Files\OpenSSL\bin;C:\tools\kotlinc\bin;C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\8.0.504-1\x64\bin;C:\Program Files\ImageMagick-7.1.2-Q16-HDRI;C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin;C:\ProgramData\kind;C:\ProgramData\Chocolatey\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files\PowerShell\7\;C:\Program Files\Microsoft\Web Platform Installer\;C:\Program Files\TortoiseSVN\bin;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\150\Tools\Binn\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files (x86)\WiX Toolset v3.14\bin;C:\Program Files\Microsoft SQL Server\130\DTS\Binn\;C:\Program Files\Microsoft SQL Server\140\DTS\Binn\;C:\Program Files\Microsoft SQL Server\150\DTS\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files\Microsoft SQL Server\170\DTS\Binn\;C:\Strawberry\c\bin;C:\Strawberry\perl\site\bin;C:\Strawberry\perl\bin;C:\ProgramData\chocolatey\lib\pulumi\tools\Pulumi\bin;C:\Program Files\CMake\bin;C:\ProgramData\chocolatey\lib\maven\apache-maven-3.9.16\bin;C:\Program Files\Microsoft Service Fabric\bin\Fabric\Fabric.Code;C:\Program Files\Microsoft SDKs\Service Fabric\Tools\ServiceFabricLocalClusterManager;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Program Files\GitHub CLI\;c:\tools\php;C:\Program Files\Amazon\AWSCLIV2\;C:\Program Files\Amazon\SessionManagerPlugin\bin\;C:\Program Files\Amazon\AWSSAMCLI\bin\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\mongosh\;C:\Program Files\LLVM\bin;C:\Program Files (x86)\LLVM\bin;C:\Users\runneradmin\.dotnet\tools;C:\Users\runneradmin\.cargo\bin;C:\Users\runneradmin\AppData\Local\Microsoft\WindowsApps;C:\Program Files (x86)\Microsoft Visual Studio\Installer;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VC\Linux\bin\ConnectionManagerExe;C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\vcpkg
+2026-10-05T07:06:06.7925276Z   Platform: x64
+2026-10-05T07:06:06.7925485Z   UCRTVersion: 10.0.26100.0
+2026-10-05T07:06:06.7925797Z   UniversalCRTSdkDir: C:\Program Files (x86)\Windows Kits\10\
+2026-10-05T07:06:06.7926305Z   VCIDEInstallDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\VC\
+2026-10-05T07:06:06.7926867Z   VCINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\
+2026-10-05T07:06:06.7927372Z   VCPKG_ROOT: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\vcpkg
+2026-10-05T07:06:06.7927972Z   VCToolsInstallDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\
+2026-10-05T07:06:06.7928648Z   VCToolsRedistDir: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Redist\MSVC\14.44.35112\
+2026-10-05T07:06:06.7929117Z   VCToolsVersion: 14.44.35207
+2026-10-05T07:06:06.7929361Z   VisualStudioVersion: 17.0
+2026-10-05T07:06:06.7929741Z   VS170COMNTOOLS: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\
+2026-10-05T07:06:06.7930171Z   VSCMD_ARG_app_plat: Desktop
+2026-10-05T07:06:06.7930396Z   VSCMD_ARG_HOST_ARCH: x64
+2026-10-05T07:06:06.7930611Z   VSCMD_ARG_TGT_ARCH: x64
+2026-10-05T07:06:06.7930823Z   VSCMD_VER: 17.14.41
+2026-10-05T07:06:06.7931133Z   VSINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\
+2026-10-05T07:06:06.7931624Z   VSSDK150INSTALL: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VSSDK
+2026-10-05T07:06:06.7932125Z   VSSDKINSTALL: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VSSDK
+2026-10-05T07:06:06.7932848Z   WindowsLibPath: C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.26100.0;C:\Program Files (x86)\Windows Kits\10\References\10.0.26100.0
+2026-10-05T07:06:06.7933533Z   WindowsSdkBinPath: C:\Program Files (x86)\Windows Kits\10\bin\
+2026-10-05T07:06:06.7933922Z   WindowsSdkDir: C:\Program Files (x86)\Windows Kits\10\
+2026-10-05T07:06:06.7934236Z   WindowsSDKLibVersion: 10.0.26100.0\
+2026-10-05T07:06:06.7934612Z   WindowsSdkVerBinPath: C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\
+2026-10-05T07:06:06.7935003Z   WindowsSDKVersion: 10.0.26100.0\
+2026-10-05T07:06:06.7935462Z   WindowsSDK_ExecutablePath_x64: C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\
+2026-10-05T07:06:06.7936237Z   WindowsSDK_ExecutablePath_x86: C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\
+2026-10-05T07:06:06.7936701Z   __DOTNET_ADD_64BIT: 1
+2026-10-05T07:06:06.7936918Z   __DOTNET_PREFERRED_BITNESS: 64
+2026-10-05T07:06:06.7946804Z   __VSCMD_PREINIT_PATH: C:\Users\runneradmin\AppData\Roaming\Python\Python312\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64;C:\Program Files\MongoDB\Server\7.0\bin;C:\aliyun-cli;C:\vcpkg;C:\Program Files (x86)\NSIS\;C:\tools\zstd;C:\Program Files\Mercurial\;C:\hostedtoolcache\windows\stack\3.11.1\x64;C:\cabal\bin;C:\\ghcup\bin;C:\mingw64\bin;C:\Program Files\dotnet;C:\Program Files\MySQL\MySQL Server 8.0\bin;C:\Program Files\R\R-4.6.1\bin\x64;C:\SeleniumWebDrivers\GeckoDriver;C:\SeleniumWebDrivers\EdgeDriver\;C:\SeleniumWebDrivers\ChromeDriver;C:\Program Files (x86)\sbt\bin;C:\Program Files (x86)\GitHub CLI;C:\Program Files\Git\bin;C:\Program Files (x86)\pipx_bin;C:\npm\prefix;C:\hostedtoolcache\windows\go\1.24.13\x64\bin;C:\hostedtoolcache\windows\Python\3.12.10\x64\Scripts;C:\hostedtoolcache\windows\Python\3.12.10\x64;C:\hostedtoolcache\windows\Ruby\3.3.12\x64\bin;C:\Program Files\OpenSSL\bin;C:\tools\kotlinc\bin;C:\hostedtoolcache\windows\Java_Temurin-Hotspot_jdk\8.0.504-1\x64\bin;C:\Program Files\ImageMagick-7.1.2-Q16-HDRI;C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin;C:\ProgramData\kind;C:\ProgramData\Chocolatey\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files\PowerShell\7\;C:\Program Files\Microsoft\Web Platform Installer\;C:\Program Files\TortoiseSVN\bin;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\150\Tools\Binn\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files (x86)\WiX Toolset v3.14\bin;C:\Program Files\Microsoft SQL Server\130\DTS\Binn\;C:\Program Files\Microsoft SQL Server\140\DTS\Binn\;C:\Program Files\Microsoft SQL Server\150\DTS\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files\Microsoft SQL Server\170\DTS\Binn\;C:\Strawberry\c\bin;C:\Strawberry\perl\site\bin;C:\Strawberry\perl\bin;C:\ProgramData\chocolatey\lib\pulumi\tools\Pulumi\bin;C:\Program Files\CMake\bin;C:\ProgramData\chocolatey\lib\maven\apache-maven-3.9.16\bin;C:\Program Files\Microsoft Service Fabric\bin\Fabric\Fabric.Code;C:\Program Files\Microsoft SDKs\Service Fabric\Tools\ServiceFabricLocalClusterManager;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Program Files\GitHub CLI\;c:\tools\php;C:\Program Files (x86)\sbt\bin;C:\Program Files\Amazon\AWSCLIV2\;C:\Program Files\Amazon\SessionManagerPlugin\bin\;C:\Program Files\Amazon\AWSSAMCLI\bin\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\mongosh\;C:\Program Files\LLVM\bin;C:\Program Files (x86)\LLVM\bin;C:\Users\runneradmin\.dotnet\tools;C:\Users\runneradmin\.cargo\bin;C:\Users\runneradmin\AppData\Local\Microsoft\WindowsApps;C:\Program Files (x86)\Microsoft Visual Studio\Installer
+2026-10-05T07:06:06.7956741Z ##[endgroup]
+2026-10-05T07:06:07.3279900Z Test project D:/a/itu-ders-bot/itu-ders-bot/build/windows-x64
+2026-10-05T07:06:07.3561211Z     Start 1: transport
+2026-10-05T07:06:07.3629207Z     Start 2: authentication
+2026-10-05T07:06:07.3702410Z     Start 3: core_and_clock
+2026-10-05T07:06:07.3886763Z 1/9 Test #3: core_and_clock ...................   Passed    0.02 sec
+2026-10-05T07:06:07.3898558Z     Start 4: application_flags
+2026-10-05T07:06:08.6080684Z 2/9 Test #1: transport ........................   Passed    1.25 sec
+2026-10-05T07:06:08.6084536Z     Start 5: setup_terminal
+2026-10-05T07:06:10.1419017Z 3/9 Test #5: setup_terminal ...................   Passed    1.53 sec
+2026-10-05T07:06:10.1425139Z     Start 6: setup_files
+2026-10-05T07:06:10.1806546Z 4/9 Test #6: setup_files ......................   Passed    0.04 sec
+2026-10-05T07:06:10.1809350Z     Start 7: artifact_integrity
+2026-10-05T07:06:11.0684578Z 5/9 Test #7: artifact_integrity ...............   Passed    0.89 sec
+2026-10-05T07:06:11.0687698Z     Start 8: manifest_paths
+2026-10-05T07:06:14.5667216Z 6/9 Test #2: authentication ...................   Passed    7.20 sec
+2026-10-05T07:06:14.5670367Z     Start 9: build_provenance
+2026-10-05T07:06:32.7739818Z 7/9 Test #8: manifest_paths ...................   Passed   21.70 sec
+2026-10-05T07:06:35.1325879Z 8/9 Test #9: build_provenance .................***Failed   20.57 sec
+2026-10-05T07:06:35.1326725Z -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.20348.
+2026-10-05T07:06:35.1327846Z -- The CXX compiler identification is MSVC 19.44.35229.0
+2026-10-05T07:06:35.1328416Z -- Detecting CXX compiler ABI info
+2026-10-05T07:06:35.1328848Z -- Detecting CXX compiler ABI info - done
+2026-10-05T07:06:35.1329985Z -- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+2026-10-05T07:06:35.1331103Z -- Detecting CXX compile features
+2026-10-05T07:06:35.1331544Z -- Detecting CXX compile features - done
+2026-10-05T07:06:35.1332004Z -- Configuring done (2.2s)
+2026-10-05T07:06:35.1332291Z -- Generating done (0.0s)
+2026-10-05T07:06:35.1332869Z -- Build files have been written to: C:/Users/runneradmin/AppData/Local/Temp/itu provenance wnwgijw8/dependency build
+2026-10-05T07:06:35.1333544Z MSBuild version 17.14.60+43b635718 for .NET Framework
+2026-10-05T07:06:35.1333798Z 
+2026-10-05T07:06:35.1333902Z   1>Checking Build System
+2026-10-05T07:06:35.1334494Z   Building Custom Rule C:/Users/runneradmin/AppData/Local/Temp/itu provenance wnwgijw8/dependency source/CMakeLists.txt
+2026-10-05T07:06:35.1335122Z   alternate.cpp
+2026-10-05T07:06:35.1335699Z   alternate.vcxproj -> C:\Users\runneradmin\AppData\Local\Temp\itu provenance wnwgijw8\dependency with spaces\lib\alternate.lib
+2026-10-05T07:06:35.1336701Z   Building Custom Rule C:/Users/runneradmin/AppData/Local/Temp/itu provenance wnwgijw8/dependency source/CMakeLists.txt
+2026-10-05T07:06:35.1337339Z   value.cpp
+2026-10-05T07:06:35.1337862Z   fixture.vcxproj -> C:\Users\runneradmin\AppData\Local\Temp\itu provenance wnwgijw8\dependency with spaces\lib\fixture.lib
+2026-10-05T07:06:35.1338707Z   Building Custom Rule C:/Users/runneradmin/AppData/Local/Temp/itu provenance wnwgijw8/dependency source/CMakeLists.txt
+2026-10-05T07:06:35.1339362Z -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.20348.
+2026-10-05T07:06:35.1339791Z -- The CXX compiler identification is MSVC 19.44.35229.0
+2026-10-05T07:06:35.1340111Z -- Detecting CXX compiler ABI info
+2026-10-05T07:06:35.1340381Z -- Detecting CXX compiler ABI info - done
+2026-10-05T07:06:35.1341027Z -- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+2026-10-05T07:06:35.1341671Z -- Detecting CXX compile features
+2026-10-05T07:06:35.1341931Z -- Detecting CXX compile features - done
+2026-10-05T07:06:35.1342214Z -- Configuring done (3.1s)
+2026-10-05T07:06:35.1342482Z -- Generating done (0.1s)
+2026-10-05T07:06:35.1343309Z -- Build files have been written to: C:/Users/runneradmin/AppData/Local/Temp/itu provenance wnwgijw8/build with spaces
+2026-10-05T07:06:35.1344528Z -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.20348.
+2026-10-05T07:06:35.1345150Z -- Configuring done (0.0s)
+2026-10-05T07:06:35.1345395Z -- Generating done (0.1s)
+2026-10-05T07:06:35.1345898Z -- Build files have been written to: C:/Users/runneradmin/AppData/Local/Temp/itu provenance wnwgijw8/build with spaces
+2026-10-05T07:06:35.1346560Z -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.20348.
+2026-10-05T07:06:35.1346935Z -- Configuring done (0.0s)
+2026-10-05T07:06:35.1347166Z -- Generating done (0.0s)
+2026-10-05T07:06:35.1347862Z -- Build files have been written to: C:/Users/runneradmin/AppData/Local/Temp/itu provenance wnwgijw8/build with spaces
+2026-10-05T07:06:35.1348494Z -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.20348.
+2026-10-05T07:06:35.1348863Z -- Configuring done (0.0s)
+2026-10-05T07:06:35.1349081Z -- Generating done (0.1s)
+2026-10-05T07:06:35.1349554Z -- Build files have been written to: C:/Users/runneradmin/AppData/Local/Temp/itu provenance wnwgijw8/build with spaces
+2026-10-05T07:06:35.1350229Z LF/CRLF receipt fingerprints agree; changed input and raw binary bytes remain bound.
+2026-10-05T07:06:35.1350676Z Traceback (most recent call last):
+2026-10-05T07:06:35.1355771Z   File "D:\a\itu-ders-bot\itu-ders-bot\tests\build_provenance_tests.py", line 580, in <module>
+2026-10-05T07:06:35.1357360Z     main()
+2026-10-05T07:06:35.1357819Z   File "D:\a\itu-ders-bot\itu-ders-bot\tests\build_provenance_tests.py", line 249, in main
+2026-10-05T07:06:35.1358266Z     assert first == validate()
+2026-10-05T07:06:35.1358503Z            ^^^^^^^^^^^^^^^^^^^
+2026-10-05T07:06:35.1358717Z AssertionError
+2026-10-05T07:06:35.1358835Z 
+2026-10-05T07:06:36.6256004Z 9/9 Test #4: application_flags ................   Passed   29.24 sec
+2026-10-05T07:06:36.6264218Z 
+2026-10-05T07:06:36.6264563Z 89% tests passed, 1 tests failed out of 9
+2026-10-05T07:06:36.6264867Z 
+2026-10-05T07:06:36.6264980Z Total Test time (real) =  29.30 sec
+2026-10-05T07:06:36.6265174Z 
+2026-10-05T07:06:36.6265279Z The following tests FAILED:
+2026-10-05T07:06:36.6267211Z 	  9 - build_provenance (Failed)
+2026-10-05T07:06:36.6271287Z Errors while running CTest
+2026-10-05T07:06:36.6535234Z ##[error]Process completed with exit code 8.
+2026-10-05T07:06:36.6787867Z Post job cleanup.
+2026-10-05T07:06:36.9114476Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-05T07:06:36.9355465Z git version 2.55.0.windows.5
+2026-10-05T07:06:36.9419622Z Temporarily overriding HOME='D:\a\_temp\ad0a2046-7138-4991-afb5-40141b098e30' before making global git config changes
+2026-10-05T07:06:36.9420955Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-05T07:06:36.9435415Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\itu-ders-bot\itu-ders-bot
+2026-10-05T07:06:36.9708480Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-05T07:06:37.0039470Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-05T07:06:37.5482795Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-05T07:06:37.5700579Z http.https://github.com/.extraheader
+2026-10-05T07:06:37.5737265Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2026-10-05T07:06:37.5975154Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-05T07:06:38.0473415Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-05T07:06:38.0717571Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-05T07:06:38.5648716Z Cleaning up orphan processes
+2026-10-05T07:06:38.5946601Z Terminate orphan process: pid (6648) (vctip)
+2026-10-05T07:06:38.6032615Z Terminate orphan process: pid (2052) (MSBuild)
+2026-10-05T07:06:38.6177362Z Terminate orphan process: pid (4756) (conhost)
+2026-10-05T07:06:38.6266575Z Terminate orphan process: pid (6172) (MSBuild)
+2026-10-05T07:06:38.6438730Z Terminate orphan process: pid (2096) (conhost)
+2026-10-05T07:06:38.6524745Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, ilammy/msvc-dev-cmd@v1. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

@@ -216,7 +216,11 @@ TokenResult TokenFetcher::get_token(const std::string& username, const std::stri
 }
 TokenResult TokenFetcher::refresh_token(bool debug) { return token_detail::refresh(session_, obs_base_, debug); }
 void TokenFetcher::set_observer(HttpSession::BeforeTransfer before, HttpSession::AfterTransfer after) {
-    session_.set_observer(std::move(before), std::move(after));
+    // Only polling installs a governor. Its cooldown must cover every HTTP
+    // exchange, including a redirect that libcurl would otherwise follow
+    // before the governor can inspect the response.
+    const bool guarded = static_cast<bool>(before) || static_cast<bool>(after);
+    session_.set_observer(std::move(before), std::move(after), guarded);
 }
 void TokenFetcher::set_cancelled(std::function<bool()> cancelled) { session_.set_cancelled(std::move(cancelled)); }
 #ifdef ITU_ENABLE_TEST_SEAMS
